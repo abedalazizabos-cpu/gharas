@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "laravel.vscode-laravel",
+        "bmewburn.vscode-intelephense-client",
+        "onecentlab.laravel-blade"
+    ]
+}

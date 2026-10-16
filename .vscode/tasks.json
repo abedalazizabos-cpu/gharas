@@ -1,0 +1,12 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        { "label": "تشغيل الموقع", "type": "shell", "command": "php artisan serve", "isBackground": true, "problemMatcher": [], "group": { "kind": "build", "isDefault": true } },
+        { "label": "تحديث قاعدة البيانات (migrate)", "type": "shell", "command": "php artisan migrate", "problemMatcher": [] },
+        { "label": "تحديث بعد نسخة جديدة", "type": "shell", "command": "composer install && php artisan migrate", "problemMatcher": [] },
+        { "label": "تثبيت أول مرة", "type": "shell", "command": "composer install && php artisan key:generate && php artisan migrate --seed && php artisan storage:link", "problemMatcher": [] },
+        { "label": "تشغيل الاختبارات", "type": "shell", "command": "php artisan test", "problemMatcher": [], "group": "test" },
+        { "label": "أرشفة الأسابيع المنتهية", "type": "shell", "command": "php artisan gharas:archive-weeks", "problemMatcher": [] },
+        { "label": "نسخة احتياطية", "type": "shell", "command": "php artisan gharas:backup", "problemMatcher": [] }
+    ]
+}
