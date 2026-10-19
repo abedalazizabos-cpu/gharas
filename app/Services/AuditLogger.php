@@ -32,7 +32,8 @@ class AuditLogger
         if ($changes === []) {
             return null;
         }
-        $old = array_intersect_key($model->getOriginal(), $changes);
+        // After save() the original already holds the new values; getPrevious() has the old ones.
+        $old = array_intersect_key($model->getPrevious(), $changes);
 
         return self::log($action, $description, $model, $old, $changes);
     }
