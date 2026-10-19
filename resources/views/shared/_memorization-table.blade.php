@@ -32,10 +32,8 @@
                                 @php($firstView = $r->parentViews->sortBy('seen_at')->first())
                                 <span class="badge bg-success-subtle text-success-emphasis" title="{{ $r->parentViews->map(fn ($v) => $v->parent?->name.' · '.$v->seen_at->format('Y/m/d H:i'))->join(' | ') }}"><i class="bi bi-check2-all"></i> تم</span>
                                 <div class="small text-muted">{{ $firstView->seen_at->diffForHumans() }}</div>
-                            @elseif ($r->tracksParentViews())
-                                <span class="badge bg-secondary-subtle text-secondary-emphasis" title="لم يفتح ولي الأمر صفحة ابنه منذ هذا التسجيل"><i class="bi bi-clock"></i> لم يطّلع</span>
                             @else
-                                <i class="bi bi-eye text-success" title="ظاهر لولي الأمر"></i>
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis" title="لم يفتح ولي الأمر صفحة ابنه منذ هذا التسجيل"><i class="bi bi-clock"></i> لم يطّلع</span>
                             @endif
                         </td>
                     @endif

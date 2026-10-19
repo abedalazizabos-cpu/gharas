@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Setting;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,14 +17,10 @@ return new class extends Migration
             $table->unique(['memorization_record_id', 'parent_id'], 'record_views_record_parent_unique');
             $table->index('parent_id');
         });
-
-        // Records saved before this point were never tracked, so they are left out of follow-up rates.
-        Setting::put('parent_views_since', now()->toDateTimeString());
     }
 
     public function down(): void
     {
         Schema::dropIfExists('memorization_record_views');
-        Setting::query()->where('key', 'parent_views_since')->delete();
     }
 };
