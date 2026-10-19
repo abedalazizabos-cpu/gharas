@@ -20,7 +20,7 @@
                     <td class="text-nowrap">{{ $r->recorded_on->format('Y/m/d') }}</td>
                     @if (!empty($showStudent))<td>{{ $r->student->full_name }}<br><small class="text-muted">{{ $r->circle?->name }}</small></td>@endif
                     <td><span class="badge bg-{{ \App\Models\MemorizationRecord::TYPE_BADGES[$r->type] }}-subtle text-{{ \App\Models\MemorizationRecord::TYPE_BADGES[$r->type] }}-emphasis">{{ $r->typeLabel() }}</span></td>
-                    <td class="text-nowrap">{{ $r->surah->name }} <small class="text-muted">({{ $r->from_ayah }}-{{ $r->to_ayah }})</small>@if ($r->pages)<br><small class="text-muted">{{ rtrim(rtrim($r->pages, '0'), '.') }} صفحة</small>@endif</td>
+                    <td class="text-nowrap">{{ $r->surah->name }} <small class="text-muted">({{ $r->from_ayah }}-{{ $r->to_ayah }})</small>@if ($r->pages)<br><small class="text-muted">{{ $r->pagesLabel() }}</small>@endif</td>
                     <td class="text-nowrap"><strong>{{ $r->score }}</strong> <small class="text-muted">{{ $r->gradeLabel() }}</small></td>
                     <td>{{ $r->mistakes_count }}</td>
                     <td class="small" style="min-width:180px">{{ $r->notes }}@if ($r->recommendations)<div class="text-success"><i class="bi bi-lightbulb"></i> {{ $r->recommendations }}</div>@endif</td>

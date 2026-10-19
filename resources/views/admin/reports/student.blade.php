@@ -13,8 +13,8 @@
 </div></div>
 <div class="row g-3 mb-3">
     <div class="col-6 col-lg-3"><x-stat-card icon="calendar-check" label="نسبة الحضور" :value="$row['attendance_rate'] !== null ? $row['attendance_rate'].'%' : '—'" :hint="'غياب: '.$row['attendance']['absent'].' · بعذر: '.$row['attendance']['excused']" /></div>
-    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="آيات حفظ جديد" :value="$row['new_ayahs']" color="gold" /></div>
-    <div class="col-6 col-lg-3"><x-stat-card icon="arrow-repeat" label="آيات مراجعة" :value="$row['revision_ayahs']" color="blue" /></div>
+    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="صفحات حفظ جديد" :value="\App\Support\Pages::num($row['new_pages'])" color="gold" /></div>
+    <div class="col-6 col-lg-3"><x-stat-card icon="arrow-repeat" label="صفحات مراجعة" :value="\App\Support\Pages::num($row['revision_pages'])" color="blue" /></div>
     <div class="col-6 col-lg-3"><x-stat-card icon="award" label="متوسط الدرجة" :value="$row['avg_score'] ?? '—'" :hint="$row['avg_assessment'] !== null ? 'متوسط التقييم: '.round($row['avg_assessment'], 1).'%' : null" /></div>
 </div>
 <div class="row g-3">
@@ -23,12 +23,12 @@
         <div class="card mb-3">
             <div class="card-header">سجلات التسميع في الفترة ({{ $records->count() }})</div>
             <div class="table-responsive"><table class="table table-sm mb-0">
-                <thead><tr><th>التاريخ</th><th>النوع</th><th>السورة</th><th>الآيات</th><th>الدرجة</th><th>ملاحظات</th></tr></thead>
+                <thead><tr><th>التاريخ</th><th>النوع</th><th>السورة</th><th>الآيات</th><th>المقدار</th><th>الدرجة</th><th>ملاحظات</th></tr></thead>
                 <tbody>
                 @forelse ($records as $r)
-                    <tr><td>{{ $r->recorded_on->format('Y/m/d') }}</td><td>{{ $r->typeLabel() }}</td><td>{{ $r->surah->name }}</td><td>{{ $r->from_ayah }}-{{ $r->to_ayah }}</td><td>{{ $r->score }} ({{ $r->gradeLabel() }})</td><td class="small">{{ $r->notes }}</td></tr>
+                    <tr><td>{{ $r->recorded_on->format('Y/m/d') }}</td><td>{{ $r->typeLabel() }}</td><td>{{ $r->surah->name }}</td><td>{{ $r->from_ayah }}-{{ $r->to_ayah }}</td><td>{{ $r->pagesLabel() }}</td><td>{{ $r->score }} ({{ $r->gradeLabel() }})</td><td class="small">{{ $r->notes }}</td></tr>
                 @empty
-                    <tr><td colspan="6"><x-empty icon="book" message="لا توجد سجلات في هذه الفترة." /></td></tr>
+                    <tr><td colspan="7"><x-empty icon="book" message="لا توجد سجلات في هذه الفترة." /></td></tr>
                 @endforelse
                 </tbody>
             </table></div>

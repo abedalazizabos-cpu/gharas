@@ -100,7 +100,7 @@ class StatsService
             ->values()->all();
     }
 
-    /** New ayahs memorized (passing grade) per week for the last N weeks. */
+    /** Pages of passing new memorization per week for the last N weeks. */
     public function memorizationTrend(int $weeks = 8, ?array $circleIds = null): array
     {
         $pass = (int) \App\Models\Setting::get('pass_score', '70');
@@ -109,7 +109,7 @@ class StatsService
             ->where('type', 'new')->where('score', '>=', $pass)
             ->where('recorded_on', '>=', $start->toDateString())
             ->when($circleIds !== null, fn ($q) => $q->whereIn('circle_id', $circleIds))
-            ->get(['recorded_on', 'from_ayah', 'to_ayah']);
+            ->get(['recorded_on', 'pages']);
 
         $labels = [];
         $values = [];
@@ -117,8 +117,7 @@ class StatsService
             $ws = $start->copy()->addWeeks($i);
             $we = $ws->copy()->addDays(6);
             $labels[] = $ws->format('m/d');
-            $values[] = $records->filter(fn ($r) => $r->recorded_on->between($ws, $we->endOfDay()))
-                ->sum(fn ($r) => $r->to_ayah - $r->from_ayah + 1);
+            $values[] = (float) $records->filter(fn ($r) => $r->recorded_on->between($ws, $we->endOfDay()))->sum('pages');
         }
 
         return ['labels' => $labels, 'values' => $values];

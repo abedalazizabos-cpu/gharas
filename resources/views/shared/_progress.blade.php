@@ -8,12 +8,12 @@
         <div class="progress mb-3" role="progressbar" aria-valuenow="{{ $quranPercent }}" aria-valuemin="0" aria-valuemax="100" style="height:.9rem">
             <div class="progress-bar" style="width: {{ max($quranPercent, 0.5) }}%"></div>
         </div>
-        <p class="small text-muted mb-3">تُحتسب الآيات محفوظة فقط عند تسجيل «حفظ جديد» بدرجة {{ \App\Models\Setting::get('pass_score') }} فأكثر من المحفظ.</p>
+        <p class="small text-muted mb-3">تُحتسب الصفحات محفوظة فقط عند تسجيل «حفظ جديد» بدرجة {{ \App\Models\Setting::get('pass_score') }} فأكثر، والنسبة من 604 صفحات (المصحف كاملاً).</p>
         @forelse ($progress as $row)
             <div class="mb-2">
                 <div class="d-flex justify-content-between small">
                     <span class="fw-semibold">{{ $row['surah']->name }}</span>
-                    <span class="text-muted">حفظ {{ $row['memorized'] }}/{{ $row['surah']->ayah_count }} · مراجعة {{ $row['revised'] }}</span>
+                    <span class="text-muted">@if ($row['percent'] >= 100) مكتملة @else {{ round($row['percent']) }}% من السورة @endif</span>
                 </div>
                 <div class="progress"><div class="progress-bar" style="width: {{ $row['percent'] }}%"></div></div>
             </div>

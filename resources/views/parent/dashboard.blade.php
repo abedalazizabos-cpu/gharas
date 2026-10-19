@@ -43,7 +43,7 @@
                     @if ($s->status !== 'active')<div class="alert alert-warning py-1 small">حالة الطالب: {{ $s->statusLabel() }}</div>@endif
                     <div class="row text-center g-2 mb-3">
                         <div class="col-4"><div class="bg-light rounded p-2"><div class="fw-bold fs-5">{{ $card['attendance_rate'] !== null ? round($card['attendance_rate']).'%' : '—' }}</div><small class="text-muted">الحضور</small></div></div>
-                        <div class="col-4"><div class="bg-light rounded p-2"><div class="fw-bold fs-5">{{ $card['memorized_ayahs'] }}</div><small class="text-muted">آية محفوظة</small></div></div>
+                        <div class="col-4"><div class="bg-light rounded p-2"><div class="fw-bold fs-5">{{ \App\Support\Pages::num($card['memorized_pages']) }}</div><small class="text-muted">صفحة محفوظة</small></div></div>
                         <div class="col-4"><div class="bg-light rounded p-2"><div class="fw-bold fs-5 {{ $card['absences'] ? 'text-danger' : '' }}">{{ $card['absences'] }}</div><small class="text-muted">غياب (30 يوماً)</small></div></div>
                     </div>
                     <div class="small mb-1 d-flex justify-content-between"><span>التقدم في حفظ القرآن</span><span>{{ $card['quran_percent'] }}%</span></div>
@@ -52,7 +52,7 @@
                         <div class="small mb-2 d-flex justify-content-between"><span>متابعتك لسجلاته اليومية</span>@include('shared._follow-rate', ['rate' => $follow['children'][$s->id]])</div>
                     @endif
                     @if ($card['last_record'])
-                        <div class="small bg-green-soft rounded p-2"><strong>آخر تسميع:</strong> {{ $card['last_record']->typeLabel() }} - {{ $card['last_record']->rangeLabel() }} · <span class="text-success">{{ $card['last_record']->gradeLabel() }}</span> <span class="text-muted">({{ $card['last_record']->recorded_on->format('Y/m/d') }})</span></div>
+                        <div class="small bg-green-soft rounded p-2"><strong>آخر تسميع:</strong> {{ $card['last_record']->typeLabel() }} - {{ $card['last_record']->rangeLabel() }} · {{ $card['last_record']->pagesLabel() }} · <span class="text-success">{{ $card['last_record']->gradeLabel() }}</span> <span class="text-muted">({{ $card['last_record']->recorded_on->format('Y/m/d') }})</span></div>
                     @endif
                 </div>
                 <div class="card-footer bg-transparent d-flex gap-2">

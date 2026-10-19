@@ -55,7 +55,20 @@
             </div>
             <x-field name="from_ayah" label="من آية" type="number" :value="$record->from_ayah" required col="col-6 col-md-2" min="1" />
             <x-field name="to_ayah" label="إلى آية" type="number" :value="$record->to_ayah" required col="col-6 col-md-2" min="1" />
-            <x-field name="pages" label="عدد الصفحات" type="number" :value="$record->pages" col="col-md-2" step="0.25" min="0" />
+            <div class="col-md-2">
+                <label class="form-label" for="pages">المقدار (صفحات) <span class="text-danger">*</span></label>
+                <input id="pages" type="number" name="pages" step="0.25" min="0.25" max="604" value="{{ old('pages', $record->pages !== null ? \App\Support\Pages::num($record->pages) : '') }}" class="form-control @error('pages') is-invalid @enderror" required>
+                @error('pages')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2 align-items-center small">
+                    <span class="text-muted">اختيار سريع للمقدار:</span>
+                    @foreach (['0.25' => 'ربع صفحة', '0.5' => 'نصف صفحة', '0.75' => 'ثلاثة أرباع', '1' => 'صفحة', '2' => 'صفحتان', '3' => '3 صفحات', '5' => '5 صفحات'] as $v => $label)
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-pages="{{ $v }}">{{ $label }}</button>
+                    @endforeach
+                    <span class="text-muted">أو اكتب أي عدد من الصفحات (بالأرباع).</span>
+                </div>
+            </div>
 
             <div class="col-md-3">
                 <label class="form-label" for="score">الدرجة (من 100) <span class="text-danger">*</span></label>

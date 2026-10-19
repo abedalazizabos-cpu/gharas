@@ -59,8 +59,8 @@
                 <div class="row g-3">
                     <div class="col-6 col-lg-3"><x-stat-card icon="calendar-check" label="نسبة الحضور" :value="$summary['attendance_rate'] !== null ? $summary['attendance_rate'].'%' : '—'" /></div>
                     <div class="col-6 col-lg-3"><x-stat-card icon="x-circle" label="أيام الغياب" :value="$summary['attendance']['absent'] + $summary['attendance']['excused']" color="red" :hint="'منها بعذر: '.$summary['attendance']['excused']" /></div>
-                    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="آيات حفظ جديد" :value="$summary['new_ayahs']" color="gold" /></div>
-                    <div class="col-6 col-lg-3"><x-stat-card icon="arrow-repeat" label="آيات مراجعة" :value="$summary['revision_ayahs']" color="blue" :hint="$summary['avg_score'] ? 'متوسط الدرجات: '.$summary['avg_score'] : null" /></div>
+                    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="صفحات حفظ جديد" :value="\App\Support\Pages::num($summary['new_pages'])" color="gold" /></div>
+                    <div class="col-6 col-lg-3"><x-stat-card icon="arrow-repeat" label="صفحات مراجعة" :value="\App\Support\Pages::num($summary['revision_pages'])" color="blue" :hint="$summary['avg_score'] ? 'متوسط الدرجات: '.$summary['avg_score'] : null" /></div>
                 </div>
             </div>
         @endif

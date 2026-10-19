@@ -149,7 +149,7 @@ class WeeklyArchiveService
         $attendance = $w['students']->map(fn ($st) => array_merge([$st->full_name], $w['days']
             ->map(fn ($d) => isset($w['grid'][$st->id][$d->toDateString()]) ? $w['grid'][$st->id][$d->toDateString()]->statusLabel() : '')->all()));
         $records = $w['records']->map(fn ($r) => array_merge(
-            [$r->recorded_on->format('Y/m/d'), $r->student?->full_name, $r->typeLabel(), $r->rangeLabel(), $r->score, $r->gradeLabel(), $r->mistakes_count],
+            [$r->recorded_on->format('Y/m/d'), $r->student?->full_name, $r->typeLabel(), $r->rangeLabel(), $r->pagesLabel(), $r->score, $r->gradeLabel(), $r->mistakes_count],
             $withNotes ? [$r->notes, $r->shared_with_parent ? 'نعم' : 'لا'] : []));
 
         return [
@@ -158,8 +158,8 @@ class WeeklyArchiveService
             [
                 ['title' => 'الحضور والغياب', 'headers' => array_merge(['الطالب'], $w['days']->map(fn ($d) => self::DAYS[$d->dayOfWeek].' '.$d->format('m/d'))->all()),
                     'rows' => $attendance, 'empty' => 'لم يُسجَّل حضور في هذا الأسبوع.'],
-                ['title' => 'سجلات الحفظ والمراجعة', 'headers' => array_merge(['التاريخ', 'الطالب', 'النوع', 'السورة والآيات', 'الدرجة', 'التقدير', 'الأخطاء'], $withNotes ? ['ملاحظات المحفظ', 'لولي الأمر'] : []),
-                    'rows' => $records, 'text_cols' => [1, 3, 7], 'empty' => 'لا توجد سجلات في هذا الأسبوع.'],
+                ['title' => 'سجلات الحفظ والمراجعة', 'headers' => array_merge(['التاريخ', 'الطالب', 'النوع', 'السورة والآيات', 'المقدار', 'الدرجة', 'التقدير', 'الأخطاء'], $withNotes ? ['ملاحظات المحفظ', 'لولي الأمر'] : []),
+                    'rows' => $records, 'text_cols' => [1, 3, 4, 8], 'empty' => 'لا توجد سجلات في هذا الأسبوع.'],
             ],
         ];
     }

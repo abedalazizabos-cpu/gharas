@@ -31,7 +31,7 @@ class MemorizationRecordRequest extends FormRequest
             'surah_id' => ['required', 'integer', 'exists:surahs,id'],
             'from_ayah' => ['required', 'integer', 'min:1'],
             'to_ayah' => ['required', 'integer', 'gte:from_ayah'],
-            'pages' => ['nullable', 'numeric', 'min:0', 'max:604'],
+            'pages' => ['required', 'numeric', 'min:0.25', 'max:604', 'multiple_of:0.25'],
             'score' => ['required', 'integer', 'between:0,100'],
             'mistakes_count' => ['nullable', 'integer', 'min:0', 'max:500'],
             'notes' => ['nullable', 'string', 'max:2000'],
@@ -54,7 +54,7 @@ class MemorizationRecordRequest extends FormRequest
     {
         return [
             'student_id' => 'الطالب', 'recorded_on' => 'تاريخ التسميع', 'type' => 'نوع النشاط',
-            'surah_id' => 'السورة', 'from_ayah' => 'من آية', 'to_ayah' => 'إلى آية', 'score' => 'الدرجة',
+            'surah_id' => 'السورة', 'from_ayah' => 'من آية', 'to_ayah' => 'إلى آية', 'pages' => 'المقدار بالصفحات', 'score' => 'الدرجة',
         ];
     }
 }

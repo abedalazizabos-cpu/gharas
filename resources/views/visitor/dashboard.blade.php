@@ -14,7 +14,7 @@
     ];
     $memChart = [
         'type' => 'bar',
-        'data' => ['labels' => $memorizationTrend['labels'], 'datasets' => [['label' => 'آيات', 'data' => $memorizationTrend['values'], 'backgroundColor' => '#c9a24a', 'borderRadius' => 6]]],
+        'data' => ['labels' => $memorizationTrend['labels'], 'datasets' => [['label' => 'صفحات', 'data' => $memorizationTrend['values'], 'backgroundColor' => '#c9a24a', 'borderRadius' => 6]]],
         'options' => ['plugins' => ['legend' => ['display' => false]]],
     ];
 @endphp
@@ -58,7 +58,7 @@
         </div>
     </div>
     <div class="col-lg-5">
-        <div class="card mb-3"><div class="card-header">التقدم في الحفظ (آيات جديدة أسبوعياً)</div><div class="card-body"><canvas height="150" data-chart='@json($memChart)'></canvas></div></div>
+        <div class="card mb-3"><div class="card-header">التقدم في الحفظ (صفحات حفظ جديد أسبوعياً)</div><div class="card-body"><canvas height="150" data-chart='@json($memChart)'></canvas></div></div>
         <div class="card">
             <div class="card-header">آخر الجلسات المنعقدة</div>
             <ul class="list-group list-group-flush small">
