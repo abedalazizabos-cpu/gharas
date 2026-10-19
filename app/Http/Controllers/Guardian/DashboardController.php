@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Guardian;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Services\ParentFollowService;
 use App\Services\ProgressService;
 use App\Services\StatsService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, StatsService $stats, ProgressService $progress)
+    public function index(Request $request, StatsService $stats, ProgressService $progress, ParentFollowService $follow)
     {
         $parent = $request->user();
         $children = $parent->children()->with('circle.teacher')->orderBy('full_name')->get();
@@ -31,6 +32,7 @@ class DashboardController extends Controller
 
         return view('parent.dashboard', [
             'cards' => $cards,
+            'follow' => $follow->forParent($parent),
             'announcements' => Announcement::current()->visibleTo($parent)->latest('publish_at')->limit(4)->get(),
             'notifications' => $parent->unreadNotifications()->limit(5)->get(),
         ]);

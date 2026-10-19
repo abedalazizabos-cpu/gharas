@@ -13,7 +13,7 @@
 <div class="card">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>الاسم</th><th>الجوال</th><th>البريد</th><th>الأبناء المرتبطون</th><th>الحالة</th><th></th></tr></thead>
+            <thead><tr><th>الاسم</th><th>الجوال</th><th>البريد</th><th>الأبناء المرتبطون</th><th title="نسبة اطّلاع ولي الأمر على السجلات اليومية خلال آخر 30 يوماً">نسبة المتابعة</th><th>الحالة</th><th></th></tr></thead>
             <tbody>
             @forelse ($parents as $p)
                 <tr>
@@ -21,6 +21,7 @@
                     <td dir="ltr" class="text-end">{{ $p->phone }}</td>
                     <td dir="ltr" class="text-end">{{ $p->email ?? '—' }}</td>
                     <td>@forelse ($p->children as $c)<span class="badge bg-green-soft text-success-emphasis me-1">{{ $c->full_name }}</span>@empty <span class="badge bg-danger-subtle text-danger-emphasis">غير مرتبط</span> @endforelse</td>
+                    <td>@include('shared._follow-rate', ['rate' => $follow[$p->id] ?? ['seen' => 0, 'total' => 0, 'percent' => null]])</td>
                     <td><x-status-badge :status="$p->status" :label="$p->statusLabel()" /></td>
                     <td class="table-actions">
                         <a href="{{ route('admin.parents.show', $p) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
@@ -28,7 +29,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6"><x-empty icon="house-heart" message="لا يوجد أولياء أمور مطابقون." /></td></tr>
+                <tr><td colspan="7"><x-empty icon="house-heart" message="لا يوجد أولياء أمور مطابقون." /></td></tr>
             @endforelse
             </tbody>
         </table>

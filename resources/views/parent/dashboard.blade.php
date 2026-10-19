@@ -18,6 +18,14 @@
     </div>
 @endif
 
+@if ($follow['overall']['percent'] !== null)
+    <div class="card mb-3"><div class="card-body">
+        <h6 class="fw-bold mb-2"><i class="bi bi-eye ms-1 text-success"></i> نسبة متابعتك لأبنائك</h6>
+        @include('shared._follow-rate', ['rate' => $follow['overall'], 'bar' => true])
+        <p class="small text-muted mt-2 mb-0">افتح صفحة كل ابن لتطّلع على تسجيله اليومي، فيظهر للمحفظ أنك اطّلعت عليه.</p>
+    </div></div>
+@endif
+
 <h2 class="h5 fw-bold mb-3">أبنائي</h2>
 <div class="row g-3 mb-4">
     @forelse ($cards as $card)
@@ -40,6 +48,9 @@
                     </div>
                     <div class="small mb-1 d-flex justify-content-between"><span>التقدم في حفظ القرآن</span><span>{{ $card['quran_percent'] }}%</span></div>
                     <div class="progress mb-3"><div class="progress-bar" style="width: {{ max($card['quran_percent'], 0.5) }}%"></div></div>
+                    @if (isset($follow['children'][$s->id]) && $follow['children'][$s->id]['percent'] !== null)
+                        <div class="small mb-2 d-flex justify-content-between"><span>متابعتك لسجلاته اليومية</span>@include('shared._follow-rate', ['rate' => $follow['children'][$s->id]])</div>
+                    @endif
                     @if ($card['last_record'])
                         <div class="small bg-green-soft rounded p-2"><strong>آخر تسميع:</strong> {{ $card['last_record']->typeLabel() }} - {{ $card['last_record']->rangeLabel() }} · <span class="text-success">{{ $card['last_record']->gradeLabel() }}</span> <span class="text-muted">({{ $card['last_record']->recorded_on->format('Y/m/d') }})</span></div>
                     @endif

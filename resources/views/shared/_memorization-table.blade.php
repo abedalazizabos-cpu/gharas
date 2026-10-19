@@ -1,4 +1,7 @@
-{{-- $records (paginator), optional $editRoute, $deleteRoute, $showStudent, $showShared --}}
+{{-- $records (paginator), optional $editRoute, $deleteRoute, $showStudent, $showShared (also shows whether a parent has seen each record) --}}
+@if (!empty($showShared))
+    @php(($records instanceof \Illuminate\Contracts\Pagination\Paginator ? $records->getCollection() : $records)->loadMissing('parentViews.parent:id,name'))
+@endif
 @if ($records->isEmpty())
     <x-empty icon="book" message="لا توجد سجلات تسميع." />
 @else
@@ -8,7 +11,7 @@
                 <th>التاريخ</th>
                 @if (!empty($showStudent))<th>الطالب</th>@endif
                 <th>النوع</th><th>السورة والآيات</th><th>الدرجة</th><th>الأخطاء</th><th>ملاحظات المحفظ</th>
-                @if (!empty($showShared))<th>مشاركة</th>@endif
+                @if (!empty($showShared))<th>ولي الأمر</th>@endif
                 @if (!empty($editRoute) || !empty($deleteRoute))<th class="no-print"></th>@endif
             </tr></thead>
             <tbody>
@@ -21,7 +24,21 @@
                     <td class="text-nowrap"><strong>{{ $r->score }}</strong> <small class="text-muted">{{ $r->gradeLabel() }}</small></td>
                     <td>{{ $r->mistakes_count }}</td>
                     <td class="small" style="min-width:180px">{{ $r->notes }}@if ($r->recommendations)<div class="text-success"><i class="bi bi-lightbulb"></i> {{ $r->recommendations }}</div>@endif</td>
-                    @if (!empty($showShared))<td>{!! $r->shared_with_parent ? '<i class="bi bi-eye text-success" title="ظاهر لولي الأمر"></i>' : '<i class="bi bi-eye-slash text-muted" title="داخلي"></i>' !!}</td>@endif
+                    @if (!empty($showShared))
+                        <td class="text-nowrap">
+                            @if (! $r->shared_with_parent)
+                                <i class="bi bi-eye-slash text-muted" title="داخلي، لا يظهر لولي الأمر"></i>
+                            @elseif ($r->parentViews->isNotEmpty())
+                                @php($firstView = $r->parentViews->sortBy('seen_at')->first())
+                                <span class="badge bg-success-subtle text-success-emphasis" title="{{ $r->parentViews->map(fn ($v) => $v->parent?->name.' · '.$v->seen_at->format('Y/m/d H:i'))->join(' | ') }}"><i class="bi bi-check2-all"></i> تم</span>
+                                <div class="small text-muted">{{ $firstView->seen_at->diffForHumans() }}</div>
+                            @elseif ($r->tracksParentViews())
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis" title="لم يفتح ولي الأمر صفحة ابنه منذ هذا التسجيل"><i class="bi bi-clock"></i> لم يطّلع</span>
+                            @else
+                                <i class="bi bi-eye text-success" title="ظاهر لولي الأمر"></i>
+                            @endif
+                        </td>
+                    @endif
                     @if (!empty($editRoute) || !empty($deleteRoute))
                         <td class="table-actions no-print">
                             @if (!empty($editRoute) && auth()->user()->can('update', $r))

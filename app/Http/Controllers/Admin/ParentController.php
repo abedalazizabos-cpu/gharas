@@ -8,6 +8,7 @@ use App\Http\Requests\UserAccountRequest;
 use App\Models\Student;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\ParentFollowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,9 @@ class ParentController extends Controller
             ->when($request->query('linked') === 'yes', fn ($q) => $q->has('children'))
             ->orderBy('name')->paginate(15)->withQueryString();
 
-        return view('admin.parents.index', compact('parents'));
+        $follow = app(ParentFollowService::class)->rates($parents->pluck('id'));
+
+        return view('admin.parents.index', compact('parents', 'follow'));
     }
 
     public function create()
@@ -50,7 +53,10 @@ class ParentController extends Controller
     {
         $this->ensureRole($parent, User::ROLE_PARENT);
 
-        return view('admin.parents.show', ['parent' => $parent->load(['parentProfile', 'children.circle.teacher'])]);
+        return view('admin.parents.show', [
+            'parent' => $parent->load(['parentProfile', 'children.circle.teacher']),
+            'follow' => app(ParentFollowService::class)->forParent($parent),
+        ]);
     }
 
     public function edit(User $parent)
