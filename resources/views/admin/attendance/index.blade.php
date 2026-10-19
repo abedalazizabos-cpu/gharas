@@ -32,7 +32,7 @@
                     <td>{{ $r->session->circle->name }}</td>
                     <td><span class="badge bg-{{ $r->badge() }}">{{ $r->statusLabel() }}</span></td>
                     <td class="small">{{ $r->notes ?: '—' }}</td>
-                    <td class="small text-muted">{{ $r->recorder?->name }}</td>
+                    <td class="small text-muted">{{ $r->recorder?->nameFor(auth()->user()) }}</td>
                 </tr>
             @empty
                 <tr><td colspan="6"><x-empty icon="calendar-x" message="لا توجد سجلات حضور في هذه الفترة." /></td></tr>

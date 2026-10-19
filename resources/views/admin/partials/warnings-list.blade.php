@@ -12,7 +12,7 @@
                         <span class="badge text-bg-{{ $w->levelColor() }}">{{ $w->levelLabel() }}</span>
                         @if ($w->circle)<span class="text-muted">· {{ $w->circle->name }}</span>@endif
                         <div class="mt-1">{{ $w->reason }}</div>
-                        <small class="text-muted">{{ $w->created_at->format('Y/m/d') }} · {{ $w->issuer?->name ?? '—' }} ·
+                        <small class="text-muted">{{ $w->created_at->format('Y/m/d') }} · {{ $w->issuer?->nameFor(auth()->user()) ?? '—' }} ·
                             @if ($w->acknowledged_at)<span class="text-success"><i class="bi bi-check2-all"></i> اطلع عليه {{ $w->acknowledged_at->diffForHumans() }}</span>
                             @else<span class="text-danger"><i class="bi bi-hourglass"></i> لم يطلع بعد</span>@endif
                         </small>
