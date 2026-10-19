@@ -132,6 +132,12 @@ class User extends Authenticatable
     }
 
     /** Admins and the super admin. */
+    /** Name shown to $viewer: the super admin appears only as «إدارة المركز» to everyone else. */
+    public function nameFor(?User $viewer): string
+    {
+        return $this->isSuperAdmin() && ! $viewer?->isSuperAdmin() ? 'إدارة المركز' : $this->name;
+    }
+
     public function scopeAdmins(Builder $query): Builder
     {
         return $query->whereIn('role', [self::ROLE_ADMIN, self::ROLE_SUPERADMIN]);

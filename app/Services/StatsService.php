@@ -123,8 +123,8 @@ class StatsService
         return ['labels' => $labels, 'values' => $values];
     }
 
-    public function recentActivity(int $limit = 8)
+    public function recentActivity(int $limit = 8, ?User $viewer = null)
     {
-        return AuditLog::with('user')->latest('created_at')->limit($limit)->get();
+        return AuditLog::with('user')->when($viewer, fn ($q) => $q->visibleTo($viewer))->latest('created_at')->limit($limit)->get();
     }
 }
