@@ -12,8 +12,8 @@
 <div class="row g-3 mb-3">
     <div class="col-6 col-lg-3"><x-stat-card icon="people" label="عدد الطلاب" :value="$rows->count()" /></div>
     <div class="col-6 col-lg-3"><x-stat-card icon="calendar-check" label="نسبة الحضور" :value="$totals['attendance_rate'] !== null ? $totals['attendance_rate'].'%' : '—'" color="blue" /></div>
-    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="آيات حفظ جديد (مجتازة)" :value="$totals['new_ayahs']" color="gold" /></div>
-    <div class="col-6 col-lg-3"><x-stat-card icon="arrow-repeat" label="آيات مراجعة وتثبيت" :value="$totals['revision_ayahs']" /></div>
+    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="صفحات حفظ جديد (مجتازة)" :value="\App\Support\Pages::num($totals['new_pages'])" color="gold" /></div>
+    <div class="col-6 col-lg-3"><x-stat-card icon="arrow-repeat" label="صفحات مراجعة وتثبيت" :value="\App\Support\Pages::num($totals['revision_pages'])" /></div>
 </div>
 
 <div class="card">
@@ -21,7 +21,7 @@
         <table class="table table-hover mb-0">
             <thead><tr>
                 <th>الطالب</th><th>حاضر</th><th>متأخر</th><th>غائب</th><th>بعذر</th><th>نسبة الحضور</th>
-                <th>حفظ جديد</th><th>مراجعة</th><th>جلسات</th><th>متوسط الدرجة</th><th>متوسط التقييم</th>
+                <th>حفظ جديد (صفحة)</th><th>مراجعة (صفحة)</th><th>جلسات</th><th>متوسط الدرجة</th><th>متوسط التقييم</th>
             </tr></thead>
             <tbody>
             @forelse ($rows as $r)
@@ -39,7 +39,7 @@
                     <td>{{ $r['attendance']['present'] }}</td><td>{{ $r['attendance']['late'] }}</td>
                     <td>{{ $r['attendance']['absent'] }}</td><td>{{ $r['attendance']['excused'] }}</td>
                     <td>{{ $r['attendance_rate'] !== null ? $r['attendance_rate'].'%' : '—' }}</td>
-                    <td>{{ $r['new_ayahs'] }}</td><td>{{ $r['revision_ayahs'] }}</td><td>{{ $r['sessions'] }}</td>
+                    <td>{{ \App\Support\Pages::num($r['new_pages']) }}</td><td>{{ \App\Support\Pages::num($r['revision_pages']) }}</td><td>{{ $r['sessions'] }}</td>
                     <td>{{ $r['avg_score'] ?? '—' }}</td>
                     <td>{{ $r['avg_assessment'] !== null ? round($r['avg_assessment'], 1).'%' : '—' }}</td>
                 </tr>

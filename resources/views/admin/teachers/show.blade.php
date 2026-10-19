@@ -16,7 +16,7 @@
     <div class="col-6 col-lg-3"><x-stat-card icon="bullseye" label="الحلقات" :value="$circles->count()" /></div>
     <div class="col-6 col-lg-3"><x-stat-card icon="people" label="الطلاب النشطون" :value="$studentsCount" color="blue" /></div>
     <div class="col-6 col-lg-3"><x-stat-card icon="calendar-check" label="نسبة الحضور (30 يوماً)" :value="$totals['attendance_rate'] !== null ? $totals['attendance_rate'].'%' : '—'" color="gold" /></div>
-    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="آيات حفظ جديد (30 يوماً)" :value="$totals['new_ayahs']" /></div>
+    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="صفحات حفظ جديد (30 يوماً)" :value="\App\Support\Pages::num($totals['new_pages'])" /></div>
 </div>
 <div class="row g-3">
     <div class="col-lg-4">

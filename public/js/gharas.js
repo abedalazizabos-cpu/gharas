@@ -90,6 +90,14 @@
             surah.addEventListener('change', sync);
             sync();
         }
+        // نموذج التسميع: اختيار سريع للمقدار بالصفحات
+        document.querySelectorAll('[data-pages]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var pages = document.getElementById('pages');
+                pages.value = btn.dataset.pages;
+                pages.dispatchEvent(new Event('input'));
+            });
+        });
         var score = document.getElementById('score');
         if (score) {
             var label = document.getElementById('grade-preview');

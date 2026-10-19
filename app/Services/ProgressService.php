@@ -40,17 +40,6 @@ class ProgressService
         })->sortBy(fn ($row) => $row['surah']->id)->values();
     }
 
-    public function totalMemorizedAyahs(Student $student): int
-    {
-        return (int) $this->surahProgress($student)->sum('memorized');
-    }
-
-    /** Percentage of the whole Quran (6236 ayahs). */
-    public function quranPercent(Student $student): float
-    {
-        return round($this->totalMemorizedAyahs($student) / 6236 * 100, 2);
-    }
-
     private function uniqueAyahs(Collection $rows, int $max): int
     {
         $covered = [];
@@ -63,10 +52,24 @@ class ProgressService
         return count($covered);
     }
 
-    /** Ayahs memorized (new, passing) per student for a list of records in a period. */
-    public static function newAyahsIn(Collection $records, int $pass): int
+    /**
+     * Pages of passing new memorization in a list of records. Amounts are measured
+     * in pages, not ayahs, since ayah length differs widely between surahs.
+     */
+    public static function newPagesIn(Collection $records, int $pass): float
     {
-        return (int) $records->where('type', 'new')->where('score', '>=', $pass)
-            ->sum(fn (MemorizationRecord $r) => $r->ayahCount());
+        return (float) $records->where('type', 'new')->where('score', '>=', $pass)->sum('pages');
+    }
+
+    /** Pages of passing new memorization over all of the student's records. */
+    public function memorizedPages(Student $student): float
+    {
+        return (float) $student->memorizationRecords()->where('type', 'new')->where('score', '>=', $this->passScore())->sum('pages');
+    }
+
+    /** Share of the Mushaf (604 pages) memorized, capped at 100. */
+    public function quranPercent(Student $student): float
+    {
+        return min(100, round($this->memorizedPages($student) / 604 * 100, 1));
     }
 }

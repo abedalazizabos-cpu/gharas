@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\User;
 use App\Services\ProgressService;
 use App\Services\ReportService;
+use App\Support\Pages;
 use App\Support\PdfExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -34,14 +35,14 @@ class ReportController extends Controller
 
         if ($request->query('export') === 'pdf') {
             return PdfExport::download('تقرير-المركز.pdf', 'التقرير الإجمالي للمركز', $this->periodLabel($from, $to), [[
-                'title' => '', 'headers' => ['الحلقة', 'المحفظ', 'عدد الطلاب', 'نسبة الحضور %', 'آيات حفظ جديد', 'آيات مراجعة', 'جلسات التسميع', 'متوسط الدرجة'],
-                'rows' => $rows->map(fn ($r) => [$r['circle']->name, $r['circle']->teacher?->name ?? '—', $r['students'], $r['attendance_rate'] ?? '—', $r['new_ayahs'], $r['revision_ayahs'], $r['sessions'], $r['avg_score'] ? round($r['avg_score'], 1) : '—']),
+                'title' => '', 'headers' => ['الحلقة', 'المحفظ', 'عدد الطلاب', 'نسبة الحضور %', 'صفحات حفظ جديد', 'صفحات مراجعة', 'جلسات التسميع', 'متوسط الدرجة'],
+                'rows' => $rows->map(fn ($r) => [$r['circle']->name, $r['circle']->teacher?->name ?? '—', $r['students'], $r['attendance_rate'] ?? '—', Pages::num($r['new_pages']), Pages::num($r['revision_pages']), $r['sessions'], $r['avg_score'] ? round($r['avg_score'], 1) : '—']),
                 'text_cols' => [0, 1],
             ]]);
         }
 
         $all = $rows->pipe(fn ($c) => [
-            'students' => $c->sum('students'), 'new_ayahs' => $c->sum('new_ayahs'), 'revision_ayahs' => $c->sum('revision_ayahs'), 'sessions' => $c->sum('sessions'),
+            'students' => $c->sum('students'), 'new_pages' => $c->sum('new_pages'), 'revision_pages' => $c->sum('revision_pages'), 'sessions' => $c->sum('sessions'),
             'attendance_rate' => app(\App\Services\StatsService::class)->rate([
                 'present' => $c->sum('attendance.present'), 'late' => $c->sum('attendance.late'),
                 'absent' => $c->sum('attendance.absent'), 'excused' => $c->sum('attendance.excused'),
@@ -90,11 +91,11 @@ class ReportController extends Controller
 
         if ($request->query('export') === 'pdf') {
             $masked = $rows->first() && $rows->first()['student']->student_number === null;
-            $headers = ['الاسم', 'حاضر', 'متأخر', 'غائب', 'بعذر', 'نسبة الحضور %', 'آيات حفظ جديد', 'آيات مراجعة', 'متوسط الدرجة', 'متوسط التقييم %'];
+            $headers = ['الاسم', 'حاضر', 'متأخر', 'غائب', 'بعذر', 'نسبة الحضور %', 'صفحات حفظ جديد', 'صفحات مراجعة', 'متوسط الدرجة', 'متوسط التقييم %'];
 
             return PdfExport::download($file.'.pdf', $title, $this->periodLabel($from, $to), [[
                 'title' => '', 'headers' => $masked ? $headers : array_merge(['رقم الطالب'], $headers),
-                'rows' => $rows->map(fn ($r) => array_merge($masked ? [] : [$r['student']->student_number], [$r['student']->full_name, $r['attendance']['present'], $r['attendance']['late'], $r['attendance']['absent'], $r['attendance']['excused'], $r['attendance_rate'] ?? '—', $r['new_ayahs'], $r['revision_ayahs'], $r['avg_score'] ?? '—', $r['avg_assessment'] ? round($r['avg_assessment'], 1) : '—'])),
+                'rows' => $rows->map(fn ($r) => array_merge($masked ? [] : [$r['student']->student_number], [$r['student']->full_name, $r['attendance']['present'], $r['attendance']['late'], $r['attendance']['absent'], $r['attendance']['excused'], $r['attendance_rate'] ?? '—', Pages::num($r['new_pages']), Pages::num($r['revision_pages']), $r['avg_score'] ?? '—', $r['avg_assessment'] ? round($r['avg_assessment'], 1) : '—'])),
                 'text_cols' => [$masked ? 0 : 1],
             ]]);
         }

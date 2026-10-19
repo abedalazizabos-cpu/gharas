@@ -55,8 +55,8 @@ class ReportService
                 'student' => $student,
                 'attendance' => $counts,
                 'attendance_rate' => $this->stats->rate($counts),
-                'new_ayahs' => ProgressService::newAyahsIn($mem, $pass),
-                'revision_ayahs' => (int) $mem->whereIn('type', ['revision', 'consolidation'])->sum(fn ($r) => $r->ayahCount()),
+                'new_pages' => ProgressService::newPagesIn($mem, $pass),
+                'revision_pages' => (float) $mem->whereIn('type', ['revision', 'consolidation'])->sum('pages'),
                 'sessions' => $mem->count(),
                 'avg_score' => $mem->count() ? round($mem->avg('score'), 1) : null,
                 'avg_assessment' => ($assessments[$student->id] ?? collect())->avg('percentage'),
@@ -74,8 +74,8 @@ class ReportService
         return [
             'attendance' => $counts,
             'attendance_rate' => $this->stats->rate($counts),
-            'new_ayahs' => $rows->sum('new_ayahs'),
-            'revision_ayahs' => $rows->sum('revision_ayahs'),
+            'new_pages' => $rows->sum('new_pages'),
+            'revision_pages' => $rows->sum('revision_pages'),
             'sessions' => $rows->sum('sessions'),
             'avg_score' => $rows->whereNotNull('avg_score')->avg('avg_score'),
         ];

@@ -297,6 +297,7 @@ class DemoSeeder extends Seeder
             'recorded_on' => $day->toDateString(), 'type' => $type, 'surah_id' => $surahId,
             'from_ayah' => $from, 'to_ayah' => $to, 'score' => $score, 'mistakes_count' => max(0, intdiv(100 - $score, 8)),
             'notes' => $comments[mt_rand(0, count($comments) - 1)], 'recommendations' => $recs[mt_rand(0, count($recs) - 1)],
+            'pages' => $type === 'new' ? [0.25, 0.5, 0.5, 0.75, 1][mt_rand(0, 4)] : [0.5, 1, 1, 2][mt_rand(0, 3)],
             'shared_with_parent' => mt_rand(0, 9) > 0,
         ]);
     }

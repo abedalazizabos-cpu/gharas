@@ -3,7 +3,7 @@
 @section('content')
 @php
     $attChart = ['type' => 'line', 'data' => ['labels' => $attendanceTrend['labels'], 'datasets' => [['label' => '%', 'data' => $attendanceTrend['values'], 'borderColor' => '#1b6b50', 'backgroundColor' => 'rgba(47,158,118,.15)', 'fill' => true, 'tension' => .35, 'spanGaps' => true]]], 'options' => ['plugins' => ['legend' => ['display' => false]], 'scales' => ['y' => ['min' => 0, 'max' => 100]]]];
-    $memChart = ['type' => 'bar', 'data' => ['labels' => $memorizationTrend['labels'], 'datasets' => [['label' => 'آيات', 'data' => $memorizationTrend['values'], 'backgroundColor' => '#c9a24a', 'borderRadius' => 6]]], 'options' => ['plugins' => ['legend' => ['display' => false]]]];
+    $memChart = ['type' => 'bar', 'data' => ['labels' => $memorizationTrend['labels'], 'datasets' => [['label' => 'صفحات', 'data' => $memorizationTrend['values'], 'backgroundColor' => '#c9a24a', 'borderRadius' => 6]]], 'options' => ['plugins' => ['legend' => ['display' => false]]]];
 @endphp
 <x-page-header :title="'مرحباً، '.auth()->user()->name">
     @if (auth()->user()->hasPermission('teacher.memorization'))<a href="{{ route('teacher.memorization.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> تسجيل تسميع</a>@endif
@@ -59,7 +59,7 @@
             <div class="card-body"><canvas height="150" data-chart='@json($attChart)'></canvas></div></div>
     </div>
     <div class="col-lg-6">
-        <div class="card h-100"><div class="card-header">آيات الحفظ الجديد أسبوعياً</div>
+        <div class="card h-100"><div class="card-header">صفحات الحفظ الجديد أسبوعياً</div>
             <div class="card-body"><canvas height="150" data-chart='@json($memChart)'></canvas></div></div>
     </div>
 </div>

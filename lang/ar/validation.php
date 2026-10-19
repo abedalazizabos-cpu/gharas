@@ -46,6 +46,7 @@ return [
     ],
     'prohibited' => 'حقل :attribute غير مسموح به.',
     'regex' => 'صيغة :attribute غير صحيحة.',
+    'multiple_of' => 'يجب أن يكون :attribute من مضاعفات :value (ربع صفحة).',
     'required' => 'حقل :attribute مطلوب.',
     'required_without' => 'حقل :attribute مطلوب في حال عدم إدخال :values.',
     'string' => 'يجب أن يكون :attribute نصاً.',

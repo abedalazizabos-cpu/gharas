@@ -80,7 +80,7 @@
     <div class="card mb-3">
         <div class="card-header">إعدادات الحلقات والتقييم</div>
         <div class="card-body"><div class="row g-3">
-            <x-field name="pass_score" label="درجة اجتياز الحفظ الجديد" type="number" :value="$settings['pass_score']" required col="col-md-4" min="1" max="100" help="لا تُحتسب الآيات محفوظة إلا بهذه الدرجة فأكثر." />
+            <x-field name="pass_score" label="درجة اجتياز الحفظ الجديد" type="number" :value="$settings['pass_score']" required col="col-md-4" min="1" max="100" help="لا تُحتسب الصفحات محفوظة إلا بهذه الدرجة فأكثر." />
             <x-field name="teacher_edit_days" label="مدة سماح تعديل المحفظ لسجلاته (أيام)" type="number" :value="$settings['teacher_edit_days']" required col="col-md-4" min="0" max="60" />
             <div class="col-md-4 d-flex align-items-center">
                 <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="allow_capacity_override" value="1" id="aco" @checked(old('allow_capacity_override', $settings['allow_capacity_override']) == '1')><label class="form-check-label" for="aco">السماح للإدارة بتجاوز سعة الحلقة</label></div>

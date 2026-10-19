@@ -24,7 +24,7 @@ class DashboardController extends Controller
                 'student' => $child,
                 'attendance_rate' => $stats->rate($counts),
                 'absences' => $counts['absent'],
-                'memorized_ayahs' => $progress->totalMemorizedAyahs($child),
+                'memorized_pages' => $progress->memorizedPages($child),
                 'quran_percent' => $progress->quranPercent($child),
                 'last_record' => $last,
             ];

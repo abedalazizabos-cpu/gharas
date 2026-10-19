@@ -10,13 +10,13 @@
 <div class="row g-3 mb-3">
     <div class="col-6 col-lg-3"><x-stat-card icon="people" label="الطلاب النشطون" :value="$all['students']" /></div>
     <div class="col-6 col-lg-3"><x-stat-card icon="calendar-check" label="نسبة الحضور" :value="$all['attendance_rate'] !== null ? $all['attendance_rate'].'%' : '—'" color="blue" /></div>
-    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="آيات حفظ جديد (مجتازة)" :value="$all['new_ayahs']" color="gold" /></div>
+    <div class="col-6 col-lg-3"><x-stat-card icon="book" label="صفحات حفظ جديد (مجتازة)" :value="\App\Support\Pages::num($all['new_pages'])" color="gold" /></div>
     <div class="col-6 col-lg-3"><x-stat-card icon="journal-check" label="جلسات التسميع" :value="$all['sessions']" /></div>
 </div>
 <div class="card">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>الحلقة</th><th>المحفظ</th><th>الطلاب</th><th>حاضر</th><th>غائب</th><th>نسبة الحضور</th><th>حفظ جديد</th><th>مراجعة</th><th>متوسط الدرجة</th><th class="no-print"></th></tr></thead>
+            <thead><tr><th>الحلقة</th><th>المحفظ</th><th>الطلاب</th><th>حاضر</th><th>غائب</th><th>نسبة الحضور</th><th>حفظ جديد (صفحة)</th><th>مراجعة (صفحة)</th><th>متوسط الدرجة</th><th class="no-print"></th></tr></thead>
             <tbody>
             @forelse ($rows as $r)
                 <tr>
@@ -26,8 +26,8 @@
                     <td>{{ $r['attendance']['present'] + $r['attendance']['late'] }}</td>
                     <td>{{ $r['attendance']['absent'] + $r['attendance']['excused'] }}</td>
                     <td>{{ $r['attendance_rate'] !== null ? $r['attendance_rate'].'%' : '—' }}</td>
-                    <td>{{ $r['new_ayahs'] }}</td>
-                    <td>{{ $r['revision_ayahs'] }}</td>
+                    <td>{{ \App\Support\Pages::num($r['new_pages']) }}</td>
+                    <td>{{ \App\Support\Pages::num($r['revision_pages']) }}</td>
                     <td>{{ $r['avg_score'] ? round($r['avg_score'], 1) : '—' }}</td>
                     <td class="no-print"><a href="{{ route($area.'.reports.circle', [$r['circle'], 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}" class="btn btn-sm btn-outline-secondary">التفاصيل</a></td>
                 </tr>
