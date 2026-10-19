@@ -6,6 +6,7 @@ use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MemorizationRecord extends Model
@@ -63,6 +64,20 @@ class MemorizationRecord extends Model
             $score >= 60 => 'acceptable',
             default => 'weak',
         };
+    }
+
+    /** Parents who opened their child's page after this record was shared. */
+    public function parentViews(): HasMany
+    {
+        return $this->hasMany(MemorizationRecordView::class);
+    }
+
+    /** Whether parent views are tracked for this record (it was saved after tracking started). */
+    public function tracksParentViews(): bool
+    {
+        $since = Setting::get('parent_views_since');
+
+        return $since !== null && $this->created_at !== null && $this->created_at->gte($since);
     }
 
     public function student(): BelongsTo

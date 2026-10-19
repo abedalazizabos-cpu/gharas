@@ -22,13 +22,18 @@
                 <dt class="col-5">آخر دخول</dt><dd class="col-7">{{ $parent->last_login_at?->diffForHumans() ?? 'لم يدخل بعد' }}</dd>
             </dl>
         </div></div>
+        <div class="card mt-3"><div class="card-body">
+            <h6 class="fw-bold mb-2"><i class="bi bi-eye ms-1 text-success"></i> نسبة متابعة الأبناء</h6>
+            @include('shared._follow-rate', ['rate' => $follow['overall'], 'bar' => true])
+            <p class="small text-muted mt-2 mb-0">نسبة السجلات اليومية التي اطّلع عليها خلال آخر {{ \App\Services\ParentFollowService::WINDOW_DAYS }} يوماً. يُحسب السجل مُطّلعاً عليه عندما يفتح ولي الأمر صفحة ابنه.</p>
+        </div></div>
     </div>
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header">الأبناء المرتبطون ({{ $parent->children->count() }})</div>
             <div class="table-responsive">
                 <table class="table mb-0">
-                    <thead><tr><th>الطالب</th><th>الصلة</th><th>الحلقة</th><th>المحفظ</th><th>الحالة</th></tr></thead>
+                    <thead><tr><th>الطالب</th><th>الصلة</th><th>الحلقة</th><th>المحفظ</th><th>المتابعة</th><th>الحالة</th></tr></thead>
                     <tbody>
                     @forelse ($parent->children as $c)
                         <tr>
@@ -36,10 +41,11 @@
                             <td>{{ ['father' => 'الأب', 'mother' => 'الأم', 'guardian' => 'ولي آخر'][$c->pivot->relationship] ?? '' }}</td>
                             <td>{{ $c->circle?->name ?? '—' }}</td>
                             <td>{{ $c->circle?->teacher?->name ?? '—' }}</td>
+                            <td>@include('shared._follow-rate', ['rate' => $follow['children'][$c->id] ?? ['seen' => 0, 'total' => 0, 'percent' => null]])</td>
                             <td><x-status-badge :status="$c->status" :label="$c->statusLabel()" /></td>
                         </tr>
                     @empty
-                        <tr><td colspan="5"><x-empty message="لا يوجد أبناء مرتبطون بهذا الحساب." /></td></tr>
+                        <tr><td colspan="6"><x-empty message="لا يوجد أبناء مرتبطون بهذا الحساب." /></td></tr>
                     @endforelse
                     </tbody>
                 </table>

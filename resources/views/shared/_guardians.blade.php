@@ -6,6 +6,7 @@
 @endif
 @php($canEdit = $prefix === 'admin' || auth()->user()->hasPermission('teacher.students.edit'))
 @php($canPassword = $prefix === 'admin' || auth()->user()->hasPermission('teacher.guardian.password'))
+@php($followRates = app(\App\Services\ParentFollowService::class)->rates($student->parents->pluck('id')))
 <div class="card mb-3" id="guardians">
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
         <span class="fw-bold"><i class="bi bi-people ms-1"></i> ولي الأمر</span>
@@ -13,17 +14,18 @@
     </div>
     <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
-            <thead><tr><th>الاسم</th><th>الجوال (اسم الدخول)</th><th>صلة القرابة</th><th class="text-end">إجراءات</th></tr></thead>
+            <thead><tr><th>الاسم</th><th>الجوال (اسم الدخول)</th><th>صلة القرابة</th><th>نسبة المتابعة</th><th class="text-end">إجراءات</th></tr></thead>
             <tbody>
             @forelse ($student->parents as $p)
                 <tr>
                     <td class="fw-semibold">{{ $p->name }}</td>
                     <td dir="ltr" class="text-end">{{ $p->phone }}</td>
                     <td>{{ ['father' => 'الأب', 'mother' => 'الأم', 'guardian' => 'ولي أمر آخر'][$p->pivot->relationship ?? ''] ?? '—' }}</td>
+                    <td>@include('shared._follow-rate', ['rate' => $followRates[$p->id] ?? ['seen' => 0, 'total' => 0, 'percent' => null]])</td>
                     <td class="text-end">@if ($canEdit)<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#guardian-{{ $p->id }}"><i class="bi bi-pencil"></i> {{ $canPassword ? 'البيانات وكلمة السر' : 'تعديل البيانات' }}</button>@endif</td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="text-danger small">لا يوجد ولي أمر مرتبط. استخدم «ربط ولي أمر».</td></tr>
+                <tr><td colspan="5" class="text-danger small">لا يوجد ولي أمر مرتبط. استخدم «ربط ولي أمر».</td></tr>
             @endforelse
             </tbody>
         </table>
