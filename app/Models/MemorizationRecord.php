@@ -72,14 +72,6 @@ class MemorizationRecord extends Model
         return $this->hasMany(MemorizationRecordView::class);
     }
 
-    /** Whether parent views are tracked for this record (it was saved after tracking started). */
-    public function tracksParentViews(): bool
-    {
-        $since = Setting::get('parent_views_since');
-
-        return $since !== null && $this->created_at !== null && $this->created_at->gte($since);
-    }
-
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class)->withTrashed();

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\MemorizationRecord;
-use App\Models\Setting;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -38,13 +37,10 @@ class ParentFollowService
         );
     }
 
-    /** Start of the counting window: the last 30 days, never before tracking began. */
+    /** Start of the counting window: the last 30 days. */
     public function windowStart(): Carbon
     {
-        $start = now()->subDays(self::WINDOW_DAYS);
-        $since = Setting::get('parent_views_since');
-
-        return $since && Carbon::parse($since)->gt($start) ? Carbon::parse($since) : $start;
+        return now()->subDays(self::WINDOW_DAYS);
     }
 
     /**

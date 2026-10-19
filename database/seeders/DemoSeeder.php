@@ -252,6 +252,28 @@ class DemoSeeder extends Seeder
         $m = new Message(['recipient_id' => $child->circle->teacher_id, 'student_id' => $child->id, 'subject' => 'استفسار عن خطة الحفظ', 'body' => 'السلام عليكم شيخنا، أرجو إفادتي عن خطة الحفظ المقترحة لابني هذا الشهر. وجزاكم الله خيراً.']);
         $m->sender_id = $parents[0]->id;
         $m->save();
+
+        $this->parentViews($parents);
+    }
+
+    /** Some parents follow closely, some rarely, so follow-up rates and «✓ تم» marks vary in the demo. */
+    private function parentViews($parents): void
+    {
+        $rows = [];
+        foreach ($parents as $i => $parent) {
+            $rate = [100, 90, 75, 60, 40, 20, 0][$i % 7];
+            $records = MemorizationRecord::whereIn('student_id', $parent->children()->pluck('students.id'))
+                ->where('shared_with_parent', true)->orderBy('recorded_on')->get(['id', 'recorded_on']);
+            foreach ($records as $record) {
+                if (mt_rand(1, 100) <= $rate) {
+                    $seenAt = $record->recorded_on->copy()->setTime(mt_rand(17, 22), mt_rand(0, 59));
+                    $rows[] = ['memorization_record_id' => $record->id, 'parent_id' => $parent->id, 'seen_at' => $seenAt->min(now())->toDateTimeString()];
+                }
+            }
+        }
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('memorization_record_views')->insertOrIgnore($chunk);
+        }
     }
 
     private function account(string $name, ?string $email, string $role, string $phone): User
