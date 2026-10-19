@@ -79,11 +79,14 @@ class WeeklyArchiveService
         return $this->pdf($circle, $this->mask($this->week($start, $circle)), false);
     }
 
-    public function archive(Circle $circle, Carbon $start): WeeklyArchive
+    /** Saves the week's row; the PDF is written now, or on first download when $withFile is false. */
+    public function archive(Circle $circle, Carbon $start, bool $withFile = true): WeeklyArchive
     {
         $w = $this->week($start, $circle);
         $path = 'archives/'.$start->format('Y').'/'.$start->format('m').'/week-'.$start->toDateString().'-circle-'.$circle->id.'.pdf';
-        Storage::disk('local')->put($path, $this->pdf($circle, $w));
+        if ($withFile) {
+            Storage::disk('local')->put($path, $this->pdf($circle, $w));
+        }
 
         return WeeklyArchive::updateOrCreate(
             ['circle_id' => $circle->id, 'week_start' => $start->toDateString()],
@@ -92,10 +95,11 @@ class WeeklyArchiveService
     }
 
     /**
-     * Saves every finished week that has activity and no file yet. Runs from the scheduler and,
-     * so it works without one (e.g. on Windows), whenever the archive page is opened.
+     * Saves every finished week that has activity and no row yet. Runs from the scheduler and,
+     * so it works without one (e.g. on Windows), whenever the archive page is opened. The page
+     * passes $withFiles = false so it opens at once: each PDF is then built on first download.
      */
-    public function archiveMissing(): int
+    public function archiveMissing(bool $withFiles = true): int
     {
         $thisWeek = self::weekStart();
         $first = collect([
@@ -114,7 +118,7 @@ class WeeklyArchiveService
             }
             $circle = Circle::withTrashed()->find($circleId);
             if ($circle) {
-                $this->archive($circle, Carbon::parse($week));
+                $this->archive($circle, Carbon::parse($week), $withFiles);
                 $count++;
             }
         }

@@ -6,7 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('vendor/bootstrap/bootstrap.rtl.min.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
-<link rel="stylesheet" href="{{ asset('css/gharas.css') }}?v=3">
+<link rel="stylesheet" href="{{ asset('css/gharas.css') }}?v={{ filemtime(public_path('css/gharas.css')) }}">
 @php($themeColor = \App\Models\Setting::get('theme_color'))
 @if ($themeColor && preg_match('/^#[0-9a-fA-F]{6}$/', $themeColor) && strtolower($themeColor) !== '#1b6b50')
     {{-- Main colour chosen by the super admin; darker/lighter shades are mixed from it. --}}

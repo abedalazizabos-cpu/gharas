@@ -34,7 +34,7 @@ class ArchiveController extends Controller
 
     public function index(Request $request)
     {
-        $this->weeks->archiveMissing();
+        $this->weeks->archiveMissing(withFiles: false);
         $circles = $this->circles($request->user());
         $archives = WeeklyArchive::with('circle.teacher')
             ->whereIn('circle_id', $circles->pluck('id'))

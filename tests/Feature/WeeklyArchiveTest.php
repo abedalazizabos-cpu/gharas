@@ -36,14 +36,16 @@ class WeeklyArchiveTest extends TestCase
         $archive = WeeklyArchive::firstOrFail();
         $this->assertSame(WeeklyArchiveService::weekStart($lastWeek)->toDateString(), $archive->week_start->toDateString());
         $this->assertSame(1, $archive->records_count);
+        $this->assertSame(1, WeeklyArchive::count()); // the current week is not archived until it ends
+        // The page opens at once; the PDF is built on first download.
+        Storage::disk('local')->assertMissing($archive->path);
+
+        $this->actingAs($teacher)->get(route('teacher.archive.download', $archive))->assertOk()->assertDownload();
         Storage::disk('local')->assertExists($archive->path);
         $this->assertStringEndsWith('.pdf', $archive->path);
         $this->assertStringStartsWith('%PDF', Storage::disk('local')->get($archive->path));
         $this->assertStringContainsString('سجل الأسبوع الماضي', PdfExport::lastText());
         $this->assertStringNotContainsString('سجل هذا الأسبوع', PdfExport::lastText());
-        $this->assertSame(1, WeeklyArchive::count()); // the current week is not archived until it ends
-
-        $this->actingAs($teacher)->get(route('teacher.archive.download', $archive))->assertOk()->assertDownload();
         $this->actingAs($this->teacher())->get(route('teacher.archive.download', $archive))->assertForbidden();
     }
 
