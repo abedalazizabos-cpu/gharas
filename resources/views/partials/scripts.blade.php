@@ -7,7 +7,7 @@
         <script id="reminders-data" type="application/json">@json($reminderCfg)</script>
     @endif
 @endauth
-<script src="{{ asset('js/gharas.js') }}?v=3"></script>
+<script src="{{ asset('js/gharas.js') }}?v={{ filemtime(public_path('js/gharas.js')) }}"></script>
 @if (session('success') || session('error'))
     <div id="flash-data" data-type="{{ session('error') ? 'error' : 'success' }}" data-message="{{ session('error') ?? session('success') }}" hidden></div>
 @endif

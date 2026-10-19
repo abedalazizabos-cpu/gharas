@@ -106,9 +106,12 @@ class Setting extends Model
             ->values()->all();
     }
 
+    /** Settings already read in this request, so each page reads the cache once rather than once per setting. */
+    private static ?array $loaded = null;
+
     public static function get(string $key, ?string $default = null): ?string
     {
-        $all = Cache::rememberForever('settings.all', fn () => static::query()->pluck('value', 'key')->all());
+        $all = static::$loaded ??= Cache::rememberForever('settings.all', fn () => static::query()->pluck('value', 'key')->all());
 
         return $all[$key] ?? $default ?? (self::DEFAULTS[$key] ?? null);
     }
@@ -117,5 +120,6 @@ class Setting extends Model
     {
         static::query()->updateOrCreate(['key' => $key], ['value' => $value]);
         Cache::forget('settings.all');
+        static::$loaded = null;
     }
 }

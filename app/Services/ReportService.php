@@ -29,19 +29,20 @@ class ReportService
             ->whereIn('student_id', $ids)
             ->whereHas('session', fn ($q) => $q->whereBetween('session_date', [$from->toDateString(), $to->toDateString()])
                 ->when($circleIds !== null, fn ($q) => $q->whereIn('circle_id', $circleIds)))
-            ->get(['student_id', 'status'])->groupBy('student_id');
+            ->toBase()->get(['student_id', 'status'])->groupBy('student_id');
 
+        // Plain rows (toBase) rather than models: reports sum thousands of records.
         $memorization = MemorizationRecord::query()
             ->whereIn('student_id', $ids)
             ->whereBetween('recorded_on', [$from->toDateString(), $to->toDateString()])
             ->when($circleIds !== null, fn ($q) => $q->whereIn('circle_id', $circleIds))
-            ->get()->groupBy('student_id');
+            ->toBase()->get(['student_id', 'type', 'score', 'pages'])->groupBy('student_id');
 
         $assessments = Assessment::query()
             ->whereIn('student_id', $ids)
             ->whereBetween('assessed_on', [$from->toDateString(), $to->toDateString()])
             ->when($circleIds !== null, fn ($q) => $q->whereIn('circle_id', $circleIds))
-            ->get(['student_id', 'percentage'])->groupBy('student_id');
+            ->toBase()->get(['student_id', 'percentage'])->groupBy('student_id');
 
         return $students->map(function (Student $student) use ($attendance, $memorization, $assessments, $pass) {
             $att = ($attendance[$student->id] ?? collect())->countBy('status')->all();

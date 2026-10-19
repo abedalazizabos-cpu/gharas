@@ -25,7 +25,7 @@
     </div>
 </form>
 
-@php($sortLink = fn ($col, $label) => '<a class="text-reset text-decoration-none" href="'.request()->fullUrlWithQuery(['sort' => $col, 'dir' => request('sort') === $col && request('dir') !== 'desc' ? 'desc' : 'asc']).'">'.$label.(request('sort', 'full_name') === $col ? (request('dir') === 'desc' ? ' <i class="bi bi-sort-down"></i>' : ' <i class="bi bi-sort-up"></i>') : '').'</a>')
+@php($sortLink = fn ($col, $label) => '<a class="text-reset text-decoration-none" href="'.e(request()->fullUrlWithQuery(['sort' => $col, 'dir' => request('sort') === $col && request('dir') !== 'desc' ? 'desc' : 'asc'])).'">'.$label.(request('sort', 'full_name') === $col ? (request('dir') === 'desc' ? ' <i class="bi bi-sort-down"></i>' : ' <i class="bi bi-sort-up"></i>') : '').'</a>')
 <div class="card">
     <div class="table-responsive">
         <table class="table table-hover mb-0">

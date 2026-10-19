@@ -105,19 +105,23 @@ class StatsService
     {
         $pass = (int) \App\Models\Setting::get('pass_score', '70');
         $start = now()->startOfWeek(Carbon::SATURDAY)->subWeeks($weeks - 1);
-        $records = MemorizationRecord::query()
+        // Summed per day in SQL, then bucketed into weeks here: a few dozen rows instead of every record.
+        $perDay = MemorizationRecord::query()
             ->where('type', 'new')->where('score', '>=', $pass)
             ->where('recorded_on', '>=', $start->toDateString())
             ->when($circleIds !== null, fn ($q) => $q->whereIn('circle_id', $circleIds))
-            ->get(['recorded_on', 'pages']);
+            ->groupBy('recorded_on')->selectRaw('recorded_on as d, SUM(pages) as p')->pluck('p', 'd');
 
         $labels = [];
-        $values = [];
+        $values = array_fill(0, $weeks, 0.0);
         for ($i = 0; $i < $weeks; $i++) {
-            $ws = $start->copy()->addWeeks($i);
-            $we = $ws->copy()->addDays(6);
-            $labels[] = $ws->format('m/d');
-            $values[] = (float) $records->filter(fn ($r) => $r->recorded_on->between($ws, $we->endOfDay()))->sum('pages');
+            $labels[] = $start->copy()->addWeeks($i)->format('m/d');
+        }
+        foreach ($perDay as $day => $pages) {
+            $i = intdiv((int) $start->diffInDays(Carbon::parse($day)), 7);
+            if ($i >= 0 && $i < $weeks) {
+                $values[$i] += (float) $pages;
+            }
         }
 
         return ['labels' => $labels, 'values' => $values];
