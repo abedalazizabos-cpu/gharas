@@ -34,6 +34,7 @@ class AuditPresenter
         'circle.create' => ['إنشاء حلقة', 'success'],
         'circle.update' => ['تعديل حلقة', 'primary'],
         'circle.delete' => ['حذف حلقة', 'danger'],
+        'circle.remove_all' => ['حذف شامل لحلقة', 'danger'],
         'circle.teacher' => ['تغيير محفظ الحلقة', 'info'],
         'teacher.reassign' => ['نقل حلقات محفظ', 'info'],
         'teacher.warn' => ['تنبيه أو إنذار لمحفظ', 'warning'],
@@ -51,6 +52,9 @@ class AuditPresenter
         'announcement.delete' => ['حذف إعلان', 'danger'],
         'settings.update' => ['تعديل الإعدادات', 'primary'],
         'system.backup' => ['نسخة احتياطية', 'secondary'],
+        'system.wipe' => ['حذف بيانات التجربة', 'danger'],
+        'trash.restore' => ['استرجاع من سلة المحذوفات', 'success'],
+        'trash.purge' => ['حذف نهائي', 'danger'],
         'access.roles' => ['تعديل صلاحيات الأدوار', 'warning'],
         'access.user' => ['تعديل صلاحيات مستخدم', 'warning'],
     ];
@@ -61,7 +65,7 @@ class AuditPresenter
         'guardian' => 'أولياء الأمور (من صفحة الطالب)', 'circle' => 'الحلقات', 'teacher' => 'المحفظون',
         'memorization' => 'سجلات التسميع', 'attendance' => 'الحضور', 'assessment' => 'التقييمات',
         'criterion' => 'معايير التقييم', 'announcement' => 'الإعلانات', 'settings' => 'الإعدادات',
-        'system' => 'النظام', 'access' => 'الصلاحيات',
+        'system' => 'النظام', 'access' => 'الصلاحيات', 'trash' => 'سلة المحذوفات',
     ];
 
     private const FIELDS = [
@@ -84,6 +88,9 @@ class AuditPresenter
         'brand_title' => 'العنوان في الشعار', 'brand_subtitle' => 'العنوان الفرعي', 'reminders_enabled' => 'التذكيرات',
         'reminders_interval' => 'فترة التذكير (دقائق)', 'reminders_text' => 'نصوص التذكير', 'contact_phone' => 'هاتف التواصل',
         'contact_email' => 'بريد التواصل', 'contact_address' => 'العنوان',
+        'records' => 'سجلات التسميع المحذوفة', 'assessments' => 'التقييمات المحذوفة', 'sessions' => 'أيام الحضور المحذوفة',
+        'students' => 'الطلاب المحذوفون', 'parents' => 'أولياء الأمور المحذوفون', 'teacher' => 'حساب المحفظ المحذوف',
+        'circles' => 'الحلقات المحذوفة', 'accounts' => 'الحسابات المحذوفة', 'count' => 'عدد العناصر',
     ];
 
     public static function action(string $code): string
@@ -158,6 +165,7 @@ class AuditPresenter
             'time_type' => Circle::TIME_TYPES[$value] ?? $value,
             'prayer' => Circle::PRAYERS[$value][0] ?? $value,
             'pages' => MemorizationRecord::formatPages($value),
+            'teacher' => $value ? 'نعم' : 'لا',
             'surah_id' => Surah::find($value)?->name ?? (string) $value,
             'circle_id' => Circle::withTrashed()->find($value)?->name ?? (string) $value,
             'student_id' => Student::withTrashed()->find($value)?->full_name ?? (string) $value,

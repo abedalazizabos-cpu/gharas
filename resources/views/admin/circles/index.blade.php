@@ -2,6 +2,9 @@
 @section('title', 'الحلقات')
 @section('content')
 <x-page-header title="إدارة الحلقات" :crumbs="['الحلقات']">
+    @if (auth()->user()->isSuperAdmin())
+        <a href="{{ route('admin.trash.index') }}" class="btn btn-outline-danger"><i class="bi bi-trash3"></i> سلة المحذوفات</a>
+    @endif
     <a href="{{ route('admin.circles.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> إضافة حلقة</a>
 </x-page-header>
 <form method="GET" class="filter-bar row g-2" data-no-loading>

@@ -68,6 +68,7 @@ class StatsService
         $from = now()->subDays($days - 1)->startOfDay();
         $rows = AttendanceRecord::query()
             ->join('circle_sessions', 'circle_sessions.id', '=', 'attendance_records.circle_session_id')
+            ->whereNull('circle_sessions.deleted_at')
             ->where('circle_sessions.session_date', '>=', $from->toDateString())
             ->when($circleIds !== null, fn ($q) => $q->whereIn('circle_sessions.circle_id', $circleIds))
             ->selectRaw('circle_sessions.session_date as d, attendance_records.status as s, COUNT(*) as c')

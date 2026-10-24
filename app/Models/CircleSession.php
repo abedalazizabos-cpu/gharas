@@ -6,9 +6,12 @@ use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CircleSession extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = ['circle_id', 'teacher_id', 'session_date', 'start_time', 'notes'];
 
     protected function casts(): array
