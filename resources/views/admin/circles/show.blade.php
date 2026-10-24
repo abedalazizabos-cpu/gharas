@@ -5,7 +5,11 @@
     <a href="{{ route('admin.attendance.create', $circle) }}" class="btn btn-success"><i class="bi bi-calendar-check"></i> تسجيل الحضور</a>
     <a href="{{ route('admin.reports.circle', $circle) }}" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-bar-graph"></i> تقرير الحلقة</a>
     <a href="{{ route('admin.circles.edit', $circle) }}" class="btn btn-primary"><i class="bi bi-pencil"></i> تعديل</a>
-    <x-delete-form :action="route('admin.circles.destroy', $circle)" class="btn btn-outline-danger" message="سيتم حذف الحلقة مع الاحتفاظ بسجلاتها. لا يمكن حذف حلقة بها طلاب." />
+    @if (auth()->user()->isSuperAdmin())
+        <a href="{{ route('admin.trash.circle', $circle) }}" class="btn btn-danger"><i class="bi bi-trash3"></i> حذف شامل</a>
+    @else
+        <x-delete-form :action="route('admin.circles.destroy', $circle)" class="btn btn-outline-danger" message="سيتم حذف الحلقة مع الاحتفاظ بسجلاتها. لا يمكن حذف حلقة بها طلاب." />
+    @endif
 </x-page-header>
 <div class="row g-3 mb-3">
     <div class="col-6 col-lg-3"><x-stat-card icon="person-badge" label="المحفظ" :value="$circle->teacher?->name ?? '—'" /></div>

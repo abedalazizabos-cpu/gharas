@@ -72,6 +72,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::patch('parents/{parent}/status', [Admin\ParentController::class, 'status'])->name('parents.status');
         });
 
+        Route::patch('admins/{admin}/status', [Admin\AdminUserController::class, 'status'])->name('admins.status')->middleware('perm:admins.manage');
         Route::resource('admins', Admin\AdminUserController::class)->except('show')->parameters(['admins' => 'admin'])->middleware('perm:admins.manage');
         Route::resource('visitors', Admin\VisitorController::class)->except('show')->parameters(['visitors' => 'visitor'])->middleware('perm:visitors.manage');
 
@@ -126,6 +127,17 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::middleware('perm:contact.manage')->group(function () {
             Route::get('contact-messages', [Admin\ContactMessageController::class, 'index'])->name('contact.index');
             Route::delete('contact-messages/{contactMessage}', [Admin\ContactMessageController::class, 'destroy'])->name('contact.destroy');
+        });
+
+        // Super admin only: remove circles with everything in them, clear the trial data, and the trash.
+        Route::prefix('trash')->name('trash.')->middleware('role:superadmin')->group(function () {
+            Route::get('/', [Admin\TrashController::class, 'index'])->name('index');
+            Route::post('restore', [Admin\TrashController::class, 'restore'])->name('restore');
+            Route::delete('purge', [Admin\TrashController::class, 'purge'])->name('purge');
+            Route::delete('purge-all', [Admin\TrashController::class, 'purgeAll'])->name('purge-all');
+            Route::post('wipe', [Admin\TrashController::class, 'wipe'])->name('wipe');
+            Route::get('circles/{circle}', [Admin\TrashController::class, 'confirmCircle'])->name('circle');
+            Route::delete('circles/{circle}', [Admin\TrashController::class, 'removeCircle'])->name('circle.remove');
         });
 
         // Super admin only: roles and permissions of every user.

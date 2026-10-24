@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UserAccountRequest;
 use App\Models\User;
 use App\Services\AuditLogger;
+use Illuminate\Http\Request;
 
 /** Admin accounts can only be created here, by an existing admin. */
 class AdminUserController extends Controller
@@ -15,7 +16,9 @@ class AdminUserController extends Controller
 
     public function index()
     {
-        return view('admin.admins.index', ['admins' => User::role(User::ROLE_ADMIN)->orderBy('name')->paginate(15)]);
+        return view('admin.admins.index', [
+            'admins' => User::role(User::ROLE_ADMIN)->withCount('permissionRules')->orderBy('name')->paginate(15),
+        ]);
     }
 
     public function create()
@@ -47,6 +50,17 @@ class AdminUserController extends Controller
         $this->updateAccount($admin, $data);
 
         return redirect()->route('admin.admins.index')->with('success', 'تم تحديث حساب المدير بنجاح.');
+    }
+
+    /** Quick activate / suspend from the list. */
+    public function status(Request $request, User $admin)
+    {
+        $this->ensureRole($admin, User::ROLE_ADMIN);
+        if ($request->input('status') !== 'active' && User::admins()->active()->whereKeyNot($admin->id)->doesntExist()) {
+            return back()->with('error', 'يجب أن يبقى مدير نشط واحد على الأقل.');
+        }
+
+        return $this->toggleStatus($request, $admin);
     }
 
     public function destroy(User $admin)

@@ -25,5 +25,6 @@
         <div class="nav-section">المدير الأعلى</div>
         @include('partials.nav-link', ['route' => 'admin.access.roles', 'active' => 'admin.access.*', 'icon' => 'shield-check', 'label' => 'الأدوار والصلاحيات'])
         @include('partials.nav-link', ['route' => 'admin.settings.edit', 'icon' => 'gear', 'label' => 'الإعدادات'])
+        @include('partials.nav-link', ['route' => 'admin.trash.index', 'active' => 'admin.trash.*', 'icon' => 'trash3', 'label' => 'سلة المحذوفات والتفريغ'])
     @endif
 </nav>
