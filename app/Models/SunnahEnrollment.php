@@ -32,6 +32,11 @@ class SunnahEnrollment extends Model
         return $this->belongsTo(Student::class);
     }
 
+    public function certificate(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Certificate::class);
+    }
+
     public function scores(): HasMany
     {
         return $this->hasMany(SunnahScore::class);

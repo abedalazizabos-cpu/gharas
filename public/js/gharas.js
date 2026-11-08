@@ -72,6 +72,12 @@
                 updateAttendanceSummary();
             });
         });
+        // «تحديد الكل»: checks every box named in data-check-all
+        document.querySelectorAll('[data-check-all]').forEach(function (box) {
+            box.addEventListener('change', function () {
+                document.querySelectorAll(box.dataset.checkAll).forEach(function (c) { c.checked = box.checked; });
+            });
+        });
         document.querySelectorAll('.att-option input').forEach(function (r) { r.addEventListener('change', updateAttendanceSummary); });
         updateAttendanceSummary();
 

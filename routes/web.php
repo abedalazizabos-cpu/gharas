@@ -39,6 +39,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
+    Route::get('/certificates/{certificate}/pdf', [\App\Http\Controllers\CertificateController::class, 'download'])->name('certificates.download');
+
     // Parent <-> teacher messaging
     Route::middleware(['role:teacher,parent', 'perm:messages.send'])->group(function () {
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
@@ -135,6 +137,15 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('{course}/posts/{post}/grades', [Admin\SunnahCourseController::class, 'homework'])->name('homework');
             Route::post('{course}/posts/{post}/grades', [Admin\SunnahCourseController::class, 'storeHomework'])->name('homework.store');
             Route::delete('{course}/posts/{post}', [Admin\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
+        });
+
+        // Certificates: the admin writes the wording and issues each one.
+        Route::prefix('certificates')->name('certificates.')->middleware('perm:certificates.manage')->group(function () {
+            Route::get('/', [Admin\CertificateController::class, 'index'])->name('index');
+            Route::post('issue', [Admin\CertificateController::class, 'issue'])->name('issue');
+            Route::delete('{certificate}', [Admin\CertificateController::class, 'destroy'])->name('destroy');
+            Route::put('templates/{template}', [Admin\CertificateController::class, 'updateTemplate'])->name('templates.update');
+            Route::get('templates/{template}/preview', [Admin\CertificateController::class, 'preview'])->name('templates.preview');
         });
 
         Route::middleware('perm:reports.view')->group(function () {
@@ -248,6 +259,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::delete('{course}/posts/{post}', [Teacher\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
+        Route::get('certificates', [\App\Http\Controllers\CertificateController::class, 'teacher'])->name('certificates.index');
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');
     });
 

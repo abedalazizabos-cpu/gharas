@@ -65,11 +65,18 @@ class SunnahService
         $enrollments = SunnahEnrollment::where('sunnah_course_id', $course->id)->whereIn('id', array_keys($rows))->with(['student.parents', 'scores'])->get();
         $graded = 0;
         $newResults = collect();
+        $rates = $this->attendanceRates($course);
 
-        DB::transaction(function () use ($course, $criteria, $max, $enrollments, $rows, $evaluatedOn, $by, &$graded, $newResults) {
+        DB::transaction(function () use ($course, $criteria, $max, $enrollments, $rows, $evaluatedOn, $by, &$graded, $newResults, $rates) {
             foreach ($enrollments as $e) {
                 $input = $rows[$e->id] ?? [];
                 $scores = (array) ($input['scores'] ?? []);
+                // Rules that follow the attendance are filled from the real attendance, not typed.
+                foreach ($criteria->where('from_attendance', true) as $c) {
+                    if (isset($rates[$e->student_id])) {
+                        $scores[$c->id] = self::attendanceScore($c->max_score, $rates[$e->student_id]);
+                    }
+                }
                 $filled = $criteria->filter(fn ($c) => isset($scores[$c->id]) && $scores[$c->id] !== '' && $scores[$c->id] !== null);
                 $notes = isset($input['notes']) && trim((string) $input['notes']) !== '' ? trim((string) $input['notes']) : null;
 
@@ -139,7 +146,7 @@ class SunnahService
     public function forStudent(Student $student): Collection
     {
         return $student->sunnahEnrollments()->whereHas('course')
-            ->with(['course.teacher', 'course.criteria', 'scores'])
+            ->with(['course.teacher', 'course.criteria', 'scores', 'certificate'])
             ->get()->sortByDesc(fn ($e) => $e->course->starts_on?->toDateString() ?? $e->course->created_at?->toDateString())->values();
     }
 
@@ -257,6 +264,20 @@ class SunnahService
     }
 
     /** @return array{present: int, late: int, absent: int, excused: int, total: int, rate: ?float, rows: Collection} */
+    /** @return array<int, float> student_id => attendance rate (present or late), for students with attendance taken. */
+    public function attendanceRates(SunnahCourse $course): array
+    {
+        return SunnahAttendance::whereHas('session', fn ($q) => $q->where('sunnah_course_id', $course->id))
+            ->selectRaw("student_id, count(*) as total, sum(case when status in ('present', 'late') then 1 else 0 end) as came")
+            ->groupBy('student_id')->get()
+            ->mapWithKeys(fn ($r) => [(int) $r->student_id => $r->total ? round($r->came / $r->total * 100, 2) : 0.0])->all();
+    }
+
+    public static function attendanceScore(int $max, float $rate): int
+    {
+        return (int) round($max * $rate / 100);
+    }
+
     public function attendanceFor(SunnahCourse $course, int $studentId): array
     {
         $rows = SunnahAttendance::where('student_id', $studentId)

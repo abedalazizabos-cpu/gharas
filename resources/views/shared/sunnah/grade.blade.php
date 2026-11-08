@@ -11,7 +11,7 @@
     <div class="card-body pb-0">
         <div class="row g-3 align-items-end mb-2">
             <x-field name="evaluated_on" label="تاريخ التقييم" type="date" :value="now()->toDateString()" required col="col-md-3" :max="now()->toDateString()" />
-            <div class="col-md-9 small text-muted">أدخل درجات كل ضابط للطالب. يُرصد الطالب حين تكتمل كل درجاته، ويُترك الصف فارغاً لمن لم يُقيَّم بعد. درجة النجاح {{ $course->pass_score }}% من مجموع {{ $course->maxTotal() }}.</div>
+            <div class="col-md-9 small text-muted">أدخل درجات كل ضابط للطالب. يُرصد الطالب حين تكتمل كل درجاته، ويُترك الصف فارغاً لمن لم يُقيَّم بعد. درجة النجاح {{ $course->pass_score }}% من مجموع {{ $course->maxTotal() }}.@if ($course->criteria->contains("from_attendance", true)) الضابط المظلل يُحسب تلقائياً من حضور الطالب في لقاءات الدورة.@endif</div>
         </div>
         @if ($errors->any())<div class="alert alert-danger small">بعض الدرجات أكبر من الدرجة العظمى أو غير صحيحة. راجع الخانات المظللة.</div>@endif
     </div>
@@ -24,7 +24,11 @@
                 <tr>
                     <td><span class="fw-semibold">{{ $e->student->full_name }}</span><div class="small text-muted">{{ $e->student->circle?->name ?? 'بلا حلقة' }} · <span class="text-{{ $e->statusColor() }}">{{ $e->statusLabel() }}</span></div></td>
                     @foreach ($course->criteria as $c)
-                        <td><input type="number" name="rows[{{ $e->id }}][scores][{{ $c->id }}]" value="{{ old("rows.{$e->id}.scores.{$c->id}", $scores[$c->id]->score ?? null) }}" min="0" max="{{ $c->max_score }}" class="form-control form-control-sm text-center sheet-score @error("rows.{$e->id}.scores.{$c->id}") is-invalid @enderror"></td>
+                        @if ($c->from_attendance && isset($rates[$e->student_id]))
+                            <td title="محسوبة من الحضور: {{ round($rates[$e->student_id]) }}%"><input type="number" value="{{ \App\Services\SunnahService::attendanceScore($c->max_score, $rates[$e->student_id]) }}" class="form-control form-control-sm text-center sheet-score bg-light" readonly tabindex="-1"><div class="text-muted text-center" style="font-size:.7rem"><i class="bi bi-calendar-check"></i> حضور {{ round($rates[$e->student_id]) }}%</div></td>
+                        @else
+                            <td><input type="number" name="rows[{{ $e->id }}][scores][{{ $c->id }}]" value="{{ old("rows.{$e->id}.scores.{$c->id}", $scores[$c->id]->score ?? null) }}" min="0" max="{{ $c->max_score }}" class="form-control form-control-sm text-center sheet-score @error("rows.{$e->id}.scores.{$c->id}") is-invalid @enderror"></td>
+                        @endif
                     @endforeach
                     <td class="text-center fw-bold sheet-total">—</td>
                     <td><input name="rows[{{ $e->id }}][notes]" value="{{ old("rows.{$e->id}.notes", $e->notes) }}" class="form-control form-control-sm" maxlength="1000"></td>

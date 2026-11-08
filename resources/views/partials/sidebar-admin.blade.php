@@ -14,6 +14,7 @@
     @if ($u->hasPermission('assessments.manage'))@include('partials.nav-link', ['route' => 'admin.assessments.index', 'active' => 'admin.assessments.*', 'icon' => 'award', 'label' => 'التقييمات'])@endif
     @if ($u->hasPermission('quality.manage'))@include('partials.nav-link', ['route' => 'admin.quality.index', 'active' => 'admin.quality.*', 'icon' => 'patch-check', 'label' => 'لجنة الجودة والاختبارات'])@endif
     @if ($u->hasPermission('sunnah.manage'))@include('partials.nav-link', ['route' => 'admin.sunnah.index', 'active' => 'admin.sunnah.*', 'icon' => 'journal-bookmark', 'label' => 'قسم السنة والدورات'])@endif
+    @if ($u->hasPermission('certificates.manage'))@include('partials.nav-link', ['route' => 'admin.certificates.index', 'active' => 'admin.certificates.*', 'icon' => 'award-fill', 'label' => 'الشهادات'])@endif
     @if ($u->hasPermission('reports.view'))@include('partials.nav-link', ['route' => 'admin.reports.index', 'active' => 'admin.reports.*', 'icon' => 'bar-chart-line', 'label' => 'التقارير'])@endif
     <div class="nav-section">التواصل</div>
     @if ($u->hasPermission('announcements.manage'))@include('partials.nav-link', ['route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'megaphone', 'label' => 'الإعلانات'])@endif

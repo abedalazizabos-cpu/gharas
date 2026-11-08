@@ -32,12 +32,23 @@ class ReportController extends Controller
         [$from, $to] = $this->period($request);
         $circles = Circle::with(['teacher', 'students' => fn ($q) => $q->active()])->orderBy('name')->get();
         $rows = $this->reports->circleRows($circles, $from, $to);
+        $courses = $this->courseRows($from, $to);
+        $certificates = \App\Models\Certificate::whereBetween('issued_on', [$from->toDateString(), $to->toDateString()])->selectRaw('kind, count(*) as n')->groupBy('kind')->pluck('n', 'kind');
 
         if ($request->query('export') === 'pdf') {
             return PdfExport::download('تقرير-المركز.pdf', 'التقرير الإجمالي للمركز', $this->periodLabel($from, $to), [[
                 'title' => '', 'headers' => ['الحلقة', 'المحفظ', 'عدد الطلاب', 'نسبة الحضور %', 'صفحات حفظ جديد', 'صفحات مراجعة', 'جلسات التسميع', 'متوسط الدرجة'],
                 'rows' => $rows->map(fn ($r) => [$r['circle']->name, $r['circle']->teacher?->name ?? '—', $r['students'], $r['attendance_rate'] ?? '—', Pages::num($r['new_pages']), Pages::num($r['revision_pages']), $r['sessions'], $r['avg_score'] ? round($r['avg_score'], 1) : '—']),
                 'text_cols' => [0, 1],
+            ], [
+                'title' => 'دورات قسم السنة في الفترة', 'empty' => 'لا توجد دورات في هذه الفترة.',
+                'headers' => ['الدورة', 'المجال', 'الشيخ', 'الحالة', 'الطلاب', 'نسبة الحضور %', 'قُيّم', 'نسبة النجاح %', 'متوسط النتيجة %', 'شهادات'],
+                'rows' => $courses->map(fn ($r) => [$r['course']->title, $r['course']->categoryLabel(), $r['course']->teacher?->name ?? '—', $r['course']->statusLabel(), $r['summary']['students'], $r['attendance_rate'] ?? '—', $r['summary']['graded'], $r['summary']['pass_rate'] ?? '—', $r['summary']['average'] ?? '—', $r['certificates']]),
+                'text_cols' => [0, 1, 2],
+            ], [
+                'title' => 'الشهادات الصادرة في الفترة', 'headers' => ['نوع الشهادة', 'العدد'],
+                'rows' => collect(\App\Models\CertificateTemplate::KINDS)->map(fn ($label, $k) => [$label, $certificates[$k] ?? 0])->values(),
+                'text_cols' => [0],
             ]]);
         }
 
@@ -49,7 +60,32 @@ class ReportController extends Controller
             ]),
         ]);
 
-        return view('admin.reports.center', compact('rows', 'all', 'from', 'to'));
+        return view('admin.reports.center', compact('rows', 'all', 'from', 'to', 'courses', 'certificates'));
+    }
+
+    /** Sunnah courses that ran during the period, with numbers only (no student names, also safe for visitors). */
+    protected function courseRows($from, $to)
+    {
+        \App\Models\SunnahCourse::syncStatuses();
+        $courses = \App\Models\SunnahCourse::with(['teacher', 'enrollments'])->withCount('enrollments')
+            ->where(fn ($q) => $q->whereNull('starts_on')->orWhere('starts_on', '<=', $to->toDateString()))
+            ->where(fn ($q) => $q->whereNull('ends_on')->orWhere('ends_on', '>=', $from->toDateString()))
+            ->orderByRaw("CASE status WHEN 'running' THEN 0 WHEN 'planned' THEN 1 ELSE 2 END")->latest('starts_on')->get();
+        $sunnah = app(\App\Services\SunnahService::class);
+        $attendance = \App\Models\SunnahAttendance::join('sunnah_sessions', 'sunnah_sessions.id', '=', 'sunnah_attendance.sunnah_session_id')
+            ->whereIn('sunnah_sessions.sunnah_course_id', $courses->pluck('id'))
+            ->selectRaw("sunnah_sessions.sunnah_course_id as course_id, count(*) as total, sum(case when sunnah_attendance.status in ('present', 'late') then 1 else 0 end) as came")
+            ->groupBy('sunnah_sessions.sunnah_course_id')->get()->keyBy('course_id');
+        $certificates = \App\Models\Certificate::join('sunnah_enrollments', 'sunnah_enrollments.id', '=', 'certificates.sunnah_enrollment_id')
+            ->whereIn('sunnah_enrollments.sunnah_course_id', $courses->pluck('id'))
+            ->selectRaw('sunnah_enrollments.sunnah_course_id as course_id, count(*) as n')->groupBy('sunnah_enrollments.sunnah_course_id')->pluck('n', 'course_id');
+
+        return $courses->map(fn ($c) => [
+            'course' => $c,
+            'summary' => $sunnah->summary($c),
+            'attendance_rate' => ($a = $attendance[$c->id] ?? null) && $a->total ? (int) round($a->came / $a->total * 100) : null,
+            'certificates' => (int) ($certificates[$c->id] ?? 0),
+        ]);
     }
 
     public function circle(Request $request, Circle $circle)

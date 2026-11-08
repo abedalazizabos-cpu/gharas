@@ -79,6 +79,11 @@ class Student extends Model
         return $this->hasMany(QualityTest::class);
     }
 
+    public function certificates(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Certificate::class)->latest('issued_on')->latest('id');
+    }
+
     /** Courses of قسم السنة this student takes part in. */
     public function sunnahEnrollments(): HasMany
     {

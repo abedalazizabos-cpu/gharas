@@ -39,7 +39,7 @@ trait ShowsSunnahCourses
 
     protected function gradeView(SunnahCourse $course, string $action, string $back)
     {
-        return view('shared.sunnah.grade', ['course' => $this->loadCourse($course), 'action' => $action, 'back' => $back]);
+        return view('shared.sunnah.grade', ['course' => $this->loadCourse($course), 'action' => $action, 'back' => $back, 'rates' => app(SunnahService::class)->attendanceRates($course)]);
     }
 
     protected function saveGrades(Request $request, SunnahCourse $course): int
