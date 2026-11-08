@@ -6,7 +6,7 @@ use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** One stored file per circle per week (Sunday to Saturday). */
+/** One stored file per circle per week (Saturday to Thursday). */
 class WeeklyArchive extends Model
 {
     protected $fillable = ['circle_id', 'week_start', 'path', 'records_count', 'attendance_count', 'generated_at'];

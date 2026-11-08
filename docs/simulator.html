@@ -287,10 +287,10 @@ input.i:focus, select.i:focus, textarea.i:focus { outline: 2px solid var(--green
   function grade(s) { return s >= 90 ? ['ممتاز', 'p-green'] : s >= 80 ? ['جيد جداً', 'p-green'] : s >= 70 ? ['جيد', 'p-info'] : s >= 60 ? ['مقبول', 'p-warn'] : ['ضعيف', 'p-red']; }
   function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
-  // weeks run Sunday to Saturday
-  function wkStart(isoDate) { var d = new Date(isoDate + 'T12:00'); return iso(addDays(d, -d.getDay())); }
+  // study weeks run Saturday to Thursday (Friday is off)
+  function wkStart(isoDate) { var d = new Date(isoDate + 'T12:00'); return iso(addDays(d, -((d.getDay() + 1) % 7))); }
   function wkShift(start, n) { return iso(addDays(new Date(start + 'T12:00'), n)); }
-  function wkLabel(start) { var e = wkShift(start, 6); return 'من ' + start.replace(/-/g, '/') + ' إلى ' + e.replace(/-/g, '/'); }
+  function wkLabel(start) { var e = wkShift(start, 5); return 'من السبت ' + start.replace(/-/g, '/') + ' إلى الخميس ' + e.replace(/-/g, '/'); }
   var TODAY = iso(new Date());
   function fmt(isoDate) { var p = isoDate.split('-'); return p[2] + '/' + p[1]; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -974,7 +974,7 @@ input.i:focus, select.i:focus, textarea.i:focus { outline: 2px solid var(--green
     return head('التنبيهات', 'الغياب، التسميع، التقييمات، الإعلانات والرسائل', '<button class="btn ghost sm" id="readall">تعليم الكل كمقروء</button>') + '<div class="card card-b">' + (list.length ? list.map(notifRow).join('') : '<div class="empty">لا توجد تنبيهات.</div>') + '</div>';
   };
   function weekData(start, cids, sid, parentView) {
-    var end = wkShift(start, 6), days = [0, 1, 2, 3, 4, 5, 6].map(function (i) { return wkShift(start, i); });
+    var end = wkShift(start, 6), days = [0, 1, 2, 3, 4, 5].map(function (i) { return wkShift(start, i); });
     var recs = S.records.filter(function (r) { var st = student(r.sid); return r.date >= start && r.date <= end && (sid ? r.sid === sid : st && cids.indexOf(st.circleId) > -1) && (!parentView || r.shared); });
     var grid = {}, att = 0;
     days.forEach(function (d) { var day = S.attendance[d]; if (!day) return; Object.keys(day).forEach(function (cid) { if (!sid && cids.indexOf(+cid) < 0) return; Object.keys(day[cid]).forEach(function (k) { if (sid && +k !== sid) return; (grid[k] = grid[k] || {})[d] = day[cid][k]; att++; }); }); });
@@ -1005,7 +1005,7 @@ input.i:focus, select.i:focus, textarea.i:focus { outline: 2px solid var(--green
     var vis = ui.role === 'visitor', all = ui.role === 'admin' || vis ? S.circles : myCircles();
     if (!all.length) return head('السجل الأسبوعي', '') + '<div class="empty">لا توجد حلقات.</div>';
     var c = circle(ui.wcircle) && all.indexOf(circle(ui.wcircle)) > -1 ? circle(ui.wcircle) : all[0], start = ui.week || wkStart(TODAY);
-    var h = head('السجل الأسبوعي', 'يبدأ الأسبوع يوم الأحد، ويُحفظ ملفه تلقائياً عند انتهائه');
+    var h = head('السجل الأسبوعي', 'أسبوع الدراسة من السبت إلى الخميس، ويُحفظ ملفه تلقائياً عند انتهائه');
     h += '<div class="card card-b grid g2" style="align-items:end"><label class="f">الحلقة<select class="i" id="wcircle">' + all.map(function (x) { return '<option value="' + x.id + '"' + (x === c ? ' selected' : '') + '>' + esc(x.name) + ' · ' + esc(tname(x.teacherId)) + '</option>'; }).join('') + '</select></label>' + weekNav(start) + '</div>';
     var weeks = pastWeeks([c.id]), byMonth = {};
     weeks.forEach(function (w) { (byMonth[monthName(w)] = byMonth[monthName(w)] || []).push(w); });

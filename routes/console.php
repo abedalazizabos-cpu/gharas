@@ -62,10 +62,10 @@ Artisan::command('gharas:backup', function (BackupService $backup) {
 
 Artisan::command('gharas:archive-weeks', function (\App\Services\WeeklyArchiveService $weeks) {
     $this->info('تم حفظ ملفات '.$weeks->archiveMissing().' أسبوع/حلقة في storage/app/private/archives');
-})->purpose('حفظ ملف لكل حلقة عن كل أسبوع منتهٍ (من الأحد إلى السبت)');
+})->purpose('حفظ ملف لكل حلقة عن كل أسبوع منتهٍ (من السبت إلى الخميس)');
 
-// Saves last week's files every Sunday; the archive page also catches up on its own.
-Schedule::command('gharas:archive-weeks')->weeklyOn(0, '00:30');
+// Saves the week's files every Friday (the study week ends on Thursday); the archive page also catches up on its own.
+Schedule::command('gharas:archive-weeks')->weeklyOn(5, '00:30');
 
 // Daily backup when the Laravel scheduler is running (php artisan schedule:work / cron).
 Schedule::command('gharas:backup')->dailyAt('02:00');

@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Weeks run Sunday to Saturday. Each finished week is saved as one PDF file per circle
+ * Study weeks run Saturday to Thursday (Friday is off). Each finished week is saved as one PDF file per circle
  * under storage/app/private/archives/{year}/{month}/, so past months stay browsable and downloadable.
  */
 class WeeklyArchiveService
@@ -26,17 +26,18 @@ class WeeklyArchiveService
     {
         $d = $date instanceof Carbon ? $date->copy() : ($date && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? Carbon::parse($date) : now());
 
-        return $d->startOfDay()->startOfWeek(Carbon::SUNDAY);
+        return $d->startOfDay()->startOfWeek(Carbon::SATURDAY);
     }
 
     public static function label(Carbon $start): string
     {
-        return 'من '.$start->format('Y/m/d').' إلى '.$start->copy()->addDays(6)->format('Y/m/d');
+        return 'من السبت '.$start->format('Y/m/d').' إلى الخميس '.$start->copy()->addDays(5)->format('Y/m/d');
     }
 
     /** Records and attendance of one circle (or one student) in a week. */
     public function week(Carbon $start, ?Circle $circle = null, ?Student $student = null, bool $parentView = false): array
     {
+        // Friday is off; it is still queried so nothing recorded on a Friday is lost.
         $end = $start->copy()->addDays(6);
         $records = MemorizationRecord::query()
             ->with(['student', 'surah', 'teacher'])
@@ -53,7 +54,10 @@ class WeeklyArchiveService
             ->when($student, fn ($q) => $q->where('student_id', $student->id))
             ->get();
 
-        $days = collect(range(0, 6))->map(fn ($i) => $start->copy()->addDays($i));
+        // Saturday to Thursday; a Friday column only appears if something was recorded on that day.
+        $days = collect(range(0, 6))->map(fn ($i) => $start->copy()->addDays($i))
+            ->reject(fn ($d) => $d->isFriday() && ! $attendance->contains(fn ($a) => $a->session->session_date->isSameDay($d))
+                && ! $records->contains(fn ($r) => $r->recorded_on->isSameDay($d)))->values();
         // student id => [Y-m-d => status]
         $grid = $attendance->groupBy('student_id')->map(fn (Collection $rows) => $rows->mapWithKeys(fn ($a) => [$a->session->session_date->toDateString() => $a]));
         $students = $attendance->pluck('student')->merge($records->pluck('student'))->filter()->unique('id')->sortBy('full_name')->values();
@@ -101,7 +105,6 @@ class WeeklyArchiveService
      */
     public function archiveMissing(bool $withFiles = true): int
     {
-        $thisWeek = self::weekStart();
         $first = collect([
             MemorizationRecord::min('recorded_on'),
             CircleSession::whereHas('attendance')->min('session_date'),
@@ -113,7 +116,8 @@ class WeeklyArchiveService
         $active = $this->activeWeeks();
         $count = 0;
         foreach ($active as $key => [$circleId, $week]) {
-            if ($week >= $thisWeek->toDateString() || isset($done[$key])) {
+            // A week is finished once its Thursday has passed.
+            if (Carbon::parse($week)->addDays(5)->gte(now()->startOfDay()) || isset($done[$key])) {
                 continue;
             }
             $circle = Circle::withTrashed()->find($circleId);
