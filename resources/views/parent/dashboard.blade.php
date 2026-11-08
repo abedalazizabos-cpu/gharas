@@ -51,35 +51,56 @@
                     @if (isset($follow['children'][$s->id]) && $follow['children'][$s->id]['percent'] !== null)
                         <div class="small mb-2 d-flex justify-content-between"><span>متابعتك لسجلاته اليومية</span>@include('shared._follow-rate', ['rate' => $follow['children'][$s->id]])</div>
                     @endif
-                    @if ($card['quality'])
-                        @php($q = $card['quality'])
+                    @php($q = $card['quality'])
+                    @php($courses = $card['sunnah'])
+                    @php($completed = $courses->filter(fn ($e) => $e->status === 'passed' && $e->course->results_to_parents))
+                    <div class="row g-2 text-center mb-2 parent-tiles">
+                        <div class="col-4"><a href="{{ route('parent.children.show', $s) }}#quality-individual" class="d-block rounded p-2 text-decoration-none h-100 border tile-individual">
+                            <i class="bi bi-patch-check-fill fs-3 d-block" style="color:#1b6b50"></i>
+                            <div class="fw-bold fs-5 text-body">{{ $q ? $q['passed_individual']->count() : 0 }}</div>
+                            <small class="text-muted">الاختبارات المنفردة</small></a></div>
+                        <div class="col-4"><a href="{{ route('parent.children.show', $s) }}#quality-combined" class="d-block rounded p-2 text-decoration-none h-100 border tile-combined">
+                            <i class="bi bi-stack fs-3 d-block" style="color:#2f5fb3"></i>
+                            <div class="fw-bold fs-5 text-body">{{ $q ? $q['passed_combined']->count() : 0 }}</div>
+                            <small class="text-muted">الاختبارات المجتمعة</small></a></div>
+                        <div class="col-4"><a href="{{ route('parent.children.courses', $s) }}" class="d-block rounded p-2 text-decoration-none h-100 border position-relative tile-courses">
+                            <i class="bi bi-journal-bookmark-fill fs-3 d-block" style="color:#b8892b"></i>
+                            <div class="fw-bold fs-5 text-body">{{ $courses->count() }}</div>
+                            <small class="text-muted">الدورات</small>
+                            @if ($card['follow']['unseen'] + $card['follow']['pending'])<span class="position-absolute top-0 start-0 translate-middle badge rounded-pill text-bg-danger" title="تعليمات جديدة أو واجبات لم يُؤكَّد إنجازها">{{ $card['follow']['unseen'] + $card['follow']['pending'] }}</span>@endif
+                        </a></div>
+                    </div>
+                    @if ($q)
                         <div class="border rounded p-2 mb-2 small">
-                            <div class="fw-bold mb-1"><i class="bi bi-patch-check text-success"></i> اختبارات لجنة الجودة <span class="text-muted fw-normal">· محفوظه {{ \App\Support\Juz::count($q['memorized_count']) }}</span></div>
-                            <div class="mb-1"><span class="text-muted">الاختبارات المنفردة المنجزة:</span>
+                            <div class="fw-bold mb-1"><i class="bi bi-award text-success"></i> الاختبارات والدورات المنجزة <span class="text-muted fw-normal">· محفوظه {{ \App\Support\Juz::count($q['memorized_count']) }}</span></div>
+                            <div class="mb-1"><i class="bi bi-patch-check-fill" style="color:#1b6b50"></i> <span class="text-muted">المنفردة:</span>
                                 @forelse ($q['passed_individual'] as $t)
                                     <span class="badge text-bg-success" title="{{ $t->tested_on?->format('Y/m/d') }}">{{ \App\Support\Juz::label($t->juz) }} · {{ $t->gradeLabel() }}</span>
                                 @empty <span class="text-muted">لا توجد بعد</span> @endforelse
                             </div>
-                            <div><span class="text-muted">الاختبارات المجتمعة المنجزة:</span>
+                            <div class="mb-1"><i class="bi bi-stack" style="color:#2f5fb3"></i> <span class="text-muted">المجتمعة:</span>
                                 @forelse ($q['passed_combined'] as $t)
                                     <span class="badge text-bg-primary" title="{{ $t->tested_on?->format('Y/m/d') }}">{{ $t->from_juz }} - {{ $t->to_juz }} · {{ $t->gradeLabel() }}</span>
                                 @empty <span class="text-muted">لا توجد بعد</span> @endforelse
                             </div>
+                            <div><i class="bi bi-journal-bookmark-fill" style="color:#b8892b"></i> <span class="text-muted">الدورات:</span>
+                                @forelse ($completed as $e)
+                                    <span class="badge text-bg-warning" title="{{ $e->evaluated_on?->format('Y/m/d') }}">{{ $e->course->title }} · {{ $e->gradeLabel() }}</span>
+                                @empty <span class="text-muted">لا توجد بعد</span> @endforelse
+                            </div>
                         </div>
                     @endif
-                    @if ($card['sunnah']->isNotEmpty())
+                    @php($current = $courses->filter(fn ($e) => $e->course->status !== 'finished'))
+                    @if ($current->isNotEmpty())
                         <div class="border rounded p-2 mb-2 small">
-                            <div class="fw-bold mb-1"><i class="bi bi-journal-bookmark text-success"></i> دورات قسم السنة</div>
-                            @foreach ($card['sunnah'] as $e)
+                            <div class="fw-bold mb-1"><i class="bi bi-journal-bookmark text-success"></i> دورات يدرسها الآن</div>
+                            @foreach ($current as $e)
                                 <div class="d-flex justify-content-between gap-2 {{ $loop->last ? '' : 'mb-1' }}">
                                     <span>{{ $e->course->title }} <span class="text-muted">· {{ $e->course->teacher?->name }}</span></span>
-                                    @if ($e->isGraded() && $e->course->results_to_parents)
-                                        <span class="badge text-bg-{{ $e->statusColor() }} align-self-start">{{ $e->gradeLabel() }} · {{ $e->percentLabel() }}</span>
-                                    @else
-                                        <span class="badge text-bg-{{ $e->course->statusColor() }} align-self-start">{{ $e->course->statusLabel() }}</span>
-                                    @endif
+                                    <span class="badge text-bg-{{ $e->course->statusColor() }} align-self-start">{{ $e->course->statusLabel() }}</span>
                                 </div>
                             @endforeach
+                            @if ($card['follow']['pending'])<div class="text-danger mt-1"><i class="bi bi-pencil-square"></i> {{ $card['follow']['pending'] }} واجب لم تؤكد إنجازه · <a href="{{ route('parent.children.courses', $s) }}">عرض</a></div>@endif
                         </div>
                     @endif
                     @if ($card['last_record'])

@@ -20,8 +20,11 @@ trait ShowsSunnahCourses
     {
         $course = $this->loadCourse($course);
 
+        $posts = $course->posts()->with(['follows'])->get();
+
         return view('shared.sunnah.show', $extra + [
             'course' => $course,
+            'posts' => $posts,
             'summary' => app(SunnahService::class)->summary($course),
         ]);
     }
@@ -41,6 +44,27 @@ trait ShowsSunnahCourses
         $data = $request->validate($rules, [], ['evaluated_on' => 'تاريخ التقييم', 'rows.*.scores.*' => 'الدرجة', 'rows.*.notes' => 'الملاحظة']);
 
         return app(SunnahService::class)->gradeSheet($course, $data['rows'] ?? [], $data['evaluated_on'], $request->user());
+    }
+
+    protected function savePost(Request $request, SunnahCourse $course): void
+    {
+        $data = $request->validate([
+            'type' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\SunnahPost::TYPES))],
+            'title' => ['required', 'string', 'max:200'],
+            'body' => ['nullable', 'string', 'max:3000'],
+            'due_on' => ['nullable', 'date'],
+        ], [], ['type' => 'النوع', 'title' => 'العنوان', 'body' => 'التفاصيل', 'due_on' => 'تاريخ التسليم']);
+        if ($data['type'] !== 'homework') {
+            $data['due_on'] = null;
+        }
+        app(SunnahService::class)->addPost($course, $request->user(), $data);
+    }
+
+    protected function removePost(SunnahCourse $course, \App\Models\SunnahPost $post): void
+    {
+        abort_unless($post->sunnah_course_id === $course->id, 404);
+        $post->delete();
+        \App\Services\AuditLogger::log('sunnah.post.delete', "حذف {$post->typeLabel()} «{$post->title}» من دورة «{$course->title}»", $post);
     }
 
     /** Arabic PDF with the center logo: course details and every participant's result. */

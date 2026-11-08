@@ -6,6 +6,8 @@ use App\Models\MemorizationRecord;
 use App\Models\Student;
 use App\Models\SunnahCourse;
 use App\Models\SunnahEnrollment;
+use App\Models\SunnahPost;
+use App\Models\SunnahPostFollow;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -83,6 +85,47 @@ class SunnahDemoSeeder extends Seeder
         ],
     ];
 
+    /** [type, title, details] in the order the sheikh gives them during the course. */
+    private const POSTS = [
+        'hadith' => [
+            ['instruction', 'منهج الدورة وطريقة الحفظ', 'نحفظ حديثين كل أسبوع: نقرأ الحديث في البيت ثلاث مرات قبل الدرس، ونسمعه في الدرس التالي.'],
+            ['homework', 'حفظ حديث «إنما الأعمال بالنيات» مع معناه', 'يكتب الطالب في دفتره ثلاث فوائد من الحديث.'],
+            ['homework', 'حفظ حديث جبريل عليه السلام', 'التركيز على أركان الإسلام والإيمان والإحسان.'],
+            ['instruction', 'مراجعة الأحاديث العشرة الأولى', 'نرجو من ولي الأمر أن يسمع لابنه الأحاديث قبل اختبار منتصف الدورة.'],
+            ['homework', 'تطبيق حديث «من حسن إسلام المرء تركه ما لا يعنيه»', 'يذكر الطالب موقفاً طبّق فيه الحديث خلال الأسبوع.'],
+        ],
+        'quran_adab' => [
+            ['instruction', 'آداب حمل المصحف والجلوس للتلاوة', 'يحضر الطالب بطهارة، ويحمل مصحفه باحترام، ويجلس مستقبلاً القبلة.'],
+            ['homework', 'حفظ حديث «خيركم من تعلم القرآن وعلمه»', 'مع ذكر معناه بأسلوب الطالب.'],
+            ['homework', 'جدول تلاوة يومي لمدة أسبوع', 'يسجل الطالب وقت تلاوته اليومية ويوقّع ولي الأمر على الجدول.'],
+            ['instruction', 'الاختبار النهائي للدورة', 'الاختبار في آخر لقاء: أسئلة شفهية عن آداب التلاوة وحفظ الأحاديث المقررة.'],
+        ],
+        'salah' => [
+            ['instruction', 'إحضار سجادة صغيرة للتطبيق العملي', 'سنطبق الصلاة عملياً في كل لقاء.'],
+            ['homework', 'كتابة أركان الصلاة الأربعة عشر', 'يكتبها الطالب في دفتره ويحفظها.'],
+            ['homework', 'حفظ أذكار ما بعد الصلاة', 'يرددها الطالب بعد كل صلاة هذا الأسبوع، ونرجو من ولي الأمر متابعته.'],
+            ['instruction', 'متابعة صلاة الابن في البيت', 'لاحظوا الطمأنينة في الركوع والسجود، وأخبرونا بأي ملاحظة.'],
+        ],
+        'taharah' => [
+            ['instruction', 'منهج الدورة', 'الوضوء ثم الغسل ثم التيمم، مع تطبيق عملي في كل لقاء.'],
+            ['homework', 'كتابة فرائض الوضوء ونواقضه', 'في دفتر الدورة مع الدليل إن أمكن.'],
+            ['homework', 'تطبيق الوضوء أمام الوالدة', 'نرجو من الوالدة متابعة وضوء ابنتها وتصحيحه.'],
+            ['instruction', 'الاختبار العملي والنظري', 'يكون الاختبار في اللقاء الأخير، الحضور مبكراً.'],
+        ],
+        'seerah' => [
+            ['instruction', 'دفتر السيرة', 'يخصص الطالب دفتراً يكتب فيه خلاصة كل درس.'],
+            ['homework', 'تلخيص قصة شق الصدر', 'في نصف صفحة بأسلوب الطالب.'],
+            ['homework', 'رسم خريطة لطريق الهجرة', 'يمكن الاستعانة بالأطلس، ونرجو مساعدة الأبناء دون أن تُرسم عنهم.'],
+            ['instruction', 'بحث مختصر عن أحد السابقين إلى الإسلام', 'يُسلَّم البحث في آخر الدورة، صفحة واحدة.'],
+        ],
+        'default' => [
+            ['instruction', 'منهج الدورة وطريقة التقييم', 'التقييم على الاختبار النهائي والحضور والمشاركة والواجبات.'],
+            ['homework', 'قراءة الدرس الأول وتلخيصه', 'نصف صفحة في دفتر الدورة.'],
+            ['homework', 'اختيار قدوة من الدرس وكتابة سبب اختيارها', 'تُعرض في اللقاء القادم.'],
+            ['instruction', 'التحضير للعرض', 'كل طالب يعرض ما كتبه في دقيقتين.'],
+        ],
+    ];
+
     private const NOTES_GOOD = ['متميز ومشارك بفاعلية', 'حفظ متقن وفهم جيد، بارك الله فيه', 'أداء ممتاز وسلوك قدوة', 'مستوى رائع، يُرشَّح للدورة التالية'];
 
     private const NOTES_MID = ['جيد، ويحتاج مزيداً من المراجعة', 'يحتاج إلى التركيز في الشرح', 'تحسن ملحوظ في آخر الدورة'];
@@ -133,6 +176,50 @@ class SunnahDemoSeeder extends Seeder
                     $this->grade($enrollment, $criteria, $teacher, $end->copy()->subDays(mt_rand(0, 2)), $parentChildren->contains('id', $student->id));
                 }
             }
+            if ($def['status'] !== 'planned') {
+                $this->posts($course, $def, $teacher, $picked, $start, $parentChildren);
+            }
+        }
+    }
+
+    /** Instructions and homework given so far, with how the parents followed them. */
+    private function posts(SunnahCourse $course, array $def, User $teacher, Collection $students, $start, Collection $parentChildren): void
+    {
+        $items = self::POSTS[$def['category']] ?? self::POSTS['default'];
+        $today = now()->startOfDay();
+        $last = $def['status'] === 'finished' ? now()->startOfWeek(\Carbon\Carbon::SUNDAY)->addWeeks($def['weeks'][1]) : $today;
+        $count = count($items);
+        foreach ($items as $i => [$type, $title, $body]) {
+            $at = $start->copy()->addDays((int) round($i * max(3, $start->diffInDays($last)) / $count))->setTime(17, 30);
+            if ($at->gt(now())) {
+                break;
+            }
+            $post = new SunnahPost(['type' => $type, 'title' => $title, 'body' => $body, 'due_on' => $type === 'homework' ? $at->copy()->addDays(5)->toDateString() : null]);
+            $post->sunnah_course_id = $course->id;
+            $post->author_id = $teacher->id;
+            $post->created_at = $post->updated_at = $at;
+            $post->save();
+
+            $isLatest = $i === $count - 1 || $start->copy()->addDays((int) round(($i + 1) * max(3, $start->diffInDays($last)) / $count))->gt(now());
+            foreach ($students as $student) {
+                $showcase = $parentChildren->contains('id', $student->id);
+                // The demo parent follows everything except the newest item of a running course.
+                $seen = $showcase ? ! ($isLatest && $def['status'] === 'running') : mt_rand(1, 100) <= ($isLatest ? 55 : 80);
+                if (! $seen) {
+                    continue;
+                }
+                $seenAt = $at->copy()->addHours(mt_rand(2, 40));
+                $doneAt = $type === 'homework' && ($showcase || mt_rand(1, 100) <= 75) ? $seenAt->copy()->addHours(mt_rand(5, 80)) : null;
+                SunnahPostFollow::create([
+                    'sunnah_post_id' => $post->id, 'student_id' => $student->id, 'parent_id' => $student->parents()->value('users.id'),
+                    'seen_at' => $seenAt->min(now()), 'done_at' => $doneAt?->min(now()),
+                ]);
+            }
+        }
+
+        // In a running course the demo parent still has the newest homework to confirm.
+        if ($def['status'] === 'running' && ($latest = SunnahPost::where('sunnah_course_id', $course->id)->where('type', 'homework')->latest()->first())) {
+            SunnahPostFollow::where('sunnah_post_id', $latest->id)->whereIn('student_id', $parentChildren->pluck('id'))->update(['done_at' => null]);
         }
     }
 

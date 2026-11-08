@@ -130,6 +130,20 @@ class SunnahCourseController extends Controller
         return redirect()->route('admin.sunnah.show', $course)->with('success', $n ? "تم رصد درجات {$n} من الطلاب." : 'حُفظت الملاحظات. لا يُرصد الطالب إلا إذا أُدخلت كل درجاته.');
     }
 
+    public function storePost(Request $request, SunnahCourse $course)
+    {
+        $this->savePost($request, $course);
+
+        return redirect()->to(route('admin.sunnah.show', $course).'#posts')->with('success', 'تم النشر، ووصل إشعار لأولياء أمور الطلاب.');
+    }
+
+    public function destroyPost(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    {
+        $this->removePost($course, $post);
+
+        return redirect()->to(route('admin.sunnah.show', $course).'#posts')->with('success', 'تم الحذف.');
+    }
+
     // ----------------------------------------------------------------
 
     private function formData(SunnahCourse $course, $criteria): array

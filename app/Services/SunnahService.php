@@ -6,6 +6,8 @@ use App\Models\MemorizationRecord;
 use App\Models\Student;
 use App\Models\SunnahCourse;
 use App\Models\SunnahEnrollment;
+use App\Models\SunnahPost;
+use App\Models\SunnahPostFollow;
 use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Collection;
@@ -137,6 +139,78 @@ class SunnahService
         return $student->sunnahEnrollments()->whereHas('course')
             ->with(['course.teacher', 'course.criteria', 'scores'])
             ->get()->sortByDesc(fn ($e) => $e->course->starts_on?->toDateString() ?? $e->course->created_at?->toDateString())->values();
+    }
+
+    // ---------------------------------------------------------------- Instructions and homework
+
+    /** The sheikh (or the admin) gives an instruction or a homework; the parents of every participant are told. */
+    public function addPost(SunnahCourse $course, User $author, array $data): SunnahPost
+    {
+        $post = $course->posts()->create($data + ['author_id' => $author->id]);
+        AuditLogger::log('sunnah.post', "إضافة {$post->typeLabel()} «{$post->title}» في دورة «{$course->title}»", $post);
+
+        $students = Student::whereIn('id', SunnahEnrollment::where('sunnah_course_id', $course->id)->pluck('student_id'))->with('parents')->get();
+        foreach ($students as $student) {
+            foreach ($student->parents as $parent) {
+                $parent->notify(new SystemNotification(
+                    ($post->isHomework() ? 'واجب جديد' : 'تعليمات جديدة').' في دورة «'.$course->title.'»',
+                    "{$post->title}".($post->due_on ? ' · التسليم '.$post->due_on->format('Y/m/d') : '')." ({$student->full_name})",
+                    route('parent.children.courses', $student), $post->isHomework() ? 'pencil-square' : 'info-circle',
+                ));
+            }
+        }
+
+        return $post;
+    }
+
+    /** Opening the courses page counts as seeing every instruction and homework given so far. */
+    public function markSeen(User $parent, Student $student): void
+    {
+        $postIds = SunnahPost::whereIn('sunnah_course_id', SunnahEnrollment::where('student_id', $student->id)->select('sunnah_course_id'))->pluck('id');
+        $known = SunnahPostFollow::where('student_id', $student->id)->whereIn('sunnah_post_id', $postIds)->get()->keyBy('sunnah_post_id');
+        $now = now();
+        foreach ($postIds as $id) {
+            $f = $known[$id] ?? null;
+            if (! $f) {
+                SunnahPostFollow::create(['sunnah_post_id' => $id, 'student_id' => $student->id, 'parent_id' => $parent->id, 'seen_at' => $now]);
+            } elseif (! $f->seen_at) {
+                $f->update(['seen_at' => $now, 'parent_id' => $f->parent_id ?? $parent->id]);
+            }
+        }
+    }
+
+    public function setDone(User $parent, Student $student, SunnahPost $post, bool $done): void
+    {
+        $f = SunnahPostFollow::firstOrNew(['sunnah_post_id' => $post->id, 'student_id' => $student->id]);
+        $f->fill(['parent_id' => $parent->id, 'seen_at' => $f->seen_at ?? now(), 'done_at' => $done ? ($f->done_at ?? now()) : null])->save();
+    }
+
+    /**
+     * Follow-up of a child's instructions and homework: posts with their follow row, and counts.
+     *
+     * @return array{posts: Collection, total: int, seen: int, homework: int, done: int, unseen: int, pending: int, percent: ?int}
+     */
+    public function followFor(Student $student): array
+    {
+        $courseIds = SunnahEnrollment::where('student_id', $student->id)->whereHas('course')->pluck('sunnah_course_id');
+        $posts = SunnahPost::whereIn('sunnah_course_id', $courseIds)->with('course')->latest()->latest('id')->get();
+        $follows = SunnahPostFollow::where('student_id', $student->id)->whereIn('sunnah_post_id', $posts->pluck('id'))->get()->keyBy('sunnah_post_id');
+        $posts->each(fn ($p) => $p->setRelation('follow', $follows[$p->id] ?? null));
+
+        $homework = $posts->filter->isHomework();
+        $seen = $posts->filter(fn ($p) => $p->follow?->seen_at)->count();
+        $done = $homework->filter(fn ($p) => $p->follow?->done_at)->count();
+
+        return [
+            'posts' => $posts,
+            'total' => $posts->count(),
+            'seen' => $seen,
+            'unseen' => $posts->count() - $seen,
+            'homework' => $homework->count(),
+            'done' => $done,
+            'pending' => $homework->count() - $done,
+            'percent' => $posts->isEmpty() ? null : (int) round(($seen + $done) / ($posts->count() + $homework->count()) * 100),
+        ];
     }
 
     /** @param array<int, int> $studentIds */

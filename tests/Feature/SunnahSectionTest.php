@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Student;
 use App\Models\SunnahCourse;
 use App\Models\SunnahEnrollment;
+use App\Models\SunnahPost;
+use App\Models\SunnahPostFollow;
 use App\Models\User;
 use App\Support\PdfExport;
 use Database\Seeders\DemoSeeder;
@@ -89,7 +91,7 @@ class SunnahSectionTest extends TestCase
             ->assertSessionHasErrors();
 
         $this->assertTrue($parent->notifications()->get()->contains(fn ($n) => $n->data['title'] === 'نتيجة دورة في قسم السنة'));
-        $this->actingAs($parent)->get(route('parent.dashboard'))->assertOk()->assertSee('دورات قسم السنة')->assertSee('91%');
+        $this->actingAs($parent)->get(route('parent.dashboard'))->assertOk()->assertSee('الدورات')->assertSee('الأربعون النووية · ممتاز', false);
         $this->actingAs($parent)->get(route('parent.children.show', $a))->assertOk()->assertSee('أن يفهم معانيها')->assertSee('متميز');
 
         // Hidden results: the parent sees the course but not the score.
@@ -106,6 +108,45 @@ class SunnahSectionTest extends TestCase
         $this->actingAs($admin)->put(route('admin.sunnah.update', $course), $this->coursePayload($sheikh, [$a->id], [
             'criteria' => [['id' => $memo->id, 'name' => 'حفظ الأحاديث', 'max_score' => 60]],
         ]))->assertSessionHasErrors('criteria');
+    }
+
+    public function test_sheikh_gives_homework_and_the_parent_follows_it(): void
+    {
+        $sheikh = $this->teacher();
+        $parent = $this->parentUser();
+        $other = $this->parentUser();
+        $a = $this->studentIn($this->circleFor($this->teacher()));
+        $b = $this->studentIn($this->circleFor($this->teacher()));
+        $a->parents()->attach($parent->id, ['relationship' => 'أب']);
+        $b->parents()->attach($other->id, ['relationship' => 'أب']);
+        $this->actingAs($this->admin())->post(route('admin.sunnah.store'), $this->coursePayload($sheikh, [$a->id, $b->id]));
+        $course = SunnahCourse::firstOrFail();
+
+        $this->actingAs($sheikh)->post(route('teacher.sunnah.posts.store', $course), [
+            'type' => 'homework', 'title' => 'حفظ حديث النية', 'body' => 'مع ثلاث فوائد', 'due_on' => now()->addDays(3)->toDateString(),
+        ])->assertSessionHasNoErrors();
+        $post = SunnahPost::firstOrFail();
+        $this->assertTrue($parent->notifications()->get()->contains(fn ($n) => str_contains($n->data['title'], 'واجب جديد')));
+
+        // Another teacher cannot post in this course.
+        $this->actingAs($this->teacher())->post(route('teacher.sunnah.posts.store', $course), ['type' => 'instruction', 'title' => 'x'])->assertForbidden();
+
+        // Before the parent opens the page the sheikh sees nobody followed it.
+        $this->actingAs($sheikh)->get(route('teacher.sunnah.show', $course))->assertOk()->assertSee('حفظ حديث النية')->assertSee('اطّلع 0 / 2');
+
+        $this->actingAs($parent)->get(route('parent.dashboard'))->assertOk()->assertSee('الاختبارات المنفردة')->assertSee('الاختبارات المجتمعة')->assertSee(route('parent.children.courses', $a));
+        $this->actingAs($parent)->get(route('parent.children.courses', $a))->assertOk()->assertSee('حفظ حديث النية')->assertSee('تأكيد إنجاز الواجب');
+        $this->actingAs($parent)->post(route('parent.children.homework', [$a, $post]), ['done' => 1])->assertRedirect();
+        $this->assertNotNull(SunnahPostFollow::where('student_id', $a->id)->value('done_at'));
+
+        $this->actingAs($sheikh)->get(route('teacher.sunnah.show', $course))->assertSee('اطّلع 1 / 2')->assertSee('أنجز 1 / 2');
+
+        // A parent cannot follow up another family's child.
+        $this->actingAs($other)->get(route('parent.children.courses', $a))->assertForbidden();
+        $this->actingAs($other)->post(route('parent.children.homework', [$a, $post]), ['done' => 1])->assertForbidden();
+
+        $this->actingAs($sheikh)->delete(route('teacher.sunnah.posts.destroy', [$course, $post]))->assertRedirect();
+        $this->actingAs($parent)->get(route('parent.children.courses', $a))->assertOk()->assertDontSee('تأكيد إنجاز الواجب')->assertDontSee('أنجز ابني الواجب');
     }
 
     public function test_course_results_download_as_arabic_pdf(): void
@@ -150,8 +191,11 @@ class SunnahSectionTest extends TestCase
         $this->assertSame(['female'], $girls->enrollments()->with('student')->get()->pluck('student.gender')->unique()->values()->all());
 
         $parent = User::where('phone', '0550000001')->firstOrFail();
-        $this->actingAs($parent)->get(route('parent.dashboard'))->assertOk()->assertSee('دورات قسم السنة');
+        $this->actingAs($parent)->get(route('parent.dashboard'))->assertOk()->assertSee('الاختبارات المجتمعة')->assertSee('الدورات');
         $this->assertTrue($parent->children->every(fn (Student $c) => $c->sunnahEnrollments()->count() >= 2));
+        $this->assertGreaterThan(10, SunnahPost::count());
+        $child = $parent->children->first();
+        $this->actingAs($parent)->get(route('parent.children.courses', $child))->assertOk()->assertSee('تعليمات الشيخ وواجباته')->assertSee('أهداف الدورة');
 
         $teacher = SunnahCourse::firstOrFail()->teacher;
         $this->actingAs($teacher)->get(route('teacher.dashboard'))->assertOk();

@@ -106,7 +106,7 @@ class QualityCommitteeTest extends TestCase
         $this->assertSame(1, $parent->notifications()->count());
 
         // The parent's home screen lists the passed test.
-        $this->actingAs($parent)->get(route('parent.dashboard'))->assertOk()->assertSee('الاختبارات المنفردة المنجزة')->assertSee('الجزء 30 (عمّ)');
+        $this->actingAs($parent)->get(route('parent.dashboard'))->assertOk()->assertSee('الاختبارات والدورات المنجزة')->assertSee('الجزء 30 (عمّ)');
     }
 
     public function test_ajza_known_on_joining_count_for_combined_tests_but_raise_no_alerts(): void

@@ -2,7 +2,8 @@
 @php($forParent = $forParent ?? false)
 @if (isset($sunnahCourses) && $sunnahCourses->isNotEmpty())
 <div class="card mb-3">
-    <div class="card-header"><i class="bi bi-journal-bookmark text-success ms-1"></i> دورات قسم السنة</div>
+    <div class="card-header d-flex justify-content-between align-items-center"><span><i class="bi bi-journal-bookmark-fill ms-1" style="color:#b8892b"></i> دورات قسم السنة</span>
+        @if ($forParent && ! request()->routeIs('parent.children.courses') && isset($student))<a href="{{ route('parent.children.courses', $student) }}" class="small">التعليمات والواجبات</a>@endif</div>
     <ul class="list-group list-group-flush">
         @foreach ($sunnahCourses as $e)
             @php($c = $e->course)

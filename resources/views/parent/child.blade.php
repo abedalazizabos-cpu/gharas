@@ -5,6 +5,7 @@
     @if ($student->circle?->teacher)
         @if (auth()->user()->hasPermission('messages.send'))<a href="{{ route('messages.create', ['to' => $student->circle->teacher_id, 'student' => $student->id]) }}" class="btn btn-outline-primary"><i class="bi bi-chat-dots"></i> مراسلة المحفظ</a>@endif
     @endif
+    <a href="{{ route('parent.children.courses', $student) }}" class="btn btn-outline-primary"><i class="bi bi-journal-bookmark"></i> الدورات والواجبات</a>
     @if (auth()->user()->hasPermission('parent.weeks'))<a href="{{ route('parent.children.weeks', $student) }}" class="btn btn-primary"><i class="bi bi-calendar-week"></i> السجلات الأسبوعية والسابقة</a>@endif
     <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> طباعة</button>
 </x-page-header>
@@ -31,6 +32,32 @@
         </div>
     </div>
     <div class="col-lg-7">@include('shared._progress')</div>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-md-6" id="quality-individual">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-patch-check-fill ms-1" style="color:#1b6b50"></i> الاختبارات المنفردة <small class="text-muted">· محفوظه {{ \App\Support\Juz::count($quality['memorized_count']) }}</small></div>
+            <ul class="list-group list-group-flush small">
+                @forelse ($quality['passed_individual'] as $t)
+                    <li class="list-group-item d-flex justify-content-between"><span>{{ \App\Support\Juz::label($t->juz) }}</span><span><span class="badge text-bg-success">{{ $t->gradeLabel() }}</span> <span class="text-muted">{{ $t->tested_on?->format('Y/m/d') }}</span></span></li>
+                @empty
+                    <li class="list-group-item text-muted">لم يُختبر في جزء بعد.</li>
+                @endforelse
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-6" id="quality-combined">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-stack ms-1" style="color:#2f5fb3"></i> الاختبارات المجتمعة</div>
+            <ul class="list-group list-group-flush small">
+                @forelse ($quality['passed_combined'] as $t)
+                    <li class="list-group-item d-flex justify-content-between"><span>{{ \App\Support\Juz::rangeLabel($t->from_juz, $t->to_juz) }}</span><span><span class="badge text-bg-primary">{{ $t->gradeLabel() }}</span> <span class="text-muted">{{ $t->tested_on?->format('Y/m/d') }}</span></span></li>
+                @empty
+                    <li class="list-group-item text-muted">لم يجتز اختباراً مجتمعاً بعد.</li>
+                @endforelse
+            </ul>
+        </div>
+    </div>
 </div>
 @include('shared._sunnah-courses', ['forParent' => true])
 

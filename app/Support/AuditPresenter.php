@@ -47,6 +47,8 @@ class AuditPresenter
         'sunnah.delete' => ['حذف دورة من قسم السنة', 'danger'],
         'sunnah.students' => ['تعديل طلاب دورة', 'info'],
         'sunnah.grade' => ['رصد درجات دورة', 'success'],
+        'sunnah.post' => ['تعليمات أو واجب في دورة', 'info'],
+        'sunnah.post.delete' => ['حذف تعليمات أو واجب', 'danger'],
         'teacher.warn.revoke' => ['إلغاء تنبيه أو إنذار', 'secondary'],
         'teacher.warn.ack' => ['اطلاع المحفظ على تنبيه', 'secondary'],
         'memorization.update' => ['تعديل سجل تسميع', 'primary'],

@@ -53,6 +53,66 @@
     <div class="col-6 col-xl-3"><x-stat-card icon="graph-up" label="متوسط النتيجة" :value="$summary['average'] !== null ? $summary['average'].'%' : '—'" /></div>
 </div>
 
+<div class="card mb-3" id="posts">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-megaphone text-success ms-1"></i> التعليمات والواجبات لأولياء الأمور</span>
+        <small class="text-muted">يصل إشعار لولي أمر كل طالب، ويظهر لك من اطّلع ومن أنجز الواجب</small>
+    </div>
+    <div class="card-body border-bottom">
+        <form method="POST" action="{{ route($area.'.sunnah.posts.store', $course) }}" class="row g-2 align-items-end" novalidate>
+            @csrf
+            <div class="col-md-2">
+                <label class="form-label small" for="post-type">النوع</label>
+                <select id="post-type" name="type" class="form-select">@foreach (\App\Models\SunnahPost::TYPES as $k => $v)<option value="{{ $k }}" @selected(old('type', 'homework') === $k)>{{ $v }}</option>@endforeach</select>
+            </div>
+            <x-field name="title" label="العنوان" required col="col-md-4" placeholder="مثال: حفظ الحديث الخامس مع معناه" />
+            <x-field name="due_on" label="تاريخ التسليم (للواجب)" type="date" col="col-md-2" />
+            <x-field name="body" label="التفاصيل (اختياري)" col="col-md-4" placeholder="ما المطلوب من الطالب وكيف يساعده ولي الأمر" />
+            <div class="col-12 text-end"><button class="btn btn-primary"><i class="bi bi-send"></i> نشر لأولياء الأمور</button></div>
+        </form>
+    </div>
+    <ul class="list-group list-group-flush">
+        @php($total = $course->enrollments->count())
+        @forelse ($posts as $post)
+            @php($follows = $post->follows->keyBy('student_id'))
+            @php($seen = $post->follows->whereNotNull('seen_at')->whereIn('student_id', $course->enrollments->pluck('student_id'))->count())
+            @php($done = $post->follows->whereNotNull('done_at')->whereIn('student_id', $course->enrollments->pluck('student_id'))->count())
+            <li class="list-group-item">
+                <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <div>
+                        <span class="badge {{ $post->isHomework() ? 'text-bg-warning' : 'text-bg-info' }}"><i class="bi bi-{{ $post->typeIcon() }}"></i> {{ $post->typeLabel() }}</span>
+                        <strong>{{ $post->title }}</strong>
+                        <small class="text-muted">· {{ $post->created_at->format('Y/m/d') }}@if ($post->due_on) · التسليم {{ $post->due_on->format('Y/m/d') }}@endif</small>
+                        @if ($post->body)<div class="small text-muted mt-1">{{ $post->body }}</div>@endif
+                    </div>
+                    <div class="text-nowrap small">
+                        <span class="badge bg-green-soft text-success border" title="أولياء الأمور الذين اطّلعوا"><i class="bi bi-eye"></i> اطّلع {{ $seen }} / {{ $total }}</span>
+                        @if ($post->isHomework())<span class="badge bg-gold-soft text-dark border" title="بتأكيد ولي الأمر"><i class="bi bi-check2-square"></i> أنجز {{ $done }} / {{ $total }}</span>@endif
+                        <x-delete-form :action="route($area.'.sunnah.posts.destroy', [$course, $post])" label="" message="سيُحذف من صفحة أولياء الأمور." />
+                    </div>
+                </div>
+                <details class="small mt-2"><summary class="text-success">متابعة كل طالب</summary>
+                    <div class="table-responsive mt-2"><table class="table table-sm mb-0">
+                        <thead><tr><th>الطالب</th><th>اطّلاع ولي الأمر</th>@if ($post->isHomework())<th>إنجاز الواجب</th>@endif</tr></thead>
+                        <tbody>
+                        @foreach ($course->enrollments as $e)
+                            @php($f = $follows[$e->student_id] ?? null)
+                            <tr>
+                                <td>{{ $e->student->full_name }}</td>
+                                <td>@if ($f?->seen_at)<span class="text-success">✓ {{ $f->seen_at->format('m/d H:i') }}</span>@else<span class="text-muted">لم يطّلع</span>@endif</td>
+                                @if ($post->isHomework())<td>@if ($f?->done_at)<span class="text-success">✓ أنجز</span>@else<span class="{{ $post->isOverdue() ? 'text-danger' : 'text-muted' }}">لم يُؤكَّد</span>@endif</td>@endif
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table></div>
+                </details>
+            </li>
+        @empty
+            <li class="list-group-item"><x-empty icon="megaphone" message="لم تُنشر تعليمات أو واجبات بعد." /></li>
+        @endforelse
+    </ul>
+</div>
+
 <div class="card">
     <div class="card-header"><i class="bi bi-list-check text-success ms-1"></i> الطلاب ونتائجهم</div>
     <div class="table-responsive">
