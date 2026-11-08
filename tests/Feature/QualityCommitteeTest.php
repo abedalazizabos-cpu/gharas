@@ -173,7 +173,7 @@ class QualityCommitteeTest extends TestCase
         $teacher = $this->teacher();
         $circle = $this->circleFor($teacher);
         foreach (range(1, 21) as $i) {
-            $this->studentIn($circle);
+            $this->studentIn($circle, ["memorized_juz_at_join" => 3 + $i % 3]);
         }
 
         $this->artisan('gharas:demo-quality')->assertSuccessful();
