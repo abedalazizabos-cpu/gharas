@@ -22,6 +22,7 @@ class StudentController extends Controller
 
         return view('teacher.students.show', [
             'quality' => $quality->forStudent($student),
+            'sunnahCourses' => app(\App\Services\SunnahService::class)->forStudent($student),
             'student' => $student->load(['circle', 'parents']),
             'progress' => $progress->surahProgress($student),
             'quranPercent' => $progress->quranPercent($student),

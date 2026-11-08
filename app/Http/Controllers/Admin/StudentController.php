@@ -83,6 +83,7 @@ class StudentController extends Controller
 
         return view('admin.students.show', array_filter([
             'quality' => $quality->forStudent($student),
+            'sunnahCourses' => app(\App\Services\SunnahService::class)->forStudent($student),
             'examiners' => $canQuality ? QualityController::examiners() : null,
             'student' => $student,
             'progress' => $progress->surahProgress($student),

@@ -79,6 +79,12 @@ class Student extends Model
         return $this->hasMany(QualityTest::class);
     }
 
+    /** Courses of قسم السنة this student takes part in. */
+    public function sunnahEnrollments(): HasMany
+    {
+        return $this->hasMany(SunnahEnrollment::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
