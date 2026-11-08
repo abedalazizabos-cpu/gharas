@@ -37,6 +37,25 @@ Artisan::command('gharas:create-admin', function () {
     $this->info(($super ? 'تم إنشاء حساب المدير الأعلى: ' : 'تم إنشاء حساب المدير: ').$email);
 })->purpose('إنشاء حساب مدير نظام بشكل آمن');
 
+// Quality committee trial data on an existing trial database (the main demo seeder already includes it).
+Artisan::command('gharas:demo-quality {--fresh : حذف بيانات الجودة الحالية وإعادة بنائها}', function () {
+    if (app()->isProduction()) {
+        $this->error('البيانات التجريبية لا تُضاف في بيئة الإنتاج (APP_ENV=production).');
+
+        return 1;
+    }
+    if (\App\Models\QualityTest::withTrashed()->exists()) {
+        if (! $this->option('fresh')) {
+            $this->warn('توجد اختبارات جودة مسجلة. لإعادة بناء بيانات التجربة شغّل الأمر مع --fresh (يحذف كل اختبارات الجودة الحالية).');
+
+            return 1;
+        }
+        \Database\Seeders\QualityDemoSeeder::clear();
+    }
+    $this->call('db:seed', ['--class' => \Database\Seeders\QualityDemoSeeder::class, '--force' => true]);
+    $this->info('تمت إضافة بيانات تجريبية للجنة الجودة: مشايخ اللجنة teacher2 وteacher6 وteacher11 وteacher17، وولي الأمر 0550000001 يرى اختبارات ابنيه.');
+})->purpose('إضافة بيانات تجريبية للجنة الجودة والاختبارات');
+
 Artisan::command('gharas:backup', function (BackupService $backup) {
     $this->info('تم إنشاء النسخة الاحتياطية: '.$backup->create());
 })->purpose('إنشاء نسخة احتياطية من قاعدة البيانات في storage/app/backups');

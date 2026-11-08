@@ -13,9 +13,6 @@ use App\Models\MemorizationRecord;
 use App\Models\Message;
 use App\Models\Student;
 use App\Models\Surah;
-use App\Models\CombinedTestStage;
-use App\Models\QualityCriterion;
-use App\Models\QualityTest;
 use App\Models\TeacherWarning;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -37,6 +34,7 @@ class DemoSeeder extends Seeder
     {
         // One transaction keeps seeding ~15k rows fast on MySQL.
         DB::transaction(fn () => $this->seed());
+        $this->call(QualityDemoSeeder::class);
     }
 
     private function seed(): void
@@ -257,64 +255,6 @@ class DemoSeeder extends Seeder
         $m->save();
 
         $this->parentViews($parents);
-        $this->qualityCommittee($teachers, $admin, $comments, $recs);
-    }
-
-    /**
-     * Quality committee demo: four examiners, ajza memorized on joining, a few students who moved
-     * to juz 29 without the juz 30 test (alerts), and some passed individual and combined tests.
-     */
-    private function qualityCommittee($teachers, User $admin, array $comments, array $recs): void
-    {
-        $examiners = collect([1, 5, 10, 16])->map(fn ($i) => $teachers[$i]);
-        $examiners->each(fn ($t) => $t->forceFill(['is_quality_examiner' => true])->save());
-        $criteria = QualityCriterion::active()->get();
-        $stages = CombinedTestStage::active()->get()->keyBy(fn ($s) => $s->from_juz.'-'.$s->to_juz);
-
-        $test = function (Student $student, User $examiner, string $kind, int $from, int $to, ?CombinedTestStage $stage, ?int $daysAgo) use ($criteria, $admin, $comments) {
-            $t = QualityTest::create([
-                'student_id' => $student->id, 'kind' => $kind, 'juz' => $kind === 'individual' ? $from : null, 'stage_id' => $stage?->id,
-                'from_juz' => $from, 'to_juz' => $to, 'examiner_id' => $examiner->id, 'assigned_by' => $admin->id,
-                'assigned_on' => now()->subDays(($daysAgo ?? 0) + 3)->toDateString(), 'status' => 'pending',
-            ]);
-            if ($daysAgo === null) {
-                return;
-            }
-            $total = 0;
-            foreach ($criteria as $c) {
-                $score = (int) round($c->max_score * mt_rand(80, 100) / 100);
-                $t->scores()->create(['quality_criterion_id' => $c->id, 'max_score' => $c->max_score, 'score' => $score]);
-                $total += $score;
-            }
-            $pct = round($total / max(1, $criteria->sum('max_score')) * 100, 2);
-            $t->update(['percentage' => $pct, 'grade' => MemorizationRecord::gradeForScore((int) floor($pct)), 'status' => $pct >= 80 ? 'passed' : 'failed',
-                'tested_on' => now()->subDays($daysAgo)->toDateString(), 'notes' => $comments[mt_rand(0, 5)]]);
-        };
-
-        $joinPattern = [0, 0, 0, 1, 3, 5, 10];
-        foreach (Student::active()->whereNotNull('current_circle_id')->with('circle')->get() as $i => $student) {
-            $joined = $joinPattern[$student->id % 7];
-            $student->update(['memorized_juz_at_join' => $joined]);
-            $examiner = $examiners[$i % $examiners->count()];
-
-            if ($joined === 0 && $student->id % 3 === 0) {
-                // Finished juz 30 and started Al-Mulk (juz 29).
-                $this->record($student, $student->circle, now()->subDay(), 'new', 67, 1, 5, $comments, $recs);
-                match ($student->id % 4) {
-                    0 => $test($student, $examiner, 'individual', 30, 30, null, 2),   // passed
-                    1 => $test($student, $examiner, 'individual', 30, 30, null, null), // waiting for the examiner
-                    default => null,                                                   // alert: never tested
-                };
-            } elseif ($joined === 5 && $student->id % 2 === 0) {
-                $test($student, $examiner, 'combined', 30, 28, $stages['30-28'] ?? null, 40);
-                $test($student, $examiner, 'combined', 30, 26, $stages['30-26'] ?? null, 10);
-            } elseif ($joined === 10 && $student->id % 2 === 0) {
-                foreach (['30-28' => 90, '30-26' => 70, '25-23' => 45, '25-21' => 25, '30-21' => 6] as $key => $days) {
-                    [$from, $to] = array_map('intval', explode('-', $key));
-                    $test($student, $examiner, 'combined', $from, $to, $stages[$key] ?? null, $days);
-                }
-            }
-        }
     }
 
     /** Some parents follow closely, some rarely, so follow-up rates and «✓ تم» marks vary in the demo. */

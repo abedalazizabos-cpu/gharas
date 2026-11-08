@@ -166,4 +166,22 @@ class QualityCommitteeTest extends TestCase
         $this->actingAs($this->admin())->post(route('admin.students.store'), ['full_name' => 'سعد علي', 'enrollment_date' => now()->toDateString(), 'memorized_juz_at_join' => 31, 'guardian_phone' => '0551231234', 'guardian_name' => 'علي سعد'])
             ->assertSessionHasErrors('memorized_juz_at_join');
     }
+
+    public function test_trial_quality_data_command(): void
+    {
+        $this->admin();
+        $teacher = $this->teacher();
+        $circle = $this->circleFor($teacher);
+        foreach (range(1, 21) as $i) {
+            $this->studentIn($circle);
+        }
+
+        $this->artisan('gharas:demo-quality')->assertSuccessful();
+        $this->assertGreaterThan(0, QualityTest::count());
+        $this->assertTrue($teacher->fresh()->isQualityExaminer());
+
+        // A second run refuses unless asked to rebuild.
+        $this->artisan('gharas:demo-quality')->assertFailed();
+        $this->artisan('gharas:demo-quality --fresh')->assertSuccessful();
+    }
 }
