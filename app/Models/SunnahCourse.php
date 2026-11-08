@@ -73,6 +73,18 @@ class SunnahCourse extends Model
         return $this->hasMany(SunnahEnrollment::class)->whereHas('student');
     }
 
+    /** Instructions and homework of the sheikh, newest first. */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(SunnahPost::class)->latest()->latest('id');
+    }
+
+    /** Meetings with their attendance, newest first. */
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(SunnahSession::class)->latest('held_on');
+    }
+
     public function scopeFor(Builder $query, User $teacher): Builder
     {
         return $query->where('teacher_id', $teacher->id);

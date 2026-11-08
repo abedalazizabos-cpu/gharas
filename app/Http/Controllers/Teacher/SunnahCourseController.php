@@ -45,6 +45,50 @@ class SunnahCourseController extends Controller
         return redirect()->route('teacher.sunnah.show', $course)->with('success', $n ? "تم رصد درجات {$n} من الطلاب." : 'حُفظت الملاحظات. لا يُرصد الطالب إلا إذا أُدخلت كل درجاته.');
     }
 
+    public function attendance(Request $request, SunnahCourse $course)
+    {
+        $this->authorizeTeacher($request, $course);
+        return $this->attendanceView($request, $course, 'teacher');
+    }
+
+    public function storeAttendance(Request $request, SunnahCourse $course)
+    {
+        $this->authorizeTeacher($request, $course);
+        $date = $this->saveAttendance($request, $course);
+
+        return redirect()->route('teacher.sunnah.attendance', [$course, 'date' => $date])->with('success', 'تم حفظ حضور اللقاء.');
+    }
+
+    public function homework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    {
+        $this->authorizeTeacher($request, $course);
+        return $this->homeworkView($course, $post, 'teacher');
+    }
+
+    public function storeHomework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    {
+        $this->authorizeTeacher($request, $course);
+        $n = $this->saveHomework($request, $course, $post);
+
+        return redirect()->to(route('teacher.sunnah.show', $course).'#posts')->with('success', "تم حفظ تقييم الواجب ({$n} طالب).");
+    }
+
+    public function storePost(Request $request, SunnahCourse $course)
+    {
+        $this->authorizeTeacher($request, $course);
+        $this->savePost($request, $course);
+
+        return redirect()->to(route('teacher.sunnah.show', $course).'#posts')->with('success', 'تم النشر، ووصل إشعار لأولياء أمور الطلاب.');
+    }
+
+    public function destroyPost(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    {
+        $this->authorizeTeacher($request, $course);
+        $this->removePost($course, $post);
+
+        return redirect()->to(route('teacher.sunnah.show', $course).'#posts')->with('success', 'تم الحذف.');
+    }
+
     private function authorizeTeacher(Request $request, SunnahCourse $course): void
     {
         abort_unless($course->teacher_id === $request->user()->id, 403, 'هذه الدورة يعطيها شيخ آخر.');

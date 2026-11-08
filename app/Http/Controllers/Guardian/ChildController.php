@@ -28,6 +28,7 @@ class ChildController extends Controller
         return view('parent.child', [
             'student' => $student->load('circle.teacher'),
             'sunnahCourses' => app(\App\Services\SunnahService::class)->forStudent($student),
+            'quality' => app(\App\Services\QualityService::class)->forStudent($student),
             'tab' => in_array($request->query('tab'), ['attendance', 'memorization', 'assessments', 'summary'], true) ? $request->query('tab') : 'memorization',
             'progress' => $progress->surahProgress($student),
             'quranPercent' => $progress->quranPercent($student),
@@ -38,6 +39,30 @@ class ChildController extends Controller
             'records' => $student->memorizationRecords()->where('shared_with_parent', true)->with(['surah', 'teacher'])->latest('recorded_on')->latest('id')->paginate(15, ['*'], 'mem_page')->withQueryString(),
             'assessments' => $student->assessments()->where('shared_with_parent', true)->with(['scores.criterion', 'teacher'])->latest('assessed_on')->paginate(10, ['*'], 'ass_page')->withQueryString(),
         ]);
+    }
+
+    /** The child's Sunnah courses: details, result, and the sheikh's instructions and homework. */
+    public function courses(Request $request, Student $student, \App\Services\SunnahService $sunnah)
+    {
+        $this->authorize('view', $student);
+        $sunnah->markSeen($request->user(), $student);
+
+        return view('parent.courses', [
+            'student' => $student->load('circle'),
+            'sunnahCourses' => $courses = $sunnah->forStudent($student),
+            'follow' => $sunnah->followFor($student),
+            'attendance' => $courses->mapWithKeys(fn ($e) => [$e->sunnah_course_id => $sunnah->attendanceFor($e->course, $student->id)]),
+        ]);
+    }
+
+    public function homeworkDone(Request $request, Student $student, \App\Models\SunnahPost $post, \App\Services\SunnahService $sunnah)
+    {
+        $this->authorize('view', $student);
+        abort_unless($post->isHomework() && \App\Models\SunnahEnrollment::where('student_id', $student->id)->where('sunnah_course_id', $post->sunnah_course_id)->exists(), 404);
+        $sunnah->setDone($request->user(), $student, $post, $request->boolean('done'));
+
+        return redirect()->to(route('parent.children.courses', $student).'#post-'.$post->id)
+            ->with('success', $request->boolean('done') ? 'جزاك الله خيراً، سُجّل أن ابنك أنجز الواجب.' : 'أُلغي تأكيد إنجاز الواجب.');
     }
 
     /** The child's week (Saturday to Thursday) with a month-by-month list of every past week. */

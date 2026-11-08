@@ -129,6 +129,12 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::delete('{course}', [Admin\SunnahCourseController::class, 'destroy'])->name('destroy');
             Route::get('{course}/grade', [Admin\SunnahCourseController::class, 'gradeForm'])->name('grade');
             Route::post('{course}/grade', [Admin\SunnahCourseController::class, 'grade'])->name('grade.store');
+            Route::post('{course}/posts', [Admin\SunnahCourseController::class, 'storePost'])->name('posts.store');
+            Route::get('{course}/attendance', [Admin\SunnahCourseController::class, 'attendance'])->name('attendance');
+            Route::post('{course}/attendance', [Admin\SunnahCourseController::class, 'storeAttendance'])->name('attendance.store');
+            Route::get('{course}/posts/{post}/grades', [Admin\SunnahCourseController::class, 'homework'])->name('homework');
+            Route::post('{course}/posts/{post}/grades', [Admin\SunnahCourseController::class, 'storeHomework'])->name('homework.store');
+            Route::delete('{course}/posts/{post}', [Admin\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
         Route::middleware('perm:reports.view')->group(function () {
@@ -234,6 +240,12 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('{course}', [Teacher\SunnahCourseController::class, 'show'])->name('show');
             Route::get('{course}/grade', [Teacher\SunnahCourseController::class, 'gradeForm'])->name('grade');
             Route::post('{course}/grade', [Teacher\SunnahCourseController::class, 'grade'])->name('grade.store');
+            Route::post('{course}/posts', [Teacher\SunnahCourseController::class, 'storePost'])->name('posts.store');
+            Route::get('{course}/attendance', [Teacher\SunnahCourseController::class, 'attendance'])->name('attendance');
+            Route::post('{course}/attendance', [Teacher\SunnahCourseController::class, 'storeAttendance'])->name('attendance.store');
+            Route::get('{course}/posts/{post}/grades', [Teacher\SunnahCourseController::class, 'homework'])->name('homework');
+            Route::post('{course}/posts/{post}/grades', [Teacher\SunnahCourseController::class, 'storeHomework'])->name('homework.store');
+            Route::delete('{course}/posts/{post}', [Teacher\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');
@@ -259,6 +271,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::prefix('parent')->name('parent.')->middleware('role:parent')->group(function () {
         Route::get('/', [Guardian\DashboardController::class, 'index'])->name('dashboard');
         Route::get('children/{student}', [Guardian\ChildController::class, 'show'])->name('children.show');
+        Route::get('children/{student}/courses', [Guardian\ChildController::class, 'courses'])->name('children.courses');
+        Route::post('children/{student}/sunnah-posts/{post}/done', [Guardian\ChildController::class, 'homeworkDone'])->name('children.homework');
         Route::get('children/{student}/weeks', [Guardian\ChildController::class, 'weeks'])->name('children.weeks')->middleware('perm:parent.weeks');
         Route::get('announcements', [Guardian\DashboardController::class, 'announcements'])->name('announcements');
     });
