@@ -23,6 +23,7 @@ class Permissions
             'memorization.manage' => 'سجلات الحفظ والمراجعة',
             'assessments.manage' => 'التقييمات ومعاييرها',
             'quality.manage' => 'لجنة الجودة: الاختبارات المنفردة والمجتمعة وضوابطها',
+            'certificates.manage' => 'الشهادات: إصدارها وتحرير نصوصها',
             'sunnah.manage' => 'قسم السنة: الدورات وشيوخها وطلابها وضوابط تقييمها',
             'archive.view' => 'السجل الأسبوعي والأرشيف',
             'reports.view' => 'التقارير وتنزيلها PDF',

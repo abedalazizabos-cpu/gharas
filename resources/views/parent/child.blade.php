@@ -59,6 +59,7 @@
         </div>
     </div>
 </div>
+@include('shared._certificates', ['certificates' => $student->certificates])
 @include('shared._sunnah-courses', ['forParent' => true])
 
 <div class="card">

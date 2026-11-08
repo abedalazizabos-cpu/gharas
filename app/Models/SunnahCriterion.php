@@ -10,11 +10,11 @@ class SunnahCriterion extends Model
 {
     protected $table = 'sunnah_criteria';
 
-    protected $fillable = ['sunnah_course_id', 'name', 'max_score', 'sort_order'];
+    protected $fillable = ['sunnah_course_id', 'name', 'max_score', 'from_attendance', 'sort_order'];
 
     protected function casts(): array
     {
-        return ['max_score' => 'integer'];
+        return ['max_score' => 'integer', 'from_attendance' => 'boolean'];
     }
 
     public function course(): BelongsTo

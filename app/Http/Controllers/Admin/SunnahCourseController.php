@@ -25,6 +25,7 @@ class SunnahCourseController extends Controller
 
     public function index(Request $request)
     {
+        SunnahCourse::syncStatuses();
         $courses = SunnahCourse::with('teacher')->withCount(['enrollments', 'enrollments as graded_count' => fn ($q) => $q->graded()])
             ->when($request->query('q'), fn ($q, $v) => $q->where('title', 'like', "%{$v}%"))
             ->when($request->query('category'), fn ($q, $v) => $q->where('category', $v))
@@ -44,7 +45,7 @@ class SunnahCourseController extends Controller
     {
         $category = array_key_exists((string) $request->query('category'), SunnahCourse::CATEGORIES) ? $request->query('category') : 'hadith';
         $course = new SunnahCourse(['category' => $category, 'status' => 'planned', 'pass_score' => 70, 'results_to_parents' => true, 'starts_on' => now()->toDateString()]);
-        $criteria = collect(SunnahCourse::defaultCriteria($category))->map(fn ($c) => ['id' => null, 'name' => $c[0], 'max_score' => $c[1]]);
+        $criteria = collect(SunnahCourse::defaultCriteria($category))->map(fn ($c) => ['id' => null, 'name' => $c[0], 'max_score' => $c[1], 'from_attendance' => str_contains($c[0], 'الحضور')]);
 
         return view('admin.sunnah.form', $this->formData($course, $criteria));
     }
@@ -58,7 +59,7 @@ class SunnahCourseController extends Controller
             $course->created_by = $request->user()->id;
             $course->save();
             foreach (array_values($criteria) as $i => $c) {
-                $course->criteria()->create(['name' => $c['name'], 'max_score' => $c['max_score'], 'sort_order' => $i + 1]);
+                $course->criteria()->create(['name' => $c['name'], 'max_score' => $c['max_score'], 'from_attendance' => $c['from_attendance'], 'sort_order' => $i + 1]);
             }
 
             return $course;
@@ -83,7 +84,7 @@ class SunnahCourseController extends Controller
     {
         $course->load('criteria');
 
-        return view('admin.sunnah.form', $this->formData($course, $course->criteria->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'max_score' => $c->max_score])));
+        return view('admin.sunnah.form', $this->formData($course, $course->criteria->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'max_score' => $c->max_score, 'from_attendance' => $c->from_attendance])));
     }
 
     public function update(Request $request, SunnahCourse $course)
@@ -98,7 +99,7 @@ class SunnahCourseController extends Controller
             $keep = collect($criteria)->pluck('id')->filter()->map(fn ($id) => (int) $id);
             $course->criteria()->whereNotIn('id', $keep)->delete();
             foreach (array_values($criteria) as $i => $c) {
-                $attrs = ['name' => $c['name'], 'max_score' => $c['max_score'], 'sort_order' => $i + 1];
+                $attrs = ['name' => $c['name'], 'max_score' => $c['max_score'], 'from_attendance' => $c['from_attendance'], 'sort_order' => $i + 1];
                 $c['id'] ? $course->criteria()->whereKey($c['id'])->update($attrs) : $course->criteria()->create($attrs);
             }
         });
@@ -205,6 +206,7 @@ class SunnahCourseController extends Controller
             'criteria.*.id' => ['nullable', 'integer'],
             'criteria.*.name' => ['required', 'string', 'max:100'],
             'criteria.*.max_score' => ['required', 'integer', 'between:1,100'],
+            'criteria.*.from_attendance' => ['nullable', 'boolean'],
             'student_ids' => ['nullable', 'array'],
             'student_ids.*' => ['integer', Rule::exists('students', 'id')->whereNull('deleted_at')],
         ], [
@@ -216,7 +218,7 @@ class SunnahCourseController extends Controller
             'criteria.*.name' => 'اسم الضابط', 'criteria.*.max_score' => 'الدرجة العظمى',
         ]);
 
-        $criteria = collect($data['criteria'])->map(fn ($c) => ['id' => isset($c['id']) ? (int) $c['id'] : null, 'name' => trim($c['name']), 'max_score' => (int) $c['max_score']])->values();
+        $criteria = collect($data['criteria'])->map(fn ($c) => ['id' => isset($c['id']) ? (int) $c['id'] : null, 'name' => trim($c['name']), 'max_score' => (int) $c['max_score'], 'from_attendance' => ! empty($c['from_attendance'])])->values();
         if ($course) {
             $own = $course->criteria()->pluck('id');
             if ($criteria->pluck('id')->filter()->diff($own)->isNotEmpty()) {

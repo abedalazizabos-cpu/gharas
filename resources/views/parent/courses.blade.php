@@ -24,9 +24,12 @@
             @else
                 <span class="badge text-bg-light border">{{ $e->isGraded() ? 'رُصدت النتيجة' : 'لم يُقيَّم بعد' }}</span>
             @endif
+            @if ($e->certificate)<a href="{{ route('certificates.download', $e->certificate) }}" class="btn btn-sm btn-success" data-no-loading><i class="bi bi-award-fill"></i> شهادة الدورة PDF</a>@endif
         </div>
         <div class="card-body small">
-            <div class="text-muted mb-2">{{ $c->categoryLabel() }} · {{ $c->teacher?->name ?? '—' }} · {{ $c->periodLabel() }}@if ($c->schedule) · {{ $c->schedule }}@endif @if ($c->location) · {{ $c->location }}@endif</div>
+            <div class="text-muted mb-2">{{ $c->categoryLabel() }} · {{ $c->teacher?->name ?? '—' }} · {{ $c->periodLabel() }}@if ($c->schedule) · {{ $c->schedule }}@endif @if ($c->location) · {{ $c->location }}@endif
+                @if ($c->teacher && auth()->user()->hasPermission('messages.send'))<a href="{{ route('messages.create', ['to' => $c->teacher_id, 'student' => $student->id, 'subject' => 'دورة «'.$c->title.'»']) }}" class="btn btn-sm btn-outline-secondary me-2 py-0"><i class="bi bi-chat-dots"></i> مراسلة شيخ الدورة</a>@endif
+            </div>
             @php($att = $attendance[$c->id] ?? null)
             @if ($att && $att['total'])
                 <div class="mb-2">

@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call([SurahSeeder::class, SettingSeeder::class]);
 
         if (! app()->isProduction()) {
-            $this->call([DemoSeeder::class, SunnahDemoSeeder::class]);
+            $this->call([DemoSeeder::class, SunnahDemoSeeder::class, CertificateDemoSeeder::class]);
         }
     }
 }

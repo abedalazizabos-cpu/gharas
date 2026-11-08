@@ -77,7 +77,8 @@ class DataRemoval
 
     /**
      * Clears the trial data: every circle with its contents, every account except the super admins,
-     * students outside circles and announcements. Surahs, settings and permissions stay.
+     * students outside circles and announcements. Surahs, settings and permissions stay. Trial
+     * certificates are deleted outright so the numbering of real certificates starts again.
      */
     public function removeEverything(): array
     {
@@ -89,6 +90,10 @@ class DataRemoval
                 $model::query()->update(['deleted_at' => $stamp]);
             }
             User::where('role', '!=', User::ROLE_SUPERADMIN)->update(['deleted_at' => $stamp]);
+            // Trial certificates go for good, so the real ones start again from number 0001.
+            \App\Models\Certificate::query()->delete();
+            \App\Models\Setting::where('key', 'like', 'certificate_last_%')->delete();
+            \Illuminate\Support\Facades\Cache::forget('settings.all');
 
             return [
                 'circles' => Circle::onlyTrashed()->where('deleted_at', $stamp)->count(),

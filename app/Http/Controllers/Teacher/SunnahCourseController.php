@@ -14,6 +14,7 @@ class SunnahCourseController extends Controller
 
     public function index(Request $request)
     {
+        SunnahCourse::syncStatuses();
         return view('teacher.sunnah.index', [
             'courses' => SunnahCourse::for($request->user())->withCount(['enrollments', 'enrollments as graded_count' => fn ($q) => $q->graded()])
                 ->orderByRaw("CASE status WHEN 'running' THEN 0 WHEN 'planned' THEN 1 ELSE 2 END")->latest('starts_on')->get(),

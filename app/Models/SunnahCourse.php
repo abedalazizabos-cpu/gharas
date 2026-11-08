@@ -90,6 +90,20 @@ class SunnahCourse extends Model
         return $query->where('teacher_id', $teacher->id);
     }
 
+    /**
+     * Moves courses forward by their dates: a planned course starts on its start date and a course
+     * ends the day after its end date. A status is never moved back, so the admin's choice wins early.
+     */
+    public static function syncStatuses(): int
+    {
+        $today = now()->toDateString();
+        $finished = static::whereIn('status', ['planned', 'running'])->whereNotNull('ends_on')->where('ends_on', '<', $today)->update(['status' => 'finished']);
+        $running = static::where('status', 'planned')->whereNotNull('starts_on')->where('starts_on', '<=', $today)
+            ->where(fn ($q) => $q->whereNull('ends_on')->orWhere('ends_on', '>=', $today))->update(['status' => 'running']);
+
+        return $finished + $running;
+    }
+
     public static function defaultCriteria(?string $category): array
     {
         return self::DEFAULT_CRITERIA[$category] ?? self::DEFAULT_CRITERIA['default'];

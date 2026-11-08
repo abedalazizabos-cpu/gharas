@@ -26,6 +26,7 @@
     <div class="col-lg-8">@include('shared._progress')</div>
 </div>
 @include('shared._quality-card')
+@include('shared._certificates', ['certificates' => $student->certificates])
 @include('shared._sunnah-courses')
 <div class="card">
     <div class="card-header p-0 border-0">

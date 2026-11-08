@@ -38,4 +38,38 @@
         </table>
     </div>
 </div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mt-4 mb-2 gap-2">
+    <h5 class="mb-0"><i class="bi bi-journal-bookmark text-success"></i> دورات قسم السنة في الفترة</h5>
+    <div class="small d-flex flex-wrap gap-2">
+        @foreach (\App\Models\CertificateTemplate::KINDS as $k => $label)
+            <span class="badge text-bg-light border fw-normal"><i class="bi bi-{{ \App\Models\Certificate::ICONS[$k] }} text-success"></i> {{ $label }}: <strong>{{ $certificates[$k] ?? 0 }}</strong></span>
+        @endforeach
+    </div>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>الدورة</th><th>الشيخ</th><th>الحالة</th><th>الطلاب</th><th>نسبة الحضور</th><th>قُيّم</th><th>نسبة النجاح</th><th>متوسط النتيجة</th><th>شهادات</th></tr></thead>
+            <tbody>
+            @forelse ($courses as $r)
+                @php($c = $r['course'])
+                <tr>
+                    <td>@if ($area === 'admin')<a href="{{ route('admin.sunnah.show', $c) }}">{{ $c->title }}</a>@else{{ $c->title }}@endif <small class="text-muted d-block">{{ $c->categoryLabel() }} · {{ $c->periodLabel() }}</small></td>
+                    <td>{{ $c->teacher?->name ?? '—' }}</td>
+                    <td><span class="badge text-bg-{{ $c->statusColor() }}">{{ $c->statusLabel() }}</span></td>
+                    <td>{{ $r['summary']['students'] }}</td>
+                    <td>{{ $r['attendance_rate'] !== null ? $r['attendance_rate'].'%' : '—' }}</td>
+                    <td>{{ $r['summary']['graded'] }}</td>
+                    <td>{{ $r['summary']['pass_rate'] !== null ? $r['summary']['pass_rate'].'%' : '—' }}</td>
+                    <td>{{ $r['summary']['average'] !== null ? $r['summary']['average'].'%' : '—' }}</td>
+                    <td>{{ $r['certificates'] }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="9"><x-empty icon="journal-bookmark" message="لا توجد دورات في هذه الفترة." /></td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection

@@ -237,17 +237,21 @@ class SunnahDemoSeeder extends Seeder
             $course->created_by = $admin->id;
             $course->created_at = $start->copy()->subDays(10);
             $course->save();
-            $criteria = collect($def['criteria'])->map(fn ($c, $i) => $course->criteria()->create(['name' => $c[0], 'max_score' => $c[1], 'sort_order' => $i + 1]));
+            $criteria = collect($def['criteria'])->map(fn ($c, $i) => $course->criteria()->create(['name' => $c[0], 'max_score' => $c[1], 'from_attendance' => str_contains($c[0], 'الحضور'), 'sort_order' => $i + 1]));
 
             $picked = $this->pick($students, $def, $teacher, $parentChildren);
-            foreach ($picked as $student) {
-                $enrollment = SunnahEnrollment::create(['sunnah_course_id' => $course->id, 'student_id' => $student->id, 'status' => 'enrolled']);
-                if ($def['status'] === 'finished') {
-                    $this->grade($enrollment, $criteria, $teacher, $end->copy()->subDays(mt_rand(0, 2)), $parentChildren->contains('id', $student->id));
+            $enrollments = $picked->map(fn ($student) => SunnahEnrollment::create(['sunnah_course_id' => $course->id, 'student_id' => $student->id, 'status' => 'enrolled']));
+            if ($def['status'] !== 'planned') {
+                $this->attendance($course, $def, $teacher, $picked, $start, $end, $parentChildren);
+            }
+            if ($def['status'] === 'finished') {
+                // The attendance rule follows the real attendance, as on the sheikh's grade sheet.
+                $rates = app(\App\Services\SunnahService::class)->attendanceRates($course);
+                foreach ($enrollments as $enrollment) {
+                    $this->grade($enrollment, $criteria, $teacher, $end->copy()->subDays(mt_rand(0, 2)), $parentChildren->contains('id', $enrollment->student_id), $rates[$enrollment->student_id] ?? null);
                 }
             }
             if ($def['status'] !== 'planned') {
-                $this->attendance($course, $def, $teacher, $picked, $start, $end, $parentChildren);
                 $this->posts($course, $def, $teacher, $picked, $start, $parentChildren);
                 $this->gradeHomework($course, $teacher, $parentChildren);
             }
@@ -393,7 +397,7 @@ class SunnahDemoSeeder extends Seeder
     }
 
     /** A believable result: most students between good and excellent, a few below the pass score. */
-    private function grade(SunnahEnrollment $e, Collection $criteria, User $teacher, $on, bool $showcase = false): void
+    private function grade(SunnahEnrollment $e, Collection $criteria, User $teacher, $on, bool $showcase = false, ?float $attendanceRate = null): void
     {
         $roll = $showcase ? 100 : mt_rand(1, 100);
         $level = $roll <= 8 ? mt_rand(45, 68) : ($roll <= 30 ? mt_rand(70, 82) : mt_rand(83, 99));
@@ -401,7 +405,9 @@ class SunnahDemoSeeder extends Seeder
         $max = 0;
         foreach ($criteria as $c) {
             $pct = max(0, min(100, $level + mt_rand(-10, 10)));
-            $score = (int) round($c->max_score * $pct / 100);
+            $score = $c->from_attendance && $attendanceRate !== null
+                ? \App\Services\SunnahService::attendanceScore($c->max_score, $attendanceRate)
+                : (int) round($c->max_score * $pct / 100);
             $e->scores()->create(['sunnah_criterion_id' => $c->id, 'max_score' => $c->max_score, 'score' => $score]);
             $total += $score;
             $max += $c->max_score;

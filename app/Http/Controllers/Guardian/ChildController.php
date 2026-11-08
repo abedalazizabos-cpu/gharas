@@ -45,6 +45,7 @@ class ChildController extends Controller
     public function courses(Request $request, Student $student, \App\Services\SunnahService $sunnah)
     {
         $this->authorize('view', $student);
+        \App\Models\SunnahCourse::syncStatuses();
         $sunnah->markSeen($request->user(), $student);
 
         return view('parent.courses', [

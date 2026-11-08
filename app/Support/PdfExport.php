@@ -18,20 +18,7 @@ class PdfExport
     public static function render(string $title, ?string $subtitle, array $sections, bool $landscape = true): string
     {
         self::$last = ['title' => $title, 'subtitle' => $subtitle, 'sections' => collect($sections)->map(fn ($s) => ['rows' => collect($s['rows'])->map(fn ($r) => array_values((array) $r))->all()] + $s)->all()];
-        $tmp = storage_path('framework/cache/mpdf');
-        if (! is_dir($tmp)) {
-            mkdir($tmp, 0775, true);
-        }
-        $mpdf = new Mpdf([
-            'mode' => 'utf-8',
-            'format' => $landscape ? 'A4-L' : 'A4',
-            'default_font' => 'xbriyaz',
-            'directionality' => 'rtl',
-            'autoScriptToLang' => true,
-            'autoLangToFont' => true,
-            'margin_top' => 12, 'margin_bottom' => 14, 'margin_left' => 10, 'margin_right' => 10,
-            'tempDir' => $tmp,
-        ]);
+        $mpdf = self::mpdf($landscape ? 'A4-L' : 'A4');
         $mpdf->SetTitle($title);
         $mpdf->SetFooter('{PAGENO} / {nbpg}');
         $sections = self::$last['sections'];
@@ -45,6 +32,41 @@ class PdfExport
         ])->render());
 
         return $mpdf->Output('', 'S');
+    }
+
+    /**
+     * A certificate on one A4 landscape page. $c holds the frozen wording (title, intro, body, closing,
+     * signers, footer, color) plus student, center, number and date.
+     */
+    public static function certificate(array $c): string
+    {
+        self::$last = ['title' => $c['title'] ?? '', 'subtitle' => $c['student'] ?? '', 'sections' => [[
+            'headers' => [], 'rows' => [[$c['intro'] ?? '', $c['body'] ?? '', $c['closing'] ?? '', $c['signer1_title'] ?? '', $c['signer1_name'] ?? '', $c['signer2_title'] ?? '', $c['signer2_name'] ?? '', $c['footer'] ?? '', $c['number'] ?? '']],
+        ]]];
+        $mpdf = self::mpdf('A4-L', 0);
+        $mpdf->SetTitle(($c['title'] ?? 'شهادة').' - '.($c['student'] ?? ''));
+        $mpdf->WriteHTML(view('pdf.certificate', ['c' => $c, 'logo' => self::logoPath()])->render());
+
+        return $mpdf->Output('', 'S');
+    }
+
+    private static function mpdf(string $format, ?int $margin = null): Mpdf
+    {
+        $tmp = storage_path('framework/cache/mpdf');
+        if (! is_dir($tmp)) {
+            mkdir($tmp, 0775, true);
+        }
+
+        return new Mpdf(($margin === null ? [] : ['margin_header' => 0, 'margin_footer' => 0]) + [
+            'mode' => 'utf-8',
+            'format' => $format,
+            'default_font' => 'xbriyaz',
+            'directionality' => 'rtl',
+            'autoScriptToLang' => true,
+            'autoLangToFont' => true,
+            'margin_top' => $margin ?? 12, 'margin_bottom' => $margin ?? 14, 'margin_left' => $margin ?? 10, 'margin_right' => $margin ?? 10,
+            'tempDir' => $tmp,
+        ]);
     }
 
     public static function download(string $filename, string $title, ?string $subtitle, array $sections, bool $landscape = true): Response

@@ -70,6 +70,12 @@
                             @if ($card['follow']['unseen'] + $card['follow']['pending'])<span class="position-absolute top-0 start-0 translate-middle badge rounded-pill text-bg-danger" title="تعليمات جديدة أو واجبات لم يُؤكَّد إنجازها">{{ $card['follow']['unseen'] + $card['follow']['pending'] }}</span>@endif
                         </a></div>
                     </div>
+                    @if ($card['certificates'])
+                        <a href="{{ route('parent.children.show', $s) }}#certificates" class="d-flex justify-content-between align-items-center border rounded p-2 mb-2 small text-decoration-none parent-certificates">
+                            <span class="text-body"><i class="bi bi-award-fill text-warning fs-5 align-middle"></i> <strong>{{ $card['certificates'] }}</strong> {{ $card['certificates'] > 2 && $card['certificates'] < 11 ? 'شهادات صادرة' : 'شهادة صادرة' }}</span>
+                            <span>عرض وتحميل PDF <i class="bi bi-chevron-left"></i></span>
+                        </a>
+                    @endif
                     @if ($q)
                         <div class="border rounded p-2 mb-2 small">
                             <div class="fw-bold mb-1"><i class="bi bi-award text-success"></i> الاختبارات والدورات المنجزة <span class="text-muted fw-normal">· محفوظه {{ \App\Support\Juz::count($q['memorized_count']) }}</span></div>

@@ -35,6 +35,7 @@
             <div class="col-md-6">
                 <label class="form-label" for="status">حالة الدورة <span class="text-danger">*</span></label>
                 <select id="status" name="status" class="form-select">@foreach (\App\Models\SunnahCourse::STATUSES as $k => $v)<option value="{{ $k }}" @selected(old('status', $course->status) === $k)>{{ $v }}</option>@endforeach</select>
+                <div class="form-text">تتغير تلقائياً: تصبح «قائمة» في تاريخ البداية و«انتهت» بعد تاريخ النهاية.</div>
             </div>
             <x-field name="starts_on" label="تاريخ البداية" type="date" :value="$course->starts_on?->format('Y-m-d')" col="col-md-3" />
             <x-field name="ends_on" label="تاريخ النهاية" type="date" :value="$course->ends_on?->format('Y-m-d')" col="col-md-3" />
@@ -60,13 +61,14 @@
         </div>
         <div class="table-responsive">
             <table class="table align-middle mb-0" id="criteria-table">
-                <thead><tr><th>الضابط</th><th style="width:150px">الدرجة العظمى</th><th style="width:60px"></th></tr></thead>
+                <thead><tr><th>الضابط</th><th style="width:150px">الدرجة العظمى</th><th style="width:130px" title="تُحسب درجته تلقائياً من نسبة حضور الطالب في لقاءات الدورة">يُحسب من الحضور</th><th style="width:60px"></th></tr></thead>
                 <tbody>
                 @foreach ($criteria as $i => $c)
                     <tr>
                         <td><input type="hidden" name="criteria[{{ $i }}][id]" value="{{ $c['id'] ?? '' }}">
                             <input name="criteria[{{ $i }}][name]" value="{{ $c['name'] }}" class="form-control form-control-sm @error("criteria.$i.name") is-invalid @enderror" required></td>
                         <td><input type="number" name="criteria[{{ $i }}][max_score]" value="{{ $c['max_score'] }}" min="1" max="100" class="form-control form-control-sm criterion-max @error("criteria.$i.max_score") is-invalid @enderror" required></td>
+                        <td class="text-center"><input type="checkbox" name="criteria[{{ $i }}][from_attendance]" value="1" class="form-check-input" @checked(! empty($c['from_attendance']))></td>
                         <td>@if (in_array((int) ($c['id'] ?? 0), $usedCriteria, true))<i class="bi bi-lock text-muted" title="رُصدت عليه درجات"></i>@else<button type="button" class="btn btn-sm btn-outline-danger remove-criterion" title="حذف"><i class="bi bi-x-lg"></i></button>@endif</td>
                     </tr>
                 @endforeach
@@ -75,6 +77,7 @@
         </div>
         <div class="card-footer bg-transparent d-flex flex-wrap justify-content-between align-items-center gap-2">
             <button type="button" class="btn btn-sm btn-outline-primary" id="add-criterion"><i class="bi bi-plus-lg"></i> إضافة ضابط</button>
+            <span class="small text-muted"><i class="bi bi-calendar-check"></i> الضابط المحسوب من الحضور يملؤه النظام من نسبة حضور الطالب (الحاضر والمتأخر) ولا يكتبه الشيخ.</span>
             <span class="small text-muted">مجموع الدرجات العظمى: <strong id="criteria-total">0</strong></span>
         </div>
     </div>
@@ -125,6 +128,7 @@
     <tr>
         <td><input type="hidden" data-field="id" value=""><input data-field="name" class="form-control form-control-sm" required></td>
         <td><input type="number" data-field="max_score" value="10" min="1" max="100" class="form-control form-control-sm criterion-max" required></td>
+        <td class="text-center"><input type="checkbox" data-field="from_attendance" value="1" class="form-check-input"></td>
         <td><button type="button" class="btn btn-sm btn-outline-danger remove-criterion" title="حذف"><i class="bi bi-x-lg"></i></button></td>
     </tr>
 </template>
@@ -149,6 +153,7 @@
         row.querySelectorAll('[data-field]').forEach(el => { el.name = 'criteria[' + i + '][' + el.dataset.field + ']'; });
         if (name) row.querySelector('[data-field=name]').value = name;
         if (max) row.querySelector('[data-field=max_score]').value = max;
+        if (name && name.indexOf('الحضور') !== -1) row.querySelector('[data-field=from_attendance]').checked = true;
         tbody.appendChild(row);
         renumber();
         return row;

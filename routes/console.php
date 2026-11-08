@@ -72,7 +72,8 @@ Artisan::command('gharas:demo-sunnah {--fresh : حذف كل دورات قسم ا
         \Database\Seeders\SunnahDemoSeeder::clear();
     }
     $this->call('db:seed', ['--class' => \Database\Seeders\SunnahDemoSeeder::class, '--force' => true]);
-    $this->info('تمت إضافة 18 دورة تجريبية لقسم السنة مع الحضور والواجبات وتقييمها. ولي الأمر 0550000001 يرى دورات ابنيه ونتائجهما.');
+    $this->call('db:seed', ['--class' => \Database\Seeders\CertificateDemoSeeder::class, '--force' => true]);
+    $this->info('تمت إضافة 18 دورة تجريبية لقسم السنة مع الحضور والواجبات وتقييمها، وشهادات تجريبية للناجحين (وبقي بعضها ليصدره المدير من صفحة الشهادات). ولي الأمر 0550000001 يرى دورات ابنيه وشهاداتهما.');
 })->purpose('إضافة بيانات تجريبية لقسم السنة والدورات');
 
 Artisan::command('gharas:backup', function (BackupService $backup) {
@@ -85,6 +86,12 @@ Artisan::command('gharas:archive-weeks', function (\App\Services\WeeklyArchiveSe
 
 // Saves the week's files every Friday (the study week ends on Thursday); the archive page also catches up on its own.
 Schedule::command('gharas:archive-weeks')->weeklyOn(5, '00:30');
+
+// Sunnah courses start and finish by their dates (the course pages also do this when opened).
+Artisan::command('gharas:sunnah-status', function () {
+    $this->info('تم تحديث حالة '.\App\Models\SunnahCourse::syncStatuses().' دورة حسب تواريخها.');
+})->purpose('تحديث حالة دورات قسم السنة حسب تاريخ البداية والنهاية');
+Schedule::command('gharas:sunnah-status')->dailyAt('00:15');
 
 // Daily backup when the Laravel scheduler is running (php artisan schedule:work / cron).
 Schedule::command('gharas:backup')->dailyAt('02:00');

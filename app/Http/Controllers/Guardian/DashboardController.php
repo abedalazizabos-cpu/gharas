@@ -15,6 +15,7 @@ class DashboardController extends Controller
     public function index(Request $request, StatsService $stats, ProgressService $progress, ParentFollowService $follow, QualityService $quality)
     {
         $parent = $request->user();
+        \App\Models\SunnahCourse::syncStatuses();
         $children = $parent->children()->with('circle.teacher')->orderBy('full_name')->get();
         $qualityStatus = $quality->statusFor($children);
 
@@ -35,6 +36,7 @@ class DashboardController extends Controller
                 'quality' => $qualityStatus[$child->id] ?? null,
                 'sunnah' => $sunnah[$child->id] ?? collect(),
                 'follow' => $sunnahService->followFor($child),
+                'certificates' => $child->certificates()->count(),
             ];
         });
 

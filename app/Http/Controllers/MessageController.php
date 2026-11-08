@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MessageRequest;
 use App\Models\Message;
 use App\Models\Student;
+use App\Models\SunnahCourse;
+use App\Models\SunnahEnrollment;
 use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
@@ -12,8 +14,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Teachers can message parents of students in their circles, and parents can
- * message the teachers of their children. Nobody else is reachable.
+ * Teachers can message parents of students in their circles or in the Sunnah courses they give,
+ * and parents can message their children's teachers and course sheikhs. Nobody else is reachable.
  */
 class MessageController extends Controller
 {
@@ -79,21 +81,32 @@ class MessageController extends Controller
     private function contacts(User $user): Collection
     {
         if ($user->isTeacher()) {
+            // Parents of his circle students and of the students in the Sunnah courses he gives.
+            $students = $this->students($user)->pluck('id');
+
             return User::role(User::ROLE_PARENT)->active()
-                ->whereHas('children', fn ($q) => $q->whereIn('current_circle_id', $user->circles()->select('id')))
+                ->whereHas('children', fn ($q) => $q->whereIn('students.id', $students))
                 ->orderBy('name')->get();
         }
 
+        // The circle teachers of the children and the sheikhs of their Sunnah courses.
+        $children = $user->children()->pluck('students.id');
+
         return User::role(User::ROLE_TEACHER)->active()
-            ->whereHas('circles.students.parents', fn ($q) => $q->whereKey($user->id))
+            ->where(fn ($q) => $q->whereHas('circles.students', fn ($s) => $s->whereIn('students.id', $children))
+                ->orWhereIn('id', SunnahCourse::whereIn('id', SunnahEnrollment::whereIn('student_id', $children)->select('sunnah_course_id'))->whereNotNull('teacher_id')->select('teacher_id')))
             ->orderBy('name')->get();
     }
 
     /** @return Collection<int, Student> */
     private function students(User $user): Collection
     {
-        return $user->isTeacher()
-            ? $user->teacherStudents()->orderBy('full_name')->get()
-            : $user->children()->orderBy('full_name')->get();
+        if ($user->isTeacher()) {
+            return Student::query()->where(fn ($q) => $q->whereIn('current_circle_id', $user->circles()->select('id'))
+                ->orWhereIn('id', SunnahEnrollment::whereIn('sunnah_course_id', SunnahCourse::where('teacher_id', $user->id)->select('id'))->select('student_id')))
+                ->orderBy('full_name')->get();
+        }
+
+        return $user->children()->orderBy('full_name')->get();
     }
 }

@@ -52,6 +52,11 @@ class QualityTest extends Model
         return $this->belongsTo(CombinedTestStage::class, 'stage_id');
     }
 
+    public function certificate(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Certificate::class);
+    }
+
     public function scores(): HasMany
     {
         return $this->hasMany(QualityTestScore::class);
