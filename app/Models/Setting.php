@@ -24,6 +24,7 @@ class Setting extends Model
         'contact_email' => 'info@gharas.test',
         'contact_address' => 'المملكة العربية السعودية',
         'pass_score' => '70',
+        'quality_pass_score' => '80',
         'teacher_edit_days' => '7',
         'allow_capacity_override' => '1',
         'center_logo' => null,

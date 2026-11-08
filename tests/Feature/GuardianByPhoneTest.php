@@ -10,7 +10,7 @@ class GuardianByPhoneTest extends TestCase
 {
     private function payload(array $extra): array
     {
-        return ['full_name' => 'يوسف خالد العتيبي', 'enrollment_date' => now()->toDateString()] + $extra;
+        return ['full_name' => 'يوسف خالد العتيبي', 'enrollment_date' => now()->toDateString(), 'memorized_juz_at_join' => 0] + $extra;
     }
 
     public function test_new_mobile_creates_a_parent_account_and_links_it(): void

@@ -6,17 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Services\ParentFollowService;
 use App\Services\ProgressService;
+use App\Services\QualityService;
 use App\Services\StatsService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, StatsService $stats, ProgressService $progress, ParentFollowService $follow)
+    public function index(Request $request, StatsService $stats, ProgressService $progress, ParentFollowService $follow, QualityService $quality)
     {
         $parent = $request->user();
         $children = $parent->children()->with('circle.teacher')->orderBy('full_name')->get();
+        $qualityStatus = $quality->statusFor($children);
 
-        $cards = $children->map(function ($child) use ($stats, $progress) {
+        $cards = $children->map(function ($child) use ($stats, $progress, $qualityStatus) {
             $counts = $stats->attendanceCounts($child->attendanceRecords()->whereHas('session', fn ($q) => $q->where('session_date', '>=', now()->subDays(30)->toDateString()))->getQuery());
             $last = $child->memorizationRecords()->where('shared_with_parent', true)->with('surah')->latest('recorded_on')->latest('id')->first();
 
@@ -27,6 +29,7 @@ class DashboardController extends Controller
                 'memorized_pages' => $progress->memorizedPages($child),
                 'quran_percent' => $progress->quranPercent($child),
                 'last_record' => $last,
+                'quality' => $qualityStatus[$child->id] ?? null,
             ];
         });
 

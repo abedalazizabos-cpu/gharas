@@ -26,6 +26,8 @@ class StudentRequest extends FormRequest
             'birth_date' => ['nullable', 'date', 'before:today'],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s]+$/'],
             'enrollment_date' => ['required', 'date'],
+            // Ajza memorized before joining, counted from juz 30 (عمّ) down.
+            'memorized_juz_at_join' => [$student ? 'sometimes' : 'required', 'integer', 'between:0,30'],
             'internal_notes' => ['nullable', 'string', 'max:2000'],
             'circle_id' => [$student ? 'prohibited' : 'nullable', 'integer', Rule::exists('circles', 'id')->whereNull('deleted_at')],
             'override_capacity' => ['nullable', 'boolean'],
@@ -72,6 +74,7 @@ class StudentRequest extends FormRequest
             'full_name' => 'اسم الطالب',
             'student_number' => 'رقم الطالب',
             'enrollment_date' => 'تاريخ التسجيل',
+            'memorized_juz_at_join' => 'عدد الأجزاء المحفوظة',
             'circle_id' => 'الحلقة',
             'parent_ids' => 'أولياء الأمور',
             'guardian_phone' => 'جوال ولي الأمر',

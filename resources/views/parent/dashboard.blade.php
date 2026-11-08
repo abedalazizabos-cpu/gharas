@@ -51,6 +51,22 @@
                     @if (isset($follow['children'][$s->id]) && $follow['children'][$s->id]['percent'] !== null)
                         <div class="small mb-2 d-flex justify-content-between"><span>متابعتك لسجلاته اليومية</span>@include('shared._follow-rate', ['rate' => $follow['children'][$s->id]])</div>
                     @endif
+                    @if ($card['quality'])
+                        @php($q = $card['quality'])
+                        <div class="border rounded p-2 mb-2 small">
+                            <div class="fw-bold mb-1"><i class="bi bi-patch-check text-success"></i> اختبارات لجنة الجودة <span class="text-muted fw-normal">· محفوظه {{ \App\Support\Juz::count($q['memorized_count']) }}</span></div>
+                            <div class="mb-1"><span class="text-muted">الاختبارات المنفردة المنجزة:</span>
+                                @forelse ($q['passed_individual'] as $t)
+                                    <span class="badge text-bg-success" title="{{ $t->tested_on?->format('Y/m/d') }}">{{ \App\Support\Juz::label($t->juz) }} · {{ $t->gradeLabel() }}</span>
+                                @empty <span class="text-muted">لا توجد بعد</span> @endforelse
+                            </div>
+                            <div><span class="text-muted">الاختبارات المجتمعة المنجزة:</span>
+                                @forelse ($q['passed_combined'] as $t)
+                                    <span class="badge text-bg-primary" title="{{ $t->tested_on?->format('Y/m/d') }}">{{ $t->from_juz }} - {{ $t->to_juz }} · {{ $t->gradeLabel() }}</span>
+                                @empty <span class="text-muted">لا توجد بعد</span> @endforelse
+                            </div>
+                        </div>
+                    @endif
                     @if ($card['last_record'])
                         <div class="small bg-green-soft rounded p-2"><strong>آخر تسميع:</strong> {{ $card['last_record']->typeLabel() }} - {{ $card['last_record']->rangeLabel() }} · {{ $card['last_record']->pagesLabel() }} · <span class="text-success">{{ $card['last_record']->gradeLabel() }}</span> <span class="text-muted">({{ $card['last_record']->recorded_on->format('Y/m/d') }})</span></div>
                     @endif

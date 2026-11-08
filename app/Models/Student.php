@@ -29,7 +29,7 @@ class Student extends Model
     // current_circle_id and status change only through EnrollmentService / explicit actions.
     protected $fillable = [
         'student_number', 'full_name', 'gender', 'birth_date', 'phone',
-        'enrollment_date', 'internal_notes',
+        'enrollment_date', 'memorized_juz_at_join', 'internal_notes',
     ];
 
     protected function casts(): array
@@ -38,6 +38,7 @@ class Student extends Model
             'birth_date' => DateOnly::class,
             'enrollment_date' => DateOnly::class,
             'withdrawn_at' => DateOnly::class,
+            'memorized_juz_at_join' => 'integer',
         ];
     }
 
@@ -71,6 +72,11 @@ class Student extends Model
     public function assessments(): HasMany
     {
         return $this->hasMany(Assessment::class);
+    }
+
+    public function qualityTests(): HasMany
+    {
+        return $this->hasMany(QualityTest::class);
     }
 
     public function scopeActive(Builder $query): Builder

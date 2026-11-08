@@ -22,6 +22,13 @@
     </div>
 @endforeach
 
+@if ($qualityPending)
+    <div class="alert alert-info d-flex flex-wrap align-items-center gap-2"><i class="bi bi-patch-check-fill fs-5"></i>
+        <span class="flex-grow-1">لديك {{ $qualityPending }} {{ $qualityPending > 2 && $qualityPending < 11 ? 'طلاب' : 'طالب' }} بانتظار اختبار لجنة الجودة.</span>
+        <a href="{{ route('teacher.quality.index') }}" class="btn btn-sm btn-primary">رصد النتائج</a></div>
+@endif
+@include('shared._quality-alerts', ['studentRoute' => 'teacher.students.show'])
+
 <div class="row g-3 mb-3">
     <div class="col-6 col-xl-3"><x-stat-card icon="bullseye" label="حلقاتي" :value="$circles->count()" /></div>
     <div class="col-6 col-xl-3"><x-stat-card icon="people" label="طلابي النشطون" :value="$studentsCount" color="blue" /></div>

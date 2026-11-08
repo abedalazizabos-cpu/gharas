@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\EnrollmentService;
 use App\Services\ProgressService;
+use App\Services\QualityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -75,11 +76,14 @@ class StudentController extends Controller
         return redirect()->route('admin.students.show', $student)->with('success', 'تمت إضافة الطالب بنجاح.')->with('guardian_notice', $this->guardianMessage($guardian));
     }
 
-    public function show(Student $student, ProgressService $progress)
+    public function show(Request $request, Student $student, ProgressService $progress, QualityService $quality)
     {
         $student->load(['circle.teacher', 'parents', 'enrollments.circle']);
+        $canQuality = $request->user()->hasPermission('quality.manage');
 
-        return view('admin.students.show', [
+        return view('admin.students.show', array_filter([
+            'quality' => $quality->forStudent($student),
+            'examiners' => $canQuality ? QualityController::examiners() : null,
             'student' => $student,
             'progress' => $progress->surahProgress($student),
             'quranPercent' => $progress->quranPercent($student),
@@ -87,7 +91,7 @@ class StudentController extends Controller
             'records' => $student->memorizationRecords()->with(['surah', 'teacher'])->latest('recorded_on')->latest('id')->paginate(10, ['*'], 'mem_page'),
             'assessments' => $student->assessments()->with(['scores.criterion', 'teacher'])->latest('assessed_on')->paginate(5, ['*'], 'ass_page'),
             'circles' => Circle::active()->withCount(['students' => fn ($q) => $q->active()])->orderBy('name')->get(),
-        ]);
+        ], fn ($v) => $v !== null));
     }
 
     public function edit(Student $student)

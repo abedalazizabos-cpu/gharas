@@ -30,6 +30,7 @@
                 <dt class="col-5">الحلقة</dt><dd class="col-7">@if ($student->circle)<a href="{{ route('admin.circles.show', $student->circle) }}">{{ $student->circle->name }}</a>@else — @endif</dd>
                 <dt class="col-5">المحفظ</dt><dd class="col-7">{{ $student->circle?->teacher?->name ?? '—' }}</dd>
                 <dt class="col-5">تاريخ التسجيل</dt><dd class="col-7">{{ $student->enrollment_date->format('Y/m/d') }}</dd>
+                <dt class="col-5">المحفوظ عند التسجيل</dt><dd class="col-7">{{ \App\Support\Juz::count($student->memorized_juz_at_join) }}</dd>
                 <dt class="col-5">الجنس</dt><dd class="col-7">{{ $student->genderLabel() ?? '—' }}</dd>
                 <dt class="col-5">العمر</dt><dd class="col-7">{{ $student->age() ? $student->age().' سنة' : '—' }}</dd>
                 <dt class="col-5">التواصل</dt><dd class="col-7" dir="ltr">{{ $student->phone ?? '—' }}</dd>
@@ -61,6 +62,7 @@
     </div>
 </div>
 
+@isset($quality)@include('shared._quality-card', isset($examiners) ? ['examiners' => $examiners] : [])@endisset
 <div class="card">
     <div class="card-header p-0 border-0">
         <ul class="nav nav-tabs px-3 pt-2" role="tablist">

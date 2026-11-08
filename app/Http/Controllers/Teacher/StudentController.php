@@ -8,6 +8,7 @@ use App\Http\Requests\StudentRequest;
 use App\Models\Student;
 use App\Services\AuditLogger;
 use App\Services\ProgressService;
+use App\Services\QualityService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
@@ -15,11 +16,12 @@ class StudentController extends Controller
 {
     use ManagesGuardians;
 
-    public function show(Student $student, ProgressService $progress)
+    public function show(Student $student, ProgressService $progress, QualityService $quality)
     {
         $this->authorize('view', $student);
 
         return view('teacher.students.show', [
+            'quality' => $quality->forStudent($student),
             'student' => $student->load(['circle', 'parents']),
             'progress' => $progress->surahProgress($student),
             'quranPercent' => $progress->quranPercent($student),
