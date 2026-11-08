@@ -39,7 +39,7 @@ class ChildController extends Controller
         ]);
     }
 
-    /** The child's week (Sunday to Saturday) with a month-by-month list of every past week. */
+    /** The child's week (Saturday to Thursday) with a month-by-month list of every past week. */
     public function weeks(Request $request, Student $student, WeeklyArchiveService $weeks, ParentFollowService $follow)
     {
         $this->authorize('view', $student);

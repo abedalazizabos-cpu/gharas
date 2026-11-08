@@ -16,7 +16,7 @@
         </select></div>
         <div class="col-md-7">@include('shared._week-nav', ['url' => fn ($d) => route($prefix.'.weeks.show', ['circle' => $circle->id, 'week' => $d->toDateString()])])</div>
     </form>
-    <p class="small text-muted">يبدأ الأسبوع يوم الأحد. عند انتهاء كل أسبوع يُحفظ ملفه في النظام تلقائياً، ويمكن الرجوع إليه من «أرشيف الأسابيع السابقة».</p>
+    <p class="small text-muted">أسبوع الدراسة من السبت إلى الخميس، والجمعة إجازة. عند انتهاء كل أسبوع يُحفظ ملفه في النظام تلقائياً، ويمكن الرجوع إليه من «أرشيف الأسابيع السابقة».</p>
     @include('shared._week-tables', ['w' => $w, 'showStudent' => true, 'showShared' => $prefix !== 'visitor'])
 @endif
 @endsection
