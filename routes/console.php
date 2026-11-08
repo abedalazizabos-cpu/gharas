@@ -72,7 +72,7 @@ Artisan::command('gharas:demo-sunnah {--fresh : حذف كل دورات قسم ا
         \Database\Seeders\SunnahDemoSeeder::clear();
     }
     $this->call('db:seed', ['--class' => \Database\Seeders\SunnahDemoSeeder::class, '--force' => true]);
-    $this->info('تمت إضافة 8 دورات تجريبية لقسم السنة. ولي الأمر 0550000001 يرى دورات ابنيه ونتائجهما.');
+    $this->info('تمت إضافة 18 دورة تجريبية لقسم السنة مع الحضور والواجبات وتقييمها. ولي الأمر 0550000001 يرى دورات ابنيه ونتائجهما.');
 })->purpose('إضافة بيانات تجريبية لقسم السنة والدورات');
 
 Artisan::command('gharas:backup', function (BackupService $backup) {

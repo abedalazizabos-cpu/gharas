@@ -27,6 +27,16 @@
         </div>
         <div class="card-body small">
             <div class="text-muted mb-2">{{ $c->categoryLabel() }} · {{ $c->teacher?->name ?? '—' }} · {{ $c->periodLabel() }}@if ($c->schedule) · {{ $c->schedule }}@endif @if ($c->location) · {{ $c->location }}@endif</div>
+            @php($att = $attendance[$c->id] ?? null)
+            @if ($att && $att['total'])
+                <div class="mb-2">
+                    <span class="fw-bold"><i class="bi bi-calendar-check text-success"></i> الحضور:</span> {{ $att['rate'] }}% من {{ $att['total'] }} لقاء
+                    · <span class="text-success">حاضر {{ $att['present'] }}</span> · <span class="text-warning-emphasis">متأخر {{ $att['late'] }}</span> · <span class="text-danger">غائب {{ $att['absent'] }}</span> · <span class="text-info-emphasis">بعذر {{ $att['excused'] }}</span>
+                    <details class="mt-1"><summary class="text-success">تفاصيل اللقاءات</summary>
+                        <ul class="list-unstyled mt-1 mb-0">@foreach ($att['rows'] as $r)<li><span class="badge text-bg-{{ $r->badge() }}">{{ $r->statusLabel() }}</span> {{ $r->session->held_on->format('Y/m/d') }}@if ($r->session->topic) · {{ $r->session->topic }}@endif @if ($r->note)<span class="text-muted">({{ $r->note }})</span>@endif</li>@endforeach</ul>
+                    </details>
+                </div>
+            @endif
             @if ($c->objectiveList())
                 <div class="fw-bold mb-1">أهداف الدورة</div>
                 <ul class="mb-2">@foreach ($c->objectiveList() as $o)<li>{{ $o }}</li>@endforeach</ul>
@@ -48,6 +58,9 @@
                             <strong>{{ $post->title }}</strong>
                             <div class="small text-muted">{{ $post->created_at->format('Y/m/d') }}@if ($post->due_on) · <span class="{{ $post->isOverdue() && ! $done ? 'text-danger fw-semibold' : '' }}">التسليم {{ $post->due_on->format('Y/m/d') }}</span>@endif</div>
                             @if ($post->body)<div class="mt-1">{{ $post->body }}</div>@endif
+                            @if ($post->isHomework() && $post->follow?->score !== null)
+                                <div class="mt-1"><span class="badge text-bg-success"><i class="bi bi-clipboard-check"></i> تقييم الشيخ: {{ $post->follow->score }} / {{ $post->max_score ?: 10 }}</span>@if ($post->follow->feedback) <span class="small text-muted">{{ $post->follow->feedback }}</span>@endif</div>
+                            @endif
                         </div>
                         @if ($post->isHomework())
                             <form method="POST" action="{{ route('parent.children.homework', [$student, $post]) }}" class="align-self-center">@csrf

@@ -149,6 +149,51 @@ class SunnahSectionTest extends TestCase
         $this->actingAs($parent)->get(route('parent.children.courses', $a))->assertOk()->assertDontSee('تأكيد إنجاز الواجب')->assertDontSee('أنجز ابني الواجب');
     }
 
+    public function test_sheikh_takes_attendance_and_grades_homework(): void
+    {
+        $sheikh = $this->teacher();
+        $parent = $this->parentUser();
+        $a = $this->studentIn($this->circleFor($this->teacher()));
+        $b = $this->studentIn($this->circleFor($this->teacher()));
+        $outsider = $this->studentIn($this->circleFor($this->teacher()));
+        $a->parents()->attach($parent->id, ['relationship' => 'أب']);
+        $this->actingAs($this->admin())->post(route('admin.sunnah.store'), $this->coursePayload($sheikh, [$a->id, $b->id]));
+        $course = SunnahCourse::firstOrFail();
+        $today = now()->toDateString();
+
+        $this->actingAs($sheikh)->get(route('teacher.sunnah.attendance', $course))->assertOk()->assertSee($a->full_name);
+        $this->actingAs($sheikh)->post(route('teacher.sunnah.attendance.store', $course), [
+            'date' => $today, 'topic' => 'حديث النية',
+            'attendance' => [$a->id => ['status' => 'absent'], $b->id => ['status' => 'present'], $outsider->id => ['status' => 'present']],
+        ])->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame(2, \App\Models\SunnahAttendance::count());
+        $this->assertTrue($parent->notifications()->get()->contains(fn ($n) => $n->data['title'] === 'غياب عن دورة'));
+
+        // Saving the same day again updates the sheet.
+        $this->actingAs($sheikh)->post(route('teacher.sunnah.attendance.store', $course), ['date' => $today, 'attendance' => [$a->id => ['status' => 'late']]]);
+        $this->assertSame(1, \App\Models\SunnahSession::count());
+        $this->assertSame('late', \App\Models\SunnahAttendance::where('student_id', $a->id)->value('status'));
+
+        $this->actingAs($this->teacher())->get(route('teacher.sunnah.attendance', $course))->assertForbidden();
+
+        $this->actingAs($sheikh)->post(route('teacher.sunnah.posts.store', $course), ['type' => 'homework', 'title' => 'تلخيص الدرس', 'max_score' => 20]);
+        $post = SunnahPost::firstOrFail();
+        $this->assertSame(20, $post->max_score);
+        $this->actingAs($sheikh)->get(route('teacher.sunnah.homework', [$course, $post]))->assertOk()->assertSee($b->full_name);
+        $this->actingAs($sheikh)->post(route('teacher.sunnah.homework.store', [$course, $post]), ['rows' => [$a->id => ['score' => 25]]])->assertSessionHasErrors();
+        $this->actingAs($sheikh)->post(route('teacher.sunnah.homework.store', [$course, $post]), ['rows' => [
+            $a->id => ['score' => 18, 'feedback' => 'أحسنت'], $b->id => ['score' => ''],
+        ]])->assertSessionHasNoErrors();
+        $f = SunnahPostFollow::where('student_id', $a->id)->firstOrFail();
+        $this->assertSame(18, $f->score);
+        $this->assertNotNull($f->done_at);
+        $this->assertNull(SunnahPostFollow::where('student_id', $b->id)->first());
+        $this->assertTrue($parent->notifications()->get()->contains(fn ($n) => $n->data['title'] === 'تقييم واجب'));
+
+        $this->actingAs($parent)->get(route('parent.children.courses', $a))->assertOk()->assertSee('تقييم الشيخ: 18 / 20')->assertSee('حديث النية')->assertSee('متأخر');
+        $this->actingAs($sheikh)->get(route('teacher.sunnah.show', $course))->assertOk()->assertSee('قُيّم 1');
+    }
+
     public function test_course_results_download_as_arabic_pdf(): void
     {
         $sheikh = $this->teacher();
@@ -178,7 +223,9 @@ class SunnahSectionTest extends TestCase
     {
         $this->seed([DemoSeeder::class, SunnahDemoSeeder::class]);
 
-        $this->assertSame(8, SunnahCourse::count());
+        $this->assertSame(18, SunnahCourse::count());
+        $this->assertGreaterThan(50, \App\Models\SunnahSession::count());
+        $this->assertGreaterThan(100, SunnahPostFollow::whereNotNull('score')->count());
         $finished = SunnahCourse::where('status', 'finished')->get();
         $this->assertNotEmpty($finished);
         foreach ($finished as $course) {

@@ -21,10 +21,18 @@ trait ShowsSunnahCourses
         $course = $this->loadCourse($course);
 
         $posts = $course->posts()->with(['follows'])->get();
+        $rows = \App\Models\SunnahAttendance::whereHas('session', fn ($q) => $q->where('sunnah_course_id', $course->id))->get(['student_id', 'status'])->groupBy('student_id');
+        $attendance = $rows->map(function ($r) {
+            $c = $r->countBy('status');
+
+            return ['total' => $r->count(), 'absent' => $c['absent'] ?? 0, 'rate' => (int) round((($c['present'] ?? 0) + ($c['late'] ?? 0)) / max(1, $r->count()) * 100)];
+        });
 
         return view('shared.sunnah.show', $extra + [
             'course' => $course,
             'posts' => $posts,
+            'attendance' => $attendance,
+            'sessionsCount' => $course->sessions()->count(),
             'summary' => app(SunnahService::class)->summary($course),
         ]);
     }
@@ -53,9 +61,13 @@ trait ShowsSunnahCourses
             'title' => ['required', 'string', 'max:200'],
             'body' => ['nullable', 'string', 'max:3000'],
             'due_on' => ['nullable', 'date'],
-        ], [], ['type' => 'النوع', 'title' => 'العنوان', 'body' => 'التفاصيل', 'due_on' => 'تاريخ التسليم']);
+            'max_score' => ['nullable', 'integer', 'between:1,100'],
+        ], [], ['type' => 'النوع', 'title' => 'العنوان', 'body' => 'التفاصيل', 'due_on' => 'تاريخ التسليم', 'max_score' => 'درجة الواجب']);
         if ($data['type'] !== 'homework') {
             $data['due_on'] = null;
+            $data['max_score'] = null;
+        } else {
+            $data['max_score'] = $data['max_score'] ?? 10;
         }
         app(SunnahService::class)->addPost($course, $request->user(), $data);
     }
@@ -65,6 +77,57 @@ trait ShowsSunnahCourses
         abort_unless($post->sunnah_course_id === $course->id, 404);
         $post->delete();
         \App\Services\AuditLogger::log('sunnah.post.delete', "حذف {$post->typeLabel()} «{$post->title}» من دورة «{$course->title}»", $post);
+    }
+
+    protected function attendanceView(Request $request, SunnahCourse $course, string $area)
+    {
+        $date = $request->date('date')?->toDateString() ?? now()->toDateString();
+        $date = min($date, now()->toDateString());
+        $course = $this->loadCourse($course);
+        $session = \App\Models\SunnahSession::where('sunnah_course_id', $course->id)->whereDate('held_on', $date)->first();
+
+        return view('shared.sunnah.attendance', [
+            'course' => $course, 'area' => $area, 'date' => $date, 'session' => $session,
+            'existing' => $session ? $session->attendance()->get()->keyBy('student_id') : collect(),
+            'sessions' => $course->sessions()->withCount(['attendance as present_count' => fn ($q) => $q->whereIn('status', ['present', 'late'])])->get(),
+        ]);
+    }
+
+    protected function saveAttendance(Request $request, SunnahCourse $course): string
+    {
+        $data = $request->validate([
+            'date' => ['required', 'date', 'before_or_equal:today'],
+            'topic' => ['nullable', 'string', 'max:200'],
+            'attendance' => ['required', 'array'],
+            'attendance.*.status' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\AttendanceRecord::STATUSES))],
+            'attendance.*.note' => ['nullable', 'string', 'max:255'],
+        ], [], ['date' => 'التاريخ', 'topic' => 'موضوع اللقاء']);
+        $date = \Illuminate\Support\Carbon::parse($data['date'])->toDateString();
+        app(SunnahService::class)->recordAttendance($course, $date, $data['topic'] ?? null, $data['attendance'], $request->user());
+
+        return $date;
+    }
+
+    protected function homeworkView(SunnahCourse $course, \App\Models\SunnahPost $post, string $area)
+    {
+        abort_unless($post->sunnah_course_id === $course->id && $post->isHomework(), 404);
+
+        return view('shared.sunnah.homework', [
+            'course' => $this->loadCourse($course), 'post' => $post, 'area' => $area,
+            'follows' => $post->follows()->get()->keyBy('student_id'),
+        ]);
+    }
+
+    protected function saveHomework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post): int
+    {
+        abort_unless($post->sunnah_course_id === $course->id && $post->isHomework(), 404);
+        $data = $request->validate([
+            'rows' => ['nullable', 'array'],
+            'rows.*.score' => ['nullable', 'integer', 'between:0,'.($post->max_score ?: 10)],
+            'rows.*.feedback' => ['nullable', 'string', 'max:255'],
+        ], [], ['rows.*.score' => 'الدرجة', 'rows.*.feedback' => 'الملاحظة']);
+
+        return app(SunnahService::class)->gradeHomework($post, $data['rows'] ?? [], $request->user());
     }
 
     /** Arabic PDF with the center logo: course details and every participant's result. */

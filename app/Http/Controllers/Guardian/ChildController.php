@@ -49,8 +49,9 @@ class ChildController extends Controller
 
         return view('parent.courses', [
             'student' => $student->load('circle'),
-            'sunnahCourses' => $sunnah->forStudent($student),
+            'sunnahCourses' => $courses = $sunnah->forStudent($student),
             'follow' => $sunnah->followFor($student),
+            'attendance' => $courses->mapWithKeys(fn ($e) => [$e->sunnah_course_id => $sunnah->attendanceFor($e->course, $student->id)]),
         ]);
     }
 

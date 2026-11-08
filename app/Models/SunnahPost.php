@@ -17,11 +17,11 @@ class SunnahPost extends Model
 
     public const TYPE_ICONS = ['instruction' => 'info-circle', 'homework' => 'pencil-square'];
 
-    protected $fillable = ['sunnah_course_id', 'author_id', 'type', 'title', 'body', 'due_on'];
+    protected $fillable = ['sunnah_course_id', 'author_id', 'type', 'title', 'body', 'due_on', 'max_score'];
 
     protected function casts(): array
     {
-        return ['due_on' => DateOnly::class];
+        return ['due_on' => DateOnly::class, 'max_score' => 'integer'];
     }
 
     public function course(): BelongsTo

@@ -83,6 +83,76 @@ class SunnahDemoSeeder extends Seeder
             'objectives' => "أن يعرف الطالب معنى الإعجاز ووجوهه\nأن يتذوق الطالب أمثلة من بلاغة القرآن في السور التي يحفظها\nأن يرد الطالب على شبهة واحدة بأسلوب علمي مهذب",
             'criteria' => [['الاختبار النهائي', 50], ['البحث المختصر', 25], ['الحضور', 10], ['المشاركة', 15]],
         ],
+        [
+            'title' => 'الأربعون النووية (الأحاديث 21 - 42)', 'category' => 'hadith', 'teacher' => 3, 'level' => ['متوسط', 'متقدم'], 'gender' => 'male', 'count' => 22,
+            'weeks' => [-1, 9], 'status' => 'running', 'schedule' => 'الأحد والثلاثاء بعد صلاة العصر', 'location' => 'المصلى الرئيس',
+            'description' => 'الجزء الثاني من الأربعين النووية لمن أتم الجزء الأول.',
+            'objectives' => "أن يحفظ الطالب الأحاديث من 21 إلى 42\nأن يشرح الطالب معنى كل حديث بأسلوبه\nأن يربط الطالب الأحاديث بأخلاقه وتعاملاته",
+            'criteria' => [['حفظ متون الأحاديث', 40], ['فهم المعاني والفوائد', 30], ['الحضور والانضباط', 15], ['المشاركة', 15]],
+        ],
+        [
+            'title' => 'آداب طالب العلم وحامل القرآن', 'category' => 'quran_adab', 'teacher' => 6, 'level' => ['متقدم'], 'gender' => 'male', 'count' => 18,
+            'weeks' => [-30, -22], 'status' => 'finished', 'schedule' => 'الاثنين بعد صلاة المغرب', 'location' => 'المكتبة',
+            'description' => 'مختارات من «حلية طالب العلم» مع آداب حملة القرآن.',
+            'objectives' => "أن يتحلى الطالب بالإخلاص في طلب العلم\nأن يحترم الطالب شيخه ومجلس العلم\nأن يرتب الطالب وقته بين الحفظ والمراجعة والدراسة",
+            'criteria' => [['الاختبار النهائي', 50], ['الحضور والانضباط', 20], ['المشاركة والتفاعل', 15], ['الواجبات والبحوث', 15]],
+        ],
+        [
+            'title' => 'الإعجاز العلمي في آيات الكون', 'category' => 'ijaz', 'teacher' => 2, 'level' => ['متقدم', 'متوسط'], 'gender' => 'male', 'count' => 20,
+            'weeks' => [-20, -13], 'status' => 'finished', 'schedule' => 'الأربعاء بعد صلاة المغرب', 'location' => 'القاعة 6',
+            'description' => 'وقفات مع آيات الخلق والكون وما فيها من دلائل القدرة.',
+            'objectives' => "أن يتأمل الطالب آيات الكون في السور التي يحفظها\nأن يفرق الطالب بين الحقيقة العلمية والنظرية\nأن يزداد يقين الطالب بأن القرآن من عند الله",
+            'criteria' => [['الاختبار النهائي', 50], ['البحث المختصر', 25], ['الحضور', 10], ['المشاركة', 15]],
+        ],
+        [
+            'title' => 'صفة الوضوء والصلاة للصغار', 'category' => 'salah', 'teacher' => 10, 'level' => ['مبتدئ'], 'gender' => 'male', 'count' => 26,
+            'weeks' => [-16, -10], 'status' => 'finished', 'schedule' => 'السبت والثلاثاء بعد صلاة العصر', 'location' => 'المصلى الرئيس',
+            'description' => 'دورة عملية مبسطة للأطفال في الوضوء والصلاة.',
+            'objectives' => "أن يتوضأ الطفل وضوءاً صحيحاً\nأن يصلي الطفل صلاة صحيحة بأركانها\nأن يحفظ الطفل أذكار الوضوء والصلاة",
+            'criteria' => [['التطبيق العملي للوضوء', 30], ['التطبيق العملي للصلاة', 40], ['حفظ الأذكار', 15], ['الحضور', 15]],
+        ],
+        [
+            'title' => 'السيرة النبوية: العهد المدني', 'category' => 'seerah', 'teacher' => 5, 'level' => ['متوسط', 'متقدم'], 'gender' => 'male', 'count' => 24,
+            'weeks' => [-26, -18], 'status' => 'finished', 'schedule' => 'السبت بعد صلاة المغرب', 'location' => 'القاعة 4',
+            'description' => 'من بناء المسجد النبوي إلى وفاة النبي ﷺ.',
+            'objectives' => "أن يعرف الطالب أسس بناء المجتمع في المدينة\nأن يذكر الطالب أهم الغزوات ودروسها\nأن يستخلص الطالب صفات القيادة من سيرة النبي ﷺ",
+            'criteria' => [['الاختبار النهائي', 50], ['البحث المختصر', 20], ['الحضور والانضباط', 15], ['المشاركة والتفاعل', 15]],
+        ],
+        [
+            'title' => 'الخلفاء الراشدون', 'category' => 'sahaba', 'teacher' => 9, 'level' => ['متوسط'], 'gender' => 'male', 'count' => 20,
+            'weeks' => [-6, 2], 'status' => 'running', 'schedule' => 'الخميس بعد صلاة العصر', 'location' => 'القاعة 3',
+            'description' => 'سير أبي بكر وعمر وعثمان وعلي رضي الله عنهم.',
+            'objectives' => "أن يعرف الطالب فضائل الخلفاء الراشدين\nأن يذكر الطالب أبرز أعمال كل خليفة\nأن يحب الطالب الصحابة ويقتدي بهم",
+            'criteria' => [['الاختبار النهائي', 50], ['الحضور والانضباط', 20], ['المشاركة والتفاعل', 15], ['الواجبات والبحوث', 15]],
+        ],
+        [
+            'title' => 'أحاديث الأخلاق والآداب للفتيات', 'category' => 'hadith', 'teacher' => 19, 'level' => null, 'gender' => 'female', 'count' => 22,
+            'weeks' => [-14, -7], 'status' => 'finished', 'schedule' => 'الاثنين بعد صلاة العصر', 'location' => 'قاعة الطالبات',
+            'description' => 'عشرون حديثاً في الأخلاق والحياء وبر الوالدين.',
+            'objectives' => "أن تحفظ الطالبة الأحاديث المقررة\nأن تطبق الطالبة آداب الحديث في بيتها\nأن تذكر الطالبة موقفاً عملياً لكل خلق",
+            'criteria' => [['حفظ الأحاديث المقررة', 40], ['فهم المعاني والفوائد', 30], ['الحضور والانضباط', 15], ['المشاركة', 15]],
+        ],
+        [
+            'title' => 'صفة صلاة المرأة وأحكامها', 'category' => 'salah', 'teacher' => 20, 'level' => null, 'gender' => 'female', 'count' => 20,
+            'weeks' => [-3, 4], 'status' => 'running', 'schedule' => 'الثلاثاء بعد صلاة العصر', 'location' => 'قاعة الطالبات',
+            'description' => 'أحكام الصلاة الخاصة بالفتيات مع التطبيق العملي.',
+            'objectives' => "أن تؤدي الطالبة الصلاة بأركانها وواجباتها\nأن تعرف الطالبة أحكام اللباس في الصلاة\nأن تحافظ الطالبة على السنن الرواتب",
+            'criteria' => [['الاختبار النظري', 35], ['التطبيق العملي للصلاة', 35], ['حفظ الأذكار', 15], ['الحضور والانضباط', 15]],
+        ],
+        [
+            'title' => 'آداب تلاوة القرآن للفتيات', 'category' => 'quran_adab', 'teacher' => 18, 'level' => null, 'gender' => 'female', 'count' => 18,
+            'weeks' => [-24, -18], 'status' => 'finished', 'schedule' => 'الخميس بعد صلاة العصر', 'location' => 'قاعة الطالبات',
+            'description' => 'آداب التلاوة والاستماع وفضل أهل القرآن.',
+            'objectives' => "أن تلتزم الطالبة بآداب التلاوة\nأن تعرف الطالبة فضل حفظ القرآن\nأن تحفظ الطالبة خمسة أحاديث في فضل القرآن",
+            'criteria' => [['الاختبار النهائي', 40], ['تطبيق الآداب في الحلقة', 30], ['حفظ الأحاديث المقررة', 15], ['الحضور', 15]],
+        ],
+        [
+            'title' => 'قصص الأنبياء في القرآن', 'category' => 'other', 'teacher' => 12, 'level' => ['مبتدئ', 'متوسط'], 'gender' => 'male', 'count' => 28,
+            'weeks' => [-2, 6], 'status' => 'running', 'schedule' => 'الأربعاء بعد صلاة العصر', 'location' => 'القاعة 5',
+            'description' => 'قصص الأنبياء كما وردت في القرآن مع الدروس المستفادة.',
+            'objectives' => "أن يسرد الطالب قصة خمسة من الأنبياء\nأن يستخرج الطالب درساً عملياً من كل قصة\nأن يربط الطالب القصة بالآيات التي يحفظها",
+            'criteria' => [['الاختبار النهائي', 50], ['الحضور والانضباط', 20], ['المشاركة والتفاعل', 15], ['الواجبات والبحوث', 15]],
+        ],
     ];
 
     /** [type, title, details] in the order the sheikh gives them during the course. */
@@ -177,7 +247,9 @@ class SunnahDemoSeeder extends Seeder
                 }
             }
             if ($def['status'] !== 'planned') {
+                $this->attendance($course, $def, $teacher, $picked, $start, $end, $parentChildren);
                 $this->posts($course, $def, $teacher, $picked, $start, $parentChildren);
+                $this->gradeHomework($course, $teacher, $parentChildren);
             }
         }
     }
@@ -194,7 +266,7 @@ class SunnahDemoSeeder extends Seeder
             if ($at->gt(now())) {
                 break;
             }
-            $post = new SunnahPost(['type' => $type, 'title' => $title, 'body' => $body, 'due_on' => $type === 'homework' ? $at->copy()->addDays(5)->toDateString() : null]);
+            $post = new SunnahPost(['type' => $type, 'title' => $title, 'body' => $body, 'due_on' => $type === 'homework' ? $at->copy()->addDays(5)->toDateString() : null, 'max_score' => $type === 'homework' ? 10 : null]);
             $post->sunnah_course_id = $course->id;
             $post->author_id = $teacher->id;
             $post->created_at = $post->updated_at = $at;
@@ -220,6 +292,87 @@ class SunnahDemoSeeder extends Seeder
         // In a running course the demo parent still has the newest homework to confirm.
         if ($def['status'] === 'running' && ($latest = SunnahPost::where('sunnah_course_id', $course->id)->where('type', 'homework')->latest()->first())) {
             SunnahPostFollow::where('sunnah_post_id', $latest->id)->whereIn('student_id', $parentChildren->pluck('id'))->update(['done_at' => null]);
+        }
+    }
+
+    private const TOPICS = [
+        'hadith' => ['التعريف بالدورة والمتن', 'حديث النية', 'حديث جبريل', 'أركان الإسلام', 'الحلال بيّن', 'الدين النصيحة', 'مراجعة', 'حديث «لا ضرر ولا ضرار»', 'حديث «اتق الله حيثما كنت»', 'الاختبار'],
+        'quran_adab' => ['فضل القرآن وأهله', 'آداب التلاوة', 'آداب المصحف', 'الإخلاص في الحفظ', 'آداب الحلقة', 'مراجعة', 'الاختبار'],
+        'salah' => ['شروط الصلاة', 'أركان الصلاة', 'واجبات الصلاة', 'سنن الصلاة', 'مبطلات الصلاة', 'سجود السهو', 'تطبيق عملي', 'الاختبار'],
+        'taharah' => ['أنواع المياه', 'فرائض الوضوء', 'سنن الوضوء ونواقضه', 'الغسل', 'التيمم', 'تطبيق عملي', 'الاختبار'],
+        'seerah' => ['نسب النبي ﷺ ومولده', 'نشأته ﷺ', 'البعثة', 'الدعوة السرية والجهرية', 'الهجرة إلى الحبشة', 'عام الحزن', 'الهجرة إلى المدينة', 'مراجعة', 'الاختبار'],
+        'sahaba' => ['مكانة الصحابة', 'أبو بكر الصديق', 'عمر بن الخطاب', 'عثمان بن عفان', 'علي بن أبي طالب', 'مراجعة', 'الاختبار'],
+        'default' => ['مقدمة الدورة', 'الدرس الأول', 'الدرس الثاني', 'الدرس الثالث', 'عرض الطلاب', 'مراجعة', 'الاختبار'],
+    ];
+
+    /** Meeting days read from the schedule text («الأحد والثلاثاء بعد صلاة العصر»). */
+    private function days(string $schedule): array
+    {
+        $map = ['السبت' => 6, 'الأحد' => 0, 'الاثنين' => 1, 'الثلاثاء' => 2, 'الأربعاء' => 3, 'الخميس' => 4];
+        $days = [];
+        foreach ($map as $name => $d) {
+            if (str_contains($schedule, $name)) {
+                $days[] = $d;
+            }
+        }
+
+        return $days ?: [0];
+    }
+
+    /** One attendance sheet per meeting until today; each student has his own habit of attendance. */
+    private function attendance(SunnahCourse $course, array $def, User $teacher, Collection $students, $start, $end, Collection $parentChildren): void
+    {
+        $days = $this->days($def['schedule']);
+        $topics = self::TOPICS[$def['category']] ?? self::TOPICS['default'];
+        $habit = $students->mapWithKeys(fn ($s) => [$s->id => $parentChildren->contains('id', $s->id) ? 95 : [97, 93, 90, 86, 78][mt_rand(0, 4)]]);
+        $rows = [];
+        $n = 0;
+        $last = $end->copy()->min(now());
+        for ($day = $start->copy(); $day->lte($last); $day->addDay()) {
+            if (! in_array($day->dayOfWeek, $days, true)) {
+                continue;
+            }
+            $session = \App\Models\SunnahSession::create([
+                'sunnah_course_id' => $course->id, 'held_on' => $day->toDateString(),
+                'topic' => $topics[min($n, count($topics) - 1)] ?? null, 'taken_by' => $teacher->id,
+            ]);
+            $n++;
+            foreach ($students as $s) {
+                $roll = mt_rand(1, 100);
+                $status = $roll <= $habit[$s->id] ? ($roll % 9 === 0 ? 'late' : 'present') : ($roll % 3 === 0 ? 'excused' : 'absent');
+                $rows[] = ['sunnah_session_id' => $session->id, 'student_id' => $s->id, 'status' => $status,
+                    'note' => $status === 'excused' ? ['مريض', 'سفر مع الأسرة', 'موعد طبي'][mt_rand(0, 2)] : null,
+                    'created_at' => $day, 'updated_at' => $day];
+            }
+        }
+        foreach (array_chunk($rows, 500) as $chunk) {
+            \App\Models\SunnahAttendance::insert($chunk);
+        }
+    }
+
+    /** The sheikh grades homework that is past due; most handed it in. */
+    private function gradeHomework(SunnahCourse $course, User $teacher, Collection $parentChildren): void
+    {
+        $feedback = ['أحسنت، بارك الله فيك', 'عمل متقن', 'يحتاج مزيداً من العناية', 'خط جميل وترتيب حسن', 'ناقص، أكمله', 'ممتاز'];
+        $ids = SunnahEnrollment::where('sunnah_course_id', $course->id)->pluck('student_id');
+        $newest = $course->status === 'running' ? SunnahPost::where('sunnah_course_id', $course->id)->where('type', 'homework')->latest()->value('id') : null;
+        foreach (SunnahPost::where('sunnah_course_id', $course->id)->where('type', 'homework')->whereDate('due_on', '<', now()->toDateString())->get() as $post) {
+            foreach ($ids as $sid) {
+                $showcase = $parentChildren->contains('id', $sid);
+                if ($showcase && $post->id === $newest) {
+                    continue; // the demo parent still has this one to confirm
+                }
+                if (! $showcase && mt_rand(1, 100) > 88) {
+                    continue; // not handed in yet
+                }
+                $score = $showcase ? mt_rand(8, 10) : max(3, min(10, (int) round(mt_rand(55, 100) / 10)));
+                $f = SunnahPostFollow::firstOrNew(['sunnah_post_id' => $post->id, 'student_id' => $sid]);
+                $f->fill([
+                    'score' => $score, 'feedback' => mt_rand(1, 100) <= 40 ? $feedback[$score >= 9 ? [0, 1, 5][mt_rand(0, 2)] : ($score >= 7 ? 3 : [2, 4][mt_rand(0, 1)])] : null,
+                    'graded_at' => $post->due_on->copy()->addDays(mt_rand(1, 3))->setTime(19, 0)->min(now()), 'graded_by' => $teacher->id,
+                    'done_at' => $f->done_at ?? $post->due_on->copy()->setTime(18, 0),
+                ])->save();
+            }
         }
     }
 

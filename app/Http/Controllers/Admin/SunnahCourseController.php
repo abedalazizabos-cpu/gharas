@@ -130,6 +130,30 @@ class SunnahCourseController extends Controller
         return redirect()->route('admin.sunnah.show', $course)->with('success', $n ? "تم رصد درجات {$n} من الطلاب." : 'حُفظت الملاحظات. لا يُرصد الطالب إلا إذا أُدخلت كل درجاته.');
     }
 
+    public function attendance(Request $request, SunnahCourse $course)
+    {
+        return $this->attendanceView($request, $course, 'admin');
+    }
+
+    public function storeAttendance(Request $request, SunnahCourse $course)
+    {
+        $date = $this->saveAttendance($request, $course);
+
+        return redirect()->route('admin.sunnah.attendance', [$course, 'date' => $date])->with('success', 'تم حفظ حضور اللقاء.');
+    }
+
+    public function homework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    {
+        return $this->homeworkView($course, $post, 'admin');
+    }
+
+    public function storeHomework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    {
+        $n = $this->saveHomework($request, $course, $post);
+
+        return redirect()->to(route('admin.sunnah.show', $course).'#posts')->with('success', "تم حفظ تقييم الواجب ({$n} طالب).");
+    }
+
     public function storePost(Request $request, SunnahCourse $course)
     {
         $this->savePost($request, $course);

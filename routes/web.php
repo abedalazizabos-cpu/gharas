@@ -130,6 +130,10 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('{course}/grade', [Admin\SunnahCourseController::class, 'gradeForm'])->name('grade');
             Route::post('{course}/grade', [Admin\SunnahCourseController::class, 'grade'])->name('grade.store');
             Route::post('{course}/posts', [Admin\SunnahCourseController::class, 'storePost'])->name('posts.store');
+            Route::get('{course}/attendance', [Admin\SunnahCourseController::class, 'attendance'])->name('attendance');
+            Route::post('{course}/attendance', [Admin\SunnahCourseController::class, 'storeAttendance'])->name('attendance.store');
+            Route::get('{course}/posts/{post}/grades', [Admin\SunnahCourseController::class, 'homework'])->name('homework');
+            Route::post('{course}/posts/{post}/grades', [Admin\SunnahCourseController::class, 'storeHomework'])->name('homework.store');
             Route::delete('{course}/posts/{post}', [Admin\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
@@ -237,6 +241,10 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('{course}/grade', [Teacher\SunnahCourseController::class, 'gradeForm'])->name('grade');
             Route::post('{course}/grade', [Teacher\SunnahCourseController::class, 'grade'])->name('grade.store');
             Route::post('{course}/posts', [Teacher\SunnahCourseController::class, 'storePost'])->name('posts.store');
+            Route::get('{course}/attendance', [Teacher\SunnahCourseController::class, 'attendance'])->name('attendance');
+            Route::post('{course}/attendance', [Teacher\SunnahCourseController::class, 'storeAttendance'])->name('attendance.store');
+            Route::get('{course}/posts/{post}/grades', [Teacher\SunnahCourseController::class, 'homework'])->name('homework');
+            Route::post('{course}/posts/{post}/grades', [Teacher\SunnahCourseController::class, 'storeHomework'])->name('homework.store');
             Route::delete('{course}/posts/{post}', [Teacher\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
