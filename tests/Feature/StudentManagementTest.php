@@ -18,12 +18,13 @@ class StudentManagementTest extends TestCase
         $parent = $this->parentUser();
 
         $this->actingAs($admin)->post(route('admin.students.store'), [
-            'full_name' => 'عمر أحمد السبيعي', 'enrollment_date' => now()->toDateString(),
+            'full_name' => 'عمر أحمد السبيعي', 'enrollment_date' => now()->toDateString(), 'memorized_juz_at_join' => 2,
             'circle_id' => $circle->id, 'parent_ids' => [$parent->id],
         ])->assertRedirect();
 
         $student = Student::where('full_name', 'عمر أحمد السبيعي')->firstOrFail();
         $this->assertSame($circle->id, $student->current_circle_id);
+        $this->assertSame(2, $student->memorized_juz_at_join);
         $this->assertNotEmpty($student->student_number);
         $this->assertTrue($parent->isParentOf($student));
         $this->assertDatabaseHas('circle_enrollments', ['student_id' => $student->id, 'circle_id' => $circle->id, 'left_at' => null]);
@@ -46,7 +47,7 @@ class StudentManagementTest extends TestCase
         $from = $this->circleFor($this->teacher());
         $to = $this->circleFor($this->teacher());
         $admin = $this->admin();
-        $this->actingAs($admin)->post(route('admin.students.store'), ['full_name' => 'طالب منقول', 'enrollment_date' => now()->toDateString(), 'circle_id' => $from->id, 'guardian_phone' => '0557778889', 'guardian_name' => 'ولي أمر منقول']);
+        $this->actingAs($admin)->post(route('admin.students.store'), ['full_name' => 'طالب منقول', 'enrollment_date' => now()->toDateString(), 'memorized_juz_at_join' => 0, 'circle_id' => $from->id, 'guardian_phone' => '0557778889', 'guardian_name' => 'ولي أمر منقول']);
         $student = Student::where('full_name', 'طالب منقول')->first();
 
         $session = CircleSession::create(['circle_id' => $from->id, 'session_date' => now()->toDateString()]);
@@ -111,7 +112,7 @@ class StudentManagementTest extends TestCase
         $this->actingAs($this->admin())->post(route('admin.students.store'), [
             'full_name' => '', 'student_number' => $existing->student_number, 'birth_date' => now()->addYear()->toDateString(),
             'circle_id' => 9999, 'phone' => 'abc',
-        ])->assertSessionHasErrors(['full_name', 'student_number', 'birth_date', 'circle_id', 'phone', 'enrollment_date']);
+        ])->assertSessionHasErrors(['full_name', 'student_number', 'birth_date', 'circle_id', 'phone', 'enrollment_date', 'memorized_juz_at_join']);
     }
 
     public function test_admin_can_search_and_filter_students(): void

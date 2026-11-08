@@ -100,6 +100,24 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::resource('criteria', Admin\AssessmentCriterionController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['criteria' => 'criterion']);
         });
 
+        // لجنة الجودة: individual (per juz) and combined tests.
+        Route::prefix('quality')->name('quality.')->middleware('perm:quality.manage')->group(function () {
+            Route::get('/', [Admin\QualityController::class, 'index'])->name('index');
+            Route::post('assign', [Admin\QualityController::class, 'assign'])->name('assign');
+            Route::delete('tests/{test}', [Admin\QualityController::class, 'destroy'])->name('destroy');
+            Route::get('tests/{test}/grade', [Admin\QualityController::class, 'gradeForm'])->name('grade');
+            Route::post('tests/{test}/grade', [Admin\QualityController::class, 'grade'])->name('grade.store');
+            Route::get('settings', [Admin\QualityController::class, 'settings'])->name('settings');
+            Route::post('examiners/{teacher}', [Admin\QualityController::class, 'examiner'])->name('examiner');
+            Route::put('pass-score', [Admin\QualityController::class, 'passScore'])->name('pass-score');
+            Route::post('criteria', [Admin\QualityController::class, 'storeCriterion'])->name('criteria.store');
+            Route::put('criteria/{criterion}', [Admin\QualityController::class, 'updateCriterion'])->name('criteria.update');
+            Route::delete('criteria/{criterion}', [Admin\QualityController::class, 'destroyCriterion'])->name('criteria.destroy');
+            Route::post('stages', [Admin\QualityController::class, 'storeStage'])->name('stages.store');
+            Route::put('stages/{stage}', [Admin\QualityController::class, 'updateStage'])->name('stages.update');
+            Route::delete('stages/{stage}', [Admin\QualityController::class, 'destroyStage'])->name('stages.destroy');
+        });
+
         Route::middleware('perm:reports.view')->group(function () {
             Route::get('reports', [Admin\ReportController::class, 'index'])->name('reports.index');
             Route::get('reports/center', [Admin\ReportController::class, 'center'])->name('reports.center');
@@ -190,6 +208,12 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('assessments', [Teacher\AssessmentController::class, 'index'])->name('assessments.index');
             Route::get('assessments/create', [Teacher\AssessmentController::class, 'create'])->name('assessments.create');
             Route::post('assessments', [Teacher\AssessmentController::class, 'store'])->name('assessments.store');
+        });
+
+        Route::middleware('perm:teacher.quality')->group(function () {
+            Route::get('quality', [Teacher\QualityController::class, 'index'])->name('quality.index');
+            Route::get('quality/{test}/grade', [Teacher\QualityController::class, 'gradeForm'])->name('quality.grade');
+            Route::post('quality/{test}/grade', [Teacher\QualityController::class, 'grade'])->name('quality.grade.store');
         });
 
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');

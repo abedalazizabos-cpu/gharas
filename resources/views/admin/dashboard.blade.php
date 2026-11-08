@@ -23,6 +23,8 @@
     @if (auth()->user()->hasPermission('reports.view'))<a href="{{ route('admin.reports.center') }}" class="btn btn-outline-primary"><i class="bi bi-bar-chart"></i> تقرير المركز</a>@endif
 </x-page-header>
 
+@include('shared._quality-alerts', ['studentRoute' => 'admin.students.show', 'moreUrl' => route('admin.quality.index')])
+
 <div class="row g-3 mb-3">
     <div class="col-6 col-xl-3"><x-stat-card icon="people" label="إجمالي الطلاب" :value="$summary['students_total']" :hint="'النشطون: '.$summary['students_active']" /></div>
     <div class="col-6 col-xl-3"><x-stat-card icon="person-badge" label="المحفظون" :value="$summary['teachers']" color="gold" :hint="'أولياء الأمور: '.$summary['parents']" /></div>

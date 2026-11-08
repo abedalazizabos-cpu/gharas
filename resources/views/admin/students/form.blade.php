@@ -25,6 +25,16 @@
             </div>
             <x-field name="birth_date" label="تاريخ الميلاد (اختياري)" type="date" :value="optional($student->birth_date)->format('Y-m-d')" col="col-md-3" />
             <x-field name="phone" label="رقم التواصل (اختياري)" :value="$student->phone" col="col-md-3" dir="ltr" />
+            <div class="col-md-3">
+                <label class="form-label" for="memorized_juz_at_join">عدد الأجزاء المحفوظة عند التسجيل <span class="text-danger">*</span></label>
+                <select id="memorized_juz_at_join" name="memorized_juz_at_join" class="form-select @error('memorized_juz_at_join') is-invalid @enderror" required>
+                    @for ($n = 0; $n <= 30; $n++)
+                        <option value="{{ $n }}" @selected((int) old('memorized_juz_at_join', $student->memorized_juz_at_join ?? 0) === $n)>{{ $n === 0 ? 'لا شيء (يبدأ من جزء عمّ)' : \App\Support\Juz::count($n).' ('.($n === 1 ? 'الجزء 30' : 'من 30 إلى '.(31 - $n)).')' }}</option>
+                    @endfor
+                </select>
+                @error('memorized_juz_at_join')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <div class="form-text">يبدأ الطلاب من الجزء 30 نزولاً. تُحسب منه الاختبارات المستحقة.</div>
+            </div>
         </div>
 
         <h6 class="fw-bold text-success mb-3">الحلقة</h6>

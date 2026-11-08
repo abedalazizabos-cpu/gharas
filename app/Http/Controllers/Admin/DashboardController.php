@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\Circle;
+use App\Models\Student;
+use App\Services\QualityService;
 use App\Services\StatsService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, StatsService $stats)
+    public function index(Request $request, StatsService $stats, QualityService $quality)
     {
         return view('admin.dashboard', [
+            'qualityAlerts' => $request->user()->hasPermission('quality.manage')
+                ? $quality->alerts(Student::active()->with('circle')->orderBy('full_name')->get()) : collect(),
             'summary' => $stats->adminSummary(),
             'attendanceTrend' => $stats->attendanceTrend(14),
             'gradeDistribution' => $stats->gradeDistribution(),

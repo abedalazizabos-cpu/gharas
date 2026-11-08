@@ -45,6 +45,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'is_quality_examiner' => 'boolean',
         ];
     }
 
@@ -67,6 +68,12 @@ class User extends Authenticatable
     public function isTeacher(): bool
     {
         return $this->role === self::ROLE_TEACHER;
+    }
+
+    /** A teacher the admin picked for the quality committee (لجنة الجودة). */
+    public function isQualityExaminer(): bool
+    {
+        return $this->isTeacher() && (bool) $this->is_quality_examiner;
     }
 
     public function isParent(): bool

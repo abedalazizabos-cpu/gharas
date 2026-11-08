@@ -34,6 +34,7 @@ class DemoSeeder extends Seeder
     {
         // One transaction keeps seeding ~15k rows fast on MySQL.
         DB::transaction(fn () => $this->seed());
+        $this->call(QualityDemoSeeder::class);
     }
 
     private function seed(): void
