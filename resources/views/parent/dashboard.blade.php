@@ -67,6 +67,21 @@
                             </div>
                         </div>
                     @endif
+                    @if ($card['sunnah']->isNotEmpty())
+                        <div class="border rounded p-2 mb-2 small">
+                            <div class="fw-bold mb-1"><i class="bi bi-journal-bookmark text-success"></i> دورات قسم السنة</div>
+                            @foreach ($card['sunnah'] as $e)
+                                <div class="d-flex justify-content-between gap-2 {{ $loop->last ? '' : 'mb-1' }}">
+                                    <span>{{ $e->course->title }} <span class="text-muted">· {{ $e->course->teacher?->name }}</span></span>
+                                    @if ($e->isGraded() && $e->course->results_to_parents)
+                                        <span class="badge text-bg-{{ $e->statusColor() }} align-self-start">{{ $e->gradeLabel() }} · {{ $e->percentLabel() }}</span>
+                                    @else
+                                        <span class="badge text-bg-{{ $e->course->statusColor() }} align-self-start">{{ $e->course->statusLabel() }}</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                     @if ($card['last_record'])
                         <div class="small bg-green-soft rounded p-2"><strong>آخر تسميع:</strong> {{ $card['last_record']->typeLabel() }} - {{ $card['last_record']->rangeLabel() }} · {{ $card['last_record']->pagesLabel() }} · <span class="text-success">{{ $card['last_record']->gradeLabel() }}</span> <span class="text-muted">({{ $card['last_record']->recorded_on->format('Y/m/d') }})</span></div>
                     @endif

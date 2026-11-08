@@ -42,6 +42,11 @@ class AuditPresenter
         'quality.grade' => ['رصد نتيجة اختبار جودة', 'success'],
         'quality.cancel' => ['إلغاء اختبار جودة', 'danger'],
         'quality.settings' => ['تعديل إعدادات لجنة الجودة', 'primary'],
+        'sunnah.create' => ['إنشاء دورة في قسم السنة', 'success'],
+        'sunnah.update' => ['تعديل دورة في قسم السنة', 'primary'],
+        'sunnah.delete' => ['حذف دورة من قسم السنة', 'danger'],
+        'sunnah.students' => ['تعديل طلاب دورة', 'info'],
+        'sunnah.grade' => ['رصد درجات دورة', 'success'],
         'teacher.warn.revoke' => ['إلغاء تنبيه أو إنذار', 'secondary'],
         'teacher.warn.ack' => ['اطلاع المحفظ على تنبيه', 'secondary'],
         'memorization.update' => ['تعديل سجل تسميع', 'primary'],
@@ -69,7 +74,7 @@ class AuditPresenter
         'guardian' => 'أولياء الأمور (من صفحة الطالب)', 'circle' => 'الحلقات', 'teacher' => 'المحفظون',
         'memorization' => 'سجلات التسميع', 'attendance' => 'الحضور', 'assessment' => 'التقييمات',
         'criterion' => 'معايير التقييم', 'announcement' => 'الإعلانات', 'settings' => 'الإعدادات',
-        'system' => 'النظام', 'access' => 'الصلاحيات', 'trash' => 'سلة المحذوفات',
+        'system' => 'النظام', 'access' => 'الصلاحيات', 'trash' => 'سلة المحذوفات', 'sunnah' => 'قسم السنة',
     ];
 
     private const FIELDS = [
@@ -95,6 +100,8 @@ class AuditPresenter
         'records' => 'سجلات التسميع المحذوفة', 'assessments' => 'التقييمات المحذوفة', 'sessions' => 'أيام الحضور المحذوفة',
         'students' => 'الطلاب المحذوفون', 'parents' => 'أولياء الأمور المحذوفون', 'teacher' => 'حساب المحفظ المحذوف',
         'circles' => 'الحلقات المحذوفة', 'accounts' => 'الحسابات المحذوفة', 'count' => 'عدد العناصر',
+        'category' => 'مجال الدورة', 'objectives' => 'الأهداف', 'starts_on' => 'تاريخ البداية', 'ends_on' => 'تاريخ النهاية',
+        'schedule' => 'الموعد', 'results_to_parents' => 'النتائج ظاهرة لأولياء الأمور', 'added' => 'الطلاب المضافون', 'removed' => 'الطلاب المزالون',
     ];
 
     public static function action(string $code): string
@@ -154,13 +161,13 @@ class AuditPresenter
         if ($value === null || $value === '' || $value === []) {
             return '—';
         }
-        if (is_bool($value) || in_array($field, ['shared_with_parent', 'is_public', 'is_active', 'capacity_override', 'reminders_enabled'], true)) {
+        if (is_bool($value) || in_array($field, ['shared_with_parent', 'is_public', 'is_active', 'capacity_override', 'reminders_enabled', 'results_to_parents'], true)) {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'نعم' : 'لا';
         }
 
         return match ($field) {
             'role' => User::ROLES[$value] ?? $value,
-            'status' => User::STATUSES[$value] ?? Student::STATUSES[$value] ?? Circle::STATUSES[$value] ?? $value,
+            'status' => User::STATUSES[$value] ?? Student::STATUSES[$value] ?? Circle::STATUSES[$value] ?? \App\Models\SunnahCourse::STATUSES[$value] ?? $value,
             'gender' => Student::GENDERS[$value] ?? $value,
             'type' => MemorizationRecord::TYPES[$value] ?? $value,
             'grade' => MemorizationRecord::GRADES[$value] ?? $value,
@@ -174,6 +181,9 @@ class AuditPresenter
             'circle_id' => Circle::withTrashed()->find($value)?->name ?? (string) $value,
             'student_id' => Student::withTrashed()->find($value)?->full_name ?? (string) $value,
             'teacher_id', 'parent_id' => User::withTrashed()->find($value)?->nameFor(auth()->user()) ?? (string) $value,
+            'category' => \App\Models\SunnahCourse::CATEGORIES[$value] ?? $value,
+            'added', 'removed' => Student::withTrashed()->whereIn('id', (array) $value)->pluck('full_name')->join('، ') ?: '—',
+            'starts_on', 'ends_on' => self::date($value, 'Y/m/d'),
             'attached', 'detached' => ($action === 'parent.children'
                 ? Student::withTrashed()->whereIn('id', (array) $value)->pluck('full_name')
                 : User::withTrashed()->whereIn('id', (array) $value)->pluck('name'))->join('، ') ?: '—',

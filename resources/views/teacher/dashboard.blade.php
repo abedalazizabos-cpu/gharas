@@ -28,6 +28,20 @@
         <a href="{{ route('teacher.quality.index') }}" class="btn btn-sm btn-primary">رصد النتائج</a></div>
 @endif
 @include('shared._quality-alerts', ['studentRoute' => 'teacher.students.show'])
+@if ($sunnahCourses->isNotEmpty())
+    <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-journal-bookmark text-success ms-1"></i> دوراتي في قسم السنة</div>
+        <ul class="list-group list-group-flush">
+            @foreach ($sunnahCourses as $c)
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div><a href="{{ route('teacher.sunnah.show', $c) }}" class="fw-semibold">{{ $c->title }}</a> <span class="badge text-bg-{{ $c->statusColor() }}">{{ $c->statusLabel() }}</span>
+                        <div class="small text-muted">{{ $c->schedule ?: $c->periodLabel() }} · {{ $c->enrollments_count }} طالباً · قُيّم {{ $c->graded_count }}</div></div>
+                    <a href="{{ route('teacher.sunnah.grade', $c) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square"></i> رصد الدرجات</a>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
 <div class="row g-3 mb-3">
     <div class="col-6 col-xl-3"><x-stat-card icon="bullseye" label="حلقاتي" :value="$circles->count()" /></div>

@@ -10,6 +10,9 @@
     @if ($authUser->hasPermission('teacher.quality') && ($authUser->isQualityExaminer() || \App\Models\QualityTest::where('examiner_id', $authUser->id)->exists()))
         @include('partials.nav-link', ['route' => 'teacher.quality.index', 'active' => 'teacher.quality.*', 'icon' => 'patch-check', 'label' => 'اختبارات الجودة', 'badge' => \App\Models\QualityTest::where('examiner_id', $authUser->id)->pending()->count() ?: null])
     @endif
+    @if ($authUser->hasPermission('teacher.sunnah') && \App\Models\SunnahCourse::for($authUser)->exists())
+        @include('partials.nav-link', ['route' => 'teacher.sunnah.index', 'active' => 'teacher.sunnah.*', 'icon' => 'journal-bookmark', 'label' => 'دوراتي في قسم السنة'])
+    @endif
     <div class="nav-section">التواصل</div>
     @if ($authUser->hasPermission('messages.send'))@include('partials.nav-link', ['route' => 'messages.index', 'active' => 'messages.*', 'icon' => 'chat-dots', 'label' => 'الرسائل', 'badge' => $unreadMessages ?: null])@endif
     @include('partials.nav-link', ['route' => 'teacher.announcements', 'icon' => 'megaphone', 'label' => 'الإعلانات'])

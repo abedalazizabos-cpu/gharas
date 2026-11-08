@@ -118,6 +118,19 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::delete('stages/{stage}', [Admin\QualityController::class, 'destroyStage'])->name('stages.destroy');
         });
 
+        // قسم السنة: courses, their sheikh, students and grading rules.
+        Route::prefix('sunnah')->name('sunnah.')->middleware('perm:sunnah.manage')->group(function () {
+            Route::get('/', [Admin\SunnahCourseController::class, 'index'])->name('index');
+            Route::get('create', [Admin\SunnahCourseController::class, 'create'])->name('create');
+            Route::post('/', [Admin\SunnahCourseController::class, 'store'])->name('store');
+            Route::get('{course}', [Admin\SunnahCourseController::class, 'show'])->name('show');
+            Route::get('{course}/edit', [Admin\SunnahCourseController::class, 'edit'])->name('edit');
+            Route::put('{course}', [Admin\SunnahCourseController::class, 'update'])->name('update');
+            Route::delete('{course}', [Admin\SunnahCourseController::class, 'destroy'])->name('destroy');
+            Route::get('{course}/grade', [Admin\SunnahCourseController::class, 'gradeForm'])->name('grade');
+            Route::post('{course}/grade', [Admin\SunnahCourseController::class, 'grade'])->name('grade.store');
+        });
+
         Route::middleware('perm:reports.view')->group(function () {
             Route::get('reports', [Admin\ReportController::class, 'index'])->name('reports.index');
             Route::get('reports/center', [Admin\ReportController::class, 'center'])->name('reports.center');
@@ -216,6 +229,13 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('quality/{test}/grade', [Teacher\QualityController::class, 'grade'])->name('quality.grade.store');
         });
 
+        Route::prefix('sunnah')->name('sunnah.')->middleware('perm:teacher.sunnah')->group(function () {
+            Route::get('/', [Teacher\SunnahCourseController::class, 'index'])->name('index');
+            Route::get('{course}', [Teacher\SunnahCourseController::class, 'show'])->name('show');
+            Route::get('{course}/grade', [Teacher\SunnahCourseController::class, 'gradeForm'])->name('grade');
+            Route::post('{course}/grade', [Teacher\SunnahCourseController::class, 'grade'])->name('grade.store');
+        });
+
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');
     });
 
@@ -226,6 +246,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('reports/center', [Visitor\ReportController::class, 'center'])->name('reports.center');
             Route::get('reports/circles/{circle}', [Visitor\ReportController::class, 'circle'])->name('reports.circle');
             Route::get('reports/teachers/{teacher}', [Visitor\ReportController::class, 'teacher'])->name('reports.teacher');
+            Route::get('sunnah', [Visitor\SunnahController::class, 'index'])->name('sunnah.index');
         });
         Route::middleware('perm:visitor.archive')->group(function () {
             Route::get('weeks', [\App\Http\Controllers\ArchiveController::class, 'week'])->name('weeks.show');

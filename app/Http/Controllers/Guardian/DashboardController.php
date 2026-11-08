@@ -18,7 +18,9 @@ class DashboardController extends Controller
         $children = $parent->children()->with('circle.teacher')->orderBy('full_name')->get();
         $qualityStatus = $quality->statusFor($children);
 
-        $cards = $children->map(function ($child) use ($stats, $progress, $qualityStatus) {
+        $sunnah = \App\Models\SunnahEnrollment::whereIn('student_id', $children->pluck('id'))->whereHas('course')->with('course.teacher')->get()->groupBy('student_id');
+
+        $cards = $children->map(function ($child) use ($stats, $progress, $qualityStatus, $sunnah) {
             $counts = $stats->attendanceCounts($child->attendanceRecords()->whereHas('session', fn ($q) => $q->where('session_date', '>=', now()->subDays(30)->toDateString()))->getQuery());
             $last = $child->memorizationRecords()->where('shared_with_parent', true)->with('surah')->latest('recorded_on')->latest('id')->first();
 
@@ -30,6 +32,7 @@ class DashboardController extends Controller
                 'quran_percent' => $progress->quranPercent($child),
                 'last_record' => $last,
                 'quality' => $qualityStatus[$child->id] ?? null,
+                'sunnah' => $sunnah[$child->id] ?? collect(),
             ];
         });
 

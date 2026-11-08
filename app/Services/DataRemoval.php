@@ -26,7 +26,7 @@ class DataRemoval
 {
     /** Soft-deletable tables in the order a purge must run (children before parents). */
     private const MODELS = [
-        MemorizationRecord::class, Assessment::class, CircleSession::class,
+        MemorizationRecord::class, Assessment::class, CircleSession::class, \App\Models\SunnahCourse::class,
         Student::class, Circle::class, Announcement::class, User::class,
     ];
 
@@ -85,7 +85,7 @@ class DataRemoval
 
         return DB::transaction(function () use ($stamp) {
             Circle::query()->get()->each(fn (Circle $c) => $this->removeCircle($c, Carbon::parse($stamp)));
-            foreach ([MemorizationRecord::class, Assessment::class, CircleSession::class, Student::class, Announcement::class] as $model) {
+            foreach ([MemorizationRecord::class, Assessment::class, CircleSession::class, \App\Models\SunnahCourse::class, Student::class, Announcement::class] as $model) {
                 $model::query()->update(['deleted_at' => $stamp]);
             }
             User::where('role', '!=', User::ROLE_SUPERADMIN)->update(['deleted_at' => $stamp]);

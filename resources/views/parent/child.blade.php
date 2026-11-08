@@ -32,6 +32,7 @@
     </div>
     <div class="col-lg-7">@include('shared._progress')</div>
 </div>
+@include('shared._sunnah-courses', ['forParent' => true])
 
 <div class="card">
     <div class="card-header p-0 border-0">

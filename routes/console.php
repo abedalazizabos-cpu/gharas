@@ -56,6 +56,25 @@ Artisan::command('gharas:demo-quality {--fresh : حذف بيانات الجود�
     $this->info('تمت إضافة بيانات تجريبية للجنة الجودة: مشايخ اللجنة teacher2 وteacher6 وteacher11 وteacher17، وولي الأمر 0550000001 يرى اختبارات ابنيه.');
 })->purpose('إضافة بيانات تجريبية للجنة الجودة والاختبارات');
 
+// قسم السنة trial data on an existing trial database (the main demo seeder already includes it).
+Artisan::command('gharas:demo-sunnah {--fresh : حذف كل دورات قسم السنة الحالية وإعادة بنائها}', function () {
+    if (app()->isProduction()) {
+        $this->error('البيانات التجريبية لا تُضاف في بيئة الإنتاج (APP_ENV=production).');
+
+        return 1;
+    }
+    if (\App\Models\SunnahCourse::withTrashed()->exists()) {
+        if (! $this->option('fresh')) {
+            $this->warn('توجد دورات في قسم السنة. لإعادة بناء بيانات التجربة شغّل الأمر مع --fresh (يحذف كل الدورات الحالية ونتائجها).');
+
+            return 1;
+        }
+        \Database\Seeders\SunnahDemoSeeder::clear();
+    }
+    $this->call('db:seed', ['--class' => \Database\Seeders\SunnahDemoSeeder::class, '--force' => true]);
+    $this->info('تمت إضافة 8 دورات تجريبية لقسم السنة. ولي الأمر 0550000001 يرى دورات ابنيه ونتائجهما.');
+})->purpose('إضافة بيانات تجريبية لقسم السنة والدورات');
+
 Artisan::command('gharas:backup', function (BackupService $backup) {
     $this->info('تم إنشاء النسخة الاحتياطية: '.$backup->create());
 })->purpose('إنشاء نسخة احتياطية من قاعدة البيانات في storage/app/backups');

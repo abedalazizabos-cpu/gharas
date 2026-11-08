@@ -27,6 +27,7 @@ class ChildController extends Controller
 
         return view('parent.child', [
             'student' => $student->load('circle.teacher'),
+            'sunnahCourses' => app(\App\Services\SunnahService::class)->forStudent($student),
             'tab' => in_array($request->query('tab'), ['attendance', 'memorization', 'assessments', 'summary'], true) ? $request->query('tab') : 'memorization',
             'progress' => $progress->surahProgress($student),
             'quranPercent' => $progress->quranPercent($student),

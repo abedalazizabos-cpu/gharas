@@ -63,6 +63,7 @@
 </div>
 
 @isset($quality)@include('shared._quality-card', isset($examiners) ? ['examiners' => $examiners] : [])@endisset
+@include('shared._sunnah-courses')
 <div class="card">
     <div class="card-header p-0 border-0">
         <ul class="nav nav-tabs px-3 pt-2" role="tablist">
