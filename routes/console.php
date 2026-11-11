@@ -93,5 +93,11 @@ Artisan::command('gharas:sunnah-status', function () {
 })->purpose('تحديث حالة دورات قسم السنة حسب تاريخ البداية والنهاية');
 Schedule::command('gharas:sunnah-status')->dailyAt('00:15');
 
+// Each morning: teachers who did not record yesterday's attendance or recitation are alerted, and the admins get a summary.
+Artisan::command('gharas:recording-alerts', function (\App\Services\RecordingGapService $gaps) {
+    $this->info('أيام غير مسجلة أمس: '.$gaps->notifyYesterday());
+})->purpose('تنبيه المحفظين الذين لم يسجلوا حضور أو تسميع يوم أمس، وإشعار الإدارة');
+Schedule::command('gharas:recording-alerts')->dailyAt('07:00');
+
 // Daily backup when the Laravel scheduler is running (php artisan schedule:work / cron).
 Schedule::command('gharas:backup')->dailyAt('02:00');

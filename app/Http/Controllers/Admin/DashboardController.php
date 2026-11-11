@@ -17,6 +17,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', [
             'qualityAlerts' => $request->user()->hasPermission('quality.manage')
                 ? $quality->alerts(Student::active()->with('circle')->orderBy('full_name')->get()) : collect(),
+            'recordingGaps' => $request->user()->hasPermission('attendance.manage') ? app(\App\Services\RecordingGapService::class)->gaps() : collect(),
             'summary' => $stats->adminSummary(),
             'attendanceTrend' => $stats->attendanceTrend(14),
             'gradeDistribution' => $stats->gradeDistribution(),

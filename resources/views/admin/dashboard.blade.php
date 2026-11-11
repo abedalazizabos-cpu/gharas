@@ -23,6 +23,22 @@
     @if (auth()->user()->hasPermission('reports.view'))<a href="{{ route('admin.reports.center') }}" class="btn btn-outline-primary"><i class="bi bi-bar-chart"></i> تقرير المركز</a>@endif
 </x-page-header>
 
+@if ($recordingGaps->isNotEmpty())
+    @php($gapTeachers = $recordingGaps->groupBy(fn ($g) => $g['teacher']?->id)->sortByDesc(fn ($r) => $r->count()))
+    <div class="card border-danger mb-3" id="recording-gaps">
+        <div class="card-header bg-danger-subtle text-danger-emphasis d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="fw-semibold"><i class="bi bi-exclamation-octagon-fill"></i> محفظون لم يسجّلوا الحضور أو التسميع (آخر {{ \App\Services\RecordingGapService::RECENT_DAYS }} أيام)</span>
+            <a href="{{ route('admin.recording-gaps.index') }}" class="btn btn-sm btn-outline-danger">التفاصيل</a>
+        </div>
+        <div class="card-body small d-flex flex-wrap gap-2">
+            @foreach ($gapTeachers->take(12) as $rows)
+                <a href="{{ route('admin.recording-gaps.index', ['teacher' => $rows->first()['teacher']?->id]) }}" class="badge text-bg-light border text-decoration-none fw-normal fs-6" title="{{ $rows->map(fn ($g) => $g['circle']->name.' '.$g['date']->format('m/d').': '.\App\Services\RecordingGapService::missingLabel($g))->implode(' · ') }}">
+                    {{ $rows->first()['teacher']?->name }} <span class="badge text-bg-danger">{{ $rows->count() }}</span></a>
+            @endforeach
+            @if ($gapTeachers->count() > 12)<span class="text-muted align-self-center">و{{ $gapTeachers->count() - 12 }} آخرون</span>@endif
+        </div>
+    </div>
+@endif
 @include('shared._quality-alerts', ['studentRoute' => 'admin.students.show', 'moreUrl' => route('admin.quality.index')])
 
 <div class="row g-3 mb-3">

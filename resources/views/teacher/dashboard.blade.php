@@ -22,6 +22,33 @@
     </div>
 @endforeach
 
+@if ($recordingGaps->isNotEmpty())
+    <div class="card border-danger mb-3" id="recording-gaps">
+        <div class="card-header bg-danger-subtle text-danger-emphasis fw-semibold"><i class="bi bi-exclamation-octagon-fill"></i> أيام لم تسجّل فيها الحضور أو التسميع ({{ $recordingGaps->count() }})
+            <small class="fw-normal d-block">آخر {{ \App\Services\RecordingGapService::RECENT_DAYS }} أيام. سجّل ما فاتك، أو بيّن أن الحلقة لم تنعقد ذلك اليوم. تظهر هذه القائمة لإدارة المركز أيضاً.</small></div>
+        <ul class="list-group list-group-flush">
+            @foreach ($recordingGaps as $g)
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div><strong>{{ $g['circle']->name }}</strong> <span class="text-muted">· {{ \App\Models\Circle::DAYS[$g['date']->dayOfWeek] }} {{ $g['date']->format('Y/m/d') }}</span>
+                        <div class="small text-danger">لم يُسجَّل: {{ \App\Services\RecordingGapService::missingLabel($g) }}</div></div>
+                    <div class="d-flex flex-wrap gap-1 align-items-center">
+                        @if ($g['attendance'] && auth()->user()->hasPermission('teacher.attendance'))<a href="{{ route('teacher.attendance.create', [$g['circle'], 'date' => $g['date']->toDateString()]) }}" class="btn btn-sm btn-success"><i class="bi bi-calendar-check"></i> سجّل الحضور</a>@endif
+                        @if ($g['memorization'] && auth()->user()->hasPermission('teacher.memorization'))<a href="{{ route('teacher.memorization.create', ['date' => $g['date']->toDateString()]) }}" class="btn btn-sm btn-primary"><i class="bi bi-plus-circle"></i> سجّل التسميع</a>@endif
+                        <form method="POST" action="{{ route('teacher.day-offs.store', $g['circle']) }}" class="d-flex gap-1">
+                            @csrf <input type="hidden" name="date" value="{{ $g['date']->toDateString() }}">
+                            <select name="reason" class="form-select form-select-sm" style="width:auto" required>
+                                <option value="">لم تنعقد الحلقة بسبب…</option>
+                                @foreach (\App\Models\CircleDayOff::REASONS as $r)<option value="{{ $r }}">{{ $r }}</option>@endforeach
+                            </select>
+                            <button class="btn btn-sm btn-outline-secondary">حفظ</button>
+                        </form>
+                    </div>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 @if ($qualityPending)
     <div class="alert alert-info d-flex flex-wrap align-items-center gap-2"><i class="bi bi-patch-check-fill fs-5"></i>
         <span class="flex-grow-1">لديك {{ $qualityPending }} {{ $qualityPending > 2 && $qualityPending < 11 ? 'طلاب' : 'طالب' }} بانتظار اختبار لجنة الجودة.</span>

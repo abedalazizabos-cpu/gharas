@@ -39,6 +39,7 @@ class DashboardController extends Controller
             'qualityAlerts' => $quality->alerts(\App\Models\Student::active()->whereIn('current_circle_id', $circleIds)->with('circle')->orderBy('full_name')->get()),
             'qualityPending' => $teacher->hasPermission('teacher.quality') ? QualityTest::where('examiner_id', $teacher->id)->pending()->count() : 0,
             'sunnahCourses' => $teacher->hasPermission('teacher.sunnah') ? \App\Models\SunnahCourse::for($teacher)->where('status', '!=', 'finished')->withCount(['enrollments', 'enrollments as graded_count' => fn ($q) => $q->graded()])->get() : collect(),
+            'recordingGaps' => app(\App\Services\RecordingGapService::class)->gaps($circles, null, null),
             'warnings' => $teacher->warnings()->pending()->with('circle')->latest()->get(),
             'unreadMessages' => $teacher->receivedMessages()->whereNull('read_at')->count(),
         ]);

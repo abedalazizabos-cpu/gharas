@@ -38,7 +38,7 @@ class MemorizationController extends Controller
         $selected = $request->integer('student') ?: null;
 
         return view('shared.memorization-form', [
-            'record' => new MemorizationRecord(['recorded_on' => now(), 'type' => 'new', 'shared_with_parent' => true, 'student_id' => $selected]),
+            'record' => new MemorizationRecord(['recorded_on' => $request->date('date') && $request->date('date')->lte(now()) ? $request->date('date') : now(), 'type' => 'new', 'shared_with_parent' => true, 'student_id' => $selected]),
             'students' => $students,
             'surahs' => Surah::orderBy('id')->get(),
             'action' => route('teacher.memorization.store'),

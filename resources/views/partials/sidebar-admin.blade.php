@@ -10,6 +10,7 @@
     <div class="nav-section">المتابعة التعليمية</div>
     @if ($u->hasPermission('archive.view'))@include('partials.nav-link', ['route' => 'admin.weeks.show', 'active' => 'admin.weeks.*|admin.archive.*', 'icon' => 'calendar-week', 'label' => 'السجل الأسبوعي والأرشيف'])@endif
     @if ($u->hasPermission('attendance.manage'))@include('partials.nav-link', ['route' => 'admin.attendance.index', 'active' => 'admin.attendance.*', 'icon' => 'calendar-check', 'label' => 'الحضور والغياب'])@endif
+    @if ($u->hasPermission('attendance.manage'))@include('partials.nav-link', ['route' => 'admin.recording-gaps.index', 'icon' => 'exclamation-octagon', 'label' => 'متابعة تسجيل المحفظين'])@endif
     @if ($u->hasPermission('memorization.manage'))@include('partials.nav-link', ['route' => 'admin.memorization.index', 'active' => 'admin.memorization.*', 'icon' => 'book', 'label' => 'الحفظ والمراجعة'])@endif
     @if ($u->hasPermission('assessments.manage'))@include('partials.nav-link', ['route' => 'admin.assessments.index', 'active' => 'admin.assessments.*', 'icon' => 'award', 'label' => 'التقييمات'])@endif
     @if ($u->hasPermission('quality.manage'))@include('partials.nav-link', ['route' => 'admin.quality.index', 'active' => 'admin.quality.*', 'icon' => 'patch-check', 'label' => 'لجنة الجودة والاختبارات'])@endif
