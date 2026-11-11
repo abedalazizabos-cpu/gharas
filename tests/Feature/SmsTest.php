@@ -104,4 +104,21 @@ class SmsTest extends TestCase
         $this->assertSame(1, SmsService::parts(str_repeat('ب', 70)));
         $this->assertSame(2, SmsService::parts(str_repeat('ب', 71)));
     }
+
+    public function test_sms_is_hidden_from_admins_until_the_super_admin_connects_the_phone(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertDontSee('رسائل SMS للأهالي');
+        $this->actingAs($admin)->get(route('admin.sms.index'))->assertNotFound();
+        $this->actingAs($admin)->post(route('admin.sms.send'), ['audience' => 'all', 'text' => 'x'])->assertNotFound();
+
+        $super = $this->superAdmin();
+        $this->actingAs($super)->get(route('admin.dashboard'))->assertOk()->assertSee('رسائل SMS للأهالي');
+        $this->actingAs($super)->get(route('admin.sms.index'))->assertOk();
+
+        Http::fake();
+        $this->connect();
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('رسائل SMS للأهالي');
+        $this->actingAs($admin)->get(route('admin.sms.index'))->assertOk();
+    }
 }

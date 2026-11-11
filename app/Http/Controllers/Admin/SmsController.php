@@ -21,6 +21,8 @@ class SmsController extends Controller
 
     public function index(Request $request)
     {
+        $this->hiddenUntilConnected($request);
+
         return view('admin.sms.index', [
             'configured' => $this->sms->configured(),
             'circles' => Circle::active()->with('teacher')->orderBy('name')->get(),
@@ -32,6 +34,7 @@ class SmsController extends Controller
 
     public function send(Request $request)
     {
+        $this->hiddenUntilConnected($request);
         $data = $request->validate([
             'audience' => ['required', Rule::in(['all', 'circle', 'student'])],
             'circle_id' => ['required_if:audience,circle', 'nullable', 'integer', 'exists:circles,id'],
@@ -104,5 +107,11 @@ class SmsController extends Controller
             'student' => $q->whereHas('children', fn ($c) => $c->whereKey($id))->get(),
             default => $q->whereHas('children', fn ($c) => $c->active())->get(),
         };
+    }
+
+    /** Until the super admin connects the center's phone, the SMS pages do not exist for anyone else. */
+    private function hiddenUntilConnected(Request $request): void
+    {
+        abort_unless($request->user()->isSuperAdmin() || $this->sms->configured(), 404);
     }
 }
