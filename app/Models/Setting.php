@@ -117,6 +117,13 @@ class Setting extends Model
         return $all[$key] ?? $default ?? (self::DEFAULTS[$key] ?? null);
     }
 
+    /** Forgets the values kept for this request (used between tests). */
+    public static function flushCache(): void
+    {
+        static::$loaded = null;
+        Cache::forget('settings.all');
+    }
+
     public static function put(string $key, ?string $value): void
     {
         static::query()->updateOrCreate(['key' => $key], ['value' => $value]);

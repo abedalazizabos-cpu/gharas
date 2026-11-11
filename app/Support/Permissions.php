@@ -28,6 +28,7 @@ class Permissions
             'archive.view' => 'السجل الأسبوعي والأرشيف',
             'reports.view' => 'التقارير وتنزيلها PDF',
             'announcements.manage' => 'الإعلانات',
+            'sms.send' => 'إرسال رسائل SMS لأولياء الأمور',
             'contact.manage' => 'رسائل التواصل',
             'admins.manage' => 'حسابات المديرين',
             'visitors.manage' => 'حسابات الزوار والداعمين',

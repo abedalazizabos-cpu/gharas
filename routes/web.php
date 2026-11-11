@@ -139,6 +139,16 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::delete('{course}/posts/{post}', [Admin\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
+        // SMS to parents from the center's phone.
+        Route::middleware('perm:sms.send')->group(function () {
+            Route::get('sms', [Admin\SmsController::class, 'index'])->name('sms.index');
+            Route::post('sms', [Admin\SmsController::class, 'send'])->name('sms.send')->middleware('throttle:10,1');
+        });
+        Route::middleware('role:superadmin')->group(function () {
+            Route::get('sms/settings', [Admin\SmsController::class, 'settings'])->name('sms.settings');
+            Route::put('sms/settings', [Admin\SmsController::class, 'saveSettings'])->name('sms.settings.update');
+        });
+
         // Days teachers did not record, and days circles did not meet.
         Route::middleware('perm:attendance.manage')->group(function () {
             Route::get('recording-gaps', [Admin\RecordingGapController::class, 'index'])->name('recording-gaps.index');

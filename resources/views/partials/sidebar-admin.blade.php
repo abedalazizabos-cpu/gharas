@@ -18,6 +18,7 @@
     @if ($u->hasPermission('certificates.manage'))@include('partials.nav-link', ['route' => 'admin.certificates.index', 'active' => 'admin.certificates.*', 'icon' => 'award-fill', 'label' => 'الشهادات'])@endif
     @if ($u->hasPermission('reports.view'))@include('partials.nav-link', ['route' => 'admin.reports.index', 'active' => 'admin.reports.*', 'icon' => 'bar-chart-line', 'label' => 'التقارير'])@endif
     <div class="nav-section">التواصل</div>
+    @if ($u->hasPermission('sms.send'))@include('partials.nav-link', ['route' => 'admin.sms.index', 'active' => 'admin.sms.*', 'icon' => 'phone', 'label' => 'رسائل SMS للأهالي'])@endif
     @if ($u->hasPermission('announcements.manage'))@include('partials.nav-link', ['route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'megaphone', 'label' => 'الإعلانات'])@endif
     @if ($u->hasPermission('contact.manage'))@include('partials.nav-link', ['route' => 'admin.contact.index', 'icon' => 'envelope', 'label' => 'رسائل التواصل', 'badge' => $newContacts ?: null])@endif
     <div class="nav-section">النظام</div>

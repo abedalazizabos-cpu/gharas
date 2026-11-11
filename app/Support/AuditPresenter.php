@@ -51,6 +51,7 @@ class AuditPresenter
         'sunnah.post.delete' => ['حذف تعليمات أو واجب', 'danger'],
         'sunnah.attendance' => ['حضور دورة', 'primary'],
         'sunnah.homework' => ['تقييم واجب في دورة', 'success'],
+        'sms.send' => ['إرسال رسائل SMS', 'info'],
         'dayoff.create' => ['يوم لم تنعقد فيه حلقة', 'info'],
         'dayoff.delete' => ['إلغاء يوم عدم انعقاد', 'warning'],
         'certificate.issue' => ['إصدار شهادات', 'success'],
@@ -83,7 +84,7 @@ class AuditPresenter
         'guardian' => 'أولياء الأمور (من صفحة الطالب)', 'circle' => 'الحلقات', 'teacher' => 'المحفظون',
         'memorization' => 'سجلات التسميع', 'attendance' => 'الحضور', 'assessment' => 'التقييمات',
         'criterion' => 'معايير التقييم', 'announcement' => 'الإعلانات', 'settings' => 'الإعدادات',
-        'system' => 'النظام', 'access' => 'الصلاحيات', 'trash' => 'سلة المحذوفات', 'sunnah' => 'قسم السنة', 'certificate' => 'الشهادات', 'dayoff' => 'أيام عدم انعقاد الحلقات',
+        'system' => 'النظام', 'access' => 'الصلاحيات', 'trash' => 'سلة المحذوفات', 'sunnah' => 'قسم السنة', 'certificate' => 'الشهادات', 'dayoff' => 'أيام عدم انعقاد الحلقات', 'sms' => 'رسائل SMS',
     ];
 
     private const FIELDS = [
