@@ -26,10 +26,17 @@ class DayOffController extends Controller
 
         // Announced on the day itself: the parents are told there is no class today.
         if ($data['date'] === now()->toDateString()) {
+            $sms = collect();
             foreach ($circle->students()->active()->with('parents')->get() as $student) {
+                $sms = $sms->merge($student->parents->pluck('phone'));
                 foreach ($student->parents as $parent) {
                     $parent->notify(new \App\Notifications\SystemNotification('لا تحفيظ اليوم', "لا تنعقد {$circle->name} اليوم ({$data['reason']}). نعتذر عن ذلك، ونلقاكم في الموعد القادم بإذن الله.", route('parent.children.show', $student), 'calendar-x'));
                 }
+            }
+
+            $smsService = app(\App\Services\SmsService::class);
+            if ($smsService->autoEnabled('day_off')) {
+                $smsService->send($sms, "لا تحفيظ اليوم في {$circle->name} ({$data['reason']}). نلقاكم في الموعد القادم بإذن الله.", 'day_off', $request->user());
             }
 
             return back()->with('success', 'سُجّل أنه لا تحفيظ اليوم، وأُشعر أولياء الأمور، وستراه الإدارة مع السبب.');

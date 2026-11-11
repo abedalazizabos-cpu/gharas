@@ -72,7 +72,7 @@
     <div class="card mb-3">
         <div class="card-header">بيانات التواصل</div>
         <div class="card-body"><div class="row g-3">
-            <x-field name="contact_phone" label="الهاتف" :value="$settings['contact_phone']" col="col-md-4" dir="ltr" />
+            <x-field name="contact_phone" label="الهاتف" :value="$settings['contact_phone']" col="col-md-4" dir="ltr" help="رقم يظهر للزوار. لإرسال SMS للأهالي من رقم المركز اربط جوال المركز من «رسائل SMS للأهالي ← إعدادات الربط»." />
             <x-field name="contact_email" label="البريد الإلكتروني" type="email" :value="$settings['contact_email']" col="col-md-4" dir="ltr" />
             <x-field name="contact_address" label="العنوان" :value="$settings['contact_address']" col="col-md-4" />
         </div></div>

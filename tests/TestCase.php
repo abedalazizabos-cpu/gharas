@@ -17,6 +17,7 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        \App\Models\Setting::flushCache();
         $this->seed([SurahSeeder::class, SettingSeeder::class]);
     }
 

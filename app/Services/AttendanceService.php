@@ -68,6 +68,7 @@ class AttendanceService
                     route('parent.children.show', $student),
                     'calendar-x',
                 ));
+                app(SmsService::class)->toParents($student, "نحيطكم علماً بغياب {$student->full_name} عن {$circle->name} اليوم {$date}.", 'absence');
             }
 
             return $session;

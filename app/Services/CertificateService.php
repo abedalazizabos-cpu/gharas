@@ -103,6 +103,7 @@ class CertificateService
             AuditLogger::log('certificate.issue', 'إصدار '.$issued->count().' '.($issued->count() > 2 && $issued->count() < 11 ? 'شهادات' : 'شهادة').': '.$issued->take(5)->map(fn ($c) => $c->content['student'])->implode('، ').($issued->count() > 5 ? ' …' : ''));
             if ($notify) {
                 foreach ($issued as $c) {
+                    app(SmsService::class)->toParents($c->student, "مبارك! صدرت {$c->kindLabel()} لـ{$c->content['student']}: {$c->subject()}. يمكنكم تحميلها من حسابكم في الموقع.", 'certificate');
                     foreach ($c->student->parents ?? [] as $parent) {
                         $parent->notify(new SystemNotification('شهادة جديدة', "صدرت {$c->kindLabel()} لـ{$c->content['student']}: {$c->subject()}. يمكنك تحميلها PDF.", route('parent.children.show', [$c->student_id, 'tab' => 'certificates']).'#certificates', 'award'));
                     }
