@@ -83,6 +83,15 @@ class WeeklyArchiveService
         return $this->pdf($circle, $this->mask($this->week($start, $circle)), false);
     }
 
+    /** Deletes the saved week files (the rows stay); each is rebuilt on its next download. */
+    public function forgetFiles(): int
+    {
+        $paths = WeeklyArchive::pluck('path')->filter(fn ($p) => Storage::disk('local')->exists($p))->values()->all();
+        Storage::disk('local')->delete($paths);
+
+        return count($paths);
+    }
+
     /** Saves the week's row; the PDF is written now, or on first download when $withFile is false. */
     public function archive(Circle $circle, Carbon $start, bool $withFile = true): WeeklyArchive
     {

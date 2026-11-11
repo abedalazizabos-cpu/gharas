@@ -24,7 +24,7 @@ class PdfExport
         $sections = self::$last['sections'];
         $mpdf->WriteHTML(view('pdf.table', [
             'center' => Setting::get('center_name', 'مركز غراس لتحفيظ القرآن الكريم'),
-            'logo' => self::logoPath(),
+            'logo' => self::$last['logo'] = self::logoPath(),
             'title' => $title,
             'subtitle' => $subtitle,
             'sections' => $sections,
@@ -45,7 +45,8 @@ class PdfExport
         ]]];
         $mpdf = self::mpdf('A4-L', 0);
         $mpdf->SetTitle(($c['title'] ?? 'شهادة').' - '.($c['student'] ?? ''));
-        $mpdf->WriteHTML(view('pdf.certificate', ['c' => $c, 'logo' => self::logoPath()])->render());
+        self::$last['logo'] = self::logoPath();
+        $mpdf->WriteHTML(view('pdf.certificate', ['c' => $c, 'logo' => self::$last['logo']])->render());
 
         return $mpdf->Output('', 'S');
     }
