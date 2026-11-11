@@ -139,6 +139,13 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::delete('{course}/posts/{post}', [Admin\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
+        // Days teachers did not record, and days circles did not meet.
+        Route::middleware('perm:attendance.manage')->group(function () {
+            Route::get('recording-gaps', [Admin\RecordingGapController::class, 'index'])->name('recording-gaps.index');
+            Route::post('day-offs', [Admin\RecordingGapController::class, 'storeOff'])->name('day-offs.store');
+            Route::delete('day-offs/{off}', [Admin\RecordingGapController::class, 'destroyOff'])->name('day-offs.destroy');
+        });
+
         // Certificates: the admin writes the wording and issues each one.
         Route::prefix('certificates')->name('certificates.')->middleware('perm:certificates.manage')->group(function () {
             Route::get('/', [Admin\CertificateController::class, 'index'])->name('index');
@@ -260,6 +267,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         });
 
         Route::get('certificates', [\App\Http\Controllers\CertificateController::class, 'teacher'])->name('certificates.index');
+        Route::post('circles/{circle}/day-off', [Teacher\DayOffController::class, 'store'])->name('day-offs.store');
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');
     });
 

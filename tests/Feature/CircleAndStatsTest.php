@@ -148,8 +148,21 @@ class CircleAndStatsTest extends TestCase
         $this->assertNotNull($logo);
         $this->assertFileExists(public_path($logo));
         $this->get(route('home'))->assertSee(asset($logo), false);
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertSee(asset($logo), false);
+        // PDFs (reports, certificates) are built with the new logo.
+        \App\Support\PdfExport::certificate(['title' => 'شهادة', 'student' => 'طالب']);
+        $this->assertSame(public_path($logo), \App\Support\PdfExport::$last['logo']);
+        \App\Support\PdfExport::render('تقرير', null, []);
+        $this->assertSame(public_path($logo), \App\Support\PdfExport::$last['logo']);
+
+        // A saved weekly file is removed so it is rebuilt with the new logo on its next download.
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $circle = $this->circleFor($this->teacher());
+        $archive = \App\Models\WeeklyArchive::create(['circle_id' => $circle->id, 'week_start' => '2026-01-03', 'path' => 'archives/old.pdf', 'records_count' => 0, 'attendance_count' => 0, 'generated_at' => now()]);
+        \Illuminate\Support\Facades\Storage::disk('local')->put($archive->path, 'old');
 
         $this->actingAs($admin)->put(route('admin.settings.update'), $settings + ['remove_logo' => '1'])->assertSessionHasNoErrors();
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing('archives/old.pdf');
         $this->assertNull(\App\Models\Setting::get('center_logo'));
         $this->assertFileDoesNotExist(public_path($logo));
     }

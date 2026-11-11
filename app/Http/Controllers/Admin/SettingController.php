@@ -43,6 +43,12 @@ class SettingController extends Controller
             AuditLogger::log('settings.update', 'تعديل إعدادات النظام', null, $old, $new);
         }
 
+        // Saved weekly files carry the logo and the center name: remove them so each one is rebuilt
+        // with the new ones on its next download. Certificates and reports are always built fresh.
+        if (array_intersect(array_keys($new), ['center_logo', 'center_name', 'logo_on_pdf'])) {
+            app(\App\Services\WeeklyArchiveService::class)->forgetFiles();
+        }
+
         return back()->with('success', 'تم حفظ الإعدادات بنجاح.');
     }
 
