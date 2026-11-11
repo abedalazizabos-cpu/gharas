@@ -92,6 +92,18 @@
                             </a>@endif
                             <a href="{{ route('teacher.circles.show', $c) }}" class="btn btn-sm btn-outline-secondary">الطلاب</a>
                         </div>
+                        @php($off = $offToday[$c->id] ?? $offToday['*'] ?? null)
+                        @if ($off)
+                            <div class="small text-muted mt-2"><i class="bi bi-calendar-x"></i> لا تحفيظ اليوم: {{ $off->reason }}</div>
+                        @elseif (! $takenToday->contains($c->id))
+                            <details class="mt-2 small"><summary class="text-muted">لا تحفيظ اليوم؟</summary>
+                                <form method="POST" action="{{ route('teacher.day-offs.store', $c) }}" class="d-flex gap-1 mt-1">
+                                    @csrf <input type="hidden" name="date" value="{{ now()->toDateString() }}">
+                                    <select name="reason" class="form-select form-select-sm" required><option value="">السبب…</option>@foreach (\App\Models\CircleDayOff::REASONS as $r)<option value="{{ $r }}">{{ $r }}</option>@endforeach</select>
+                                    <button class="btn btn-sm btn-outline-secondary text-nowrap">حفظ وإبلاغ الأهالي</button>
+                                </form>
+                            </details>
+                        @endif
                     </div>
                 </div>
             @empty

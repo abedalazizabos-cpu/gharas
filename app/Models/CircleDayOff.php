@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** A day a circle (or, with no circle, the whole center) did not meet, with the reason. */
 class CircleDayOff extends Model
 {
-    public const REASONS = ['عطلة رسمية', 'مرض المحفظ', 'ظرف طارئ للمحفظ', 'نشاط أو رحلة للمركز', 'ظرف جوي', 'أخرى'];
+    public const REASONS = ['عطلة رسمية', 'مرض المحفظ', 'ظرف طارئ للمحفظ', 'ظرف في مكان الحلقة', 'نشاط أو رحلة للمركز', 'ظرف جوي', 'أخرى'];
 
     protected $fillable = ['circle_id', 'off_on', 'reason', 'created_by'];
 

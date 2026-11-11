@@ -114,4 +114,19 @@ class RecordingGapsTest extends TestCase
         $this->assertSame([], $this->gaps());
         $this->actingAs($this->teacher)->get(route('teacher.dashboard'))->assertOk()->assertDontSee('أيام لم تسجّل فيها الحضور أو التسميع');
     }
+
+    public function test_teacher_announces_no_class_today_and_parents_are_told(): void
+    {
+        $parent = $this->parentUser();
+        $this->student->parents()->attach($parent->id, ['relationship' => 'أب']);
+        $this->record('2026-11-07');
+
+        $this->actingAs($this->teacher)->get(route('teacher.dashboard'))->assertOk()->assertSee('لا تحفيظ اليوم؟')->assertSee('ظرف في مكان الحلقة');
+        $this->actingAs($this->teacher)->post(route('teacher.day-offs.store', $this->circle), ['date' => '2026-11-11', 'reason' => 'ظرف في مكان الحلقة'])->assertSessionHasNoErrors();
+
+        $this->assertSame(1, $parent->notifications()->count());
+        $this->assertSame('لا تحفيظ اليوم', $parent->notifications()->first()->data['title']);
+        $this->actingAs($this->teacher)->get(route('teacher.dashboard'))->assertOk()->assertSee('لا تحفيظ اليوم: ظرف في مكان الحلقة');
+        $this->actingAs($this->admin())->get(route('admin.recording-gaps.index', ['from' => '2026-11-07', 'to' => '2026-11-10']))->assertOk()->assertSee('ظرف في مكان الحلقة');
+    }
 }
