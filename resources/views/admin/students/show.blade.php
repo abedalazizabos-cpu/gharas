@@ -5,6 +5,7 @@
     <a href="{{ route('admin.students.edit', $student) }}" class="btn btn-primary"><i class="bi bi-pencil"></i> تعديل</a>
     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#transferModal"><i class="bi bi-arrow-left-right"></i> نقل إلى حلقة</button>
     <a href="{{ route('admin.reports.student', $student) }}" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-bar-graph"></i> تقرير التقدم</a>
+    @include('shared._monthly-reports')
     <div class="dropdown">
         <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">الحالة</button>
         <div class="dropdown-menu dropdown-menu-end p-2">

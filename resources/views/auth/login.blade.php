@@ -31,5 +31,10 @@
         </div>
         <button class="btn btn-primary w-100 py-2"><i class="bi bi-box-arrow-in-left ms-1"></i> دخول</button>
     </form>
-    <p class="text-center text-muted small mt-4 mb-0">الحسابات تُنشأ من قبل إدارة المركز فقط.<br><a href="{{ route('home') }}">العودة للصفحة الرئيسية</a></p>
+    <p class="text-center text-muted small mt-4 mb-0">الحسابات تُنشأ من قبل إدارة المركز فقط.
+        @if (\App\Models\Setting::get('registration_open', '1') === '1')<br><a href="{{ route('registration.create') }}" class="fw-semibold"><i class="bi bi-person-plus"></i> تسجيل طالب جديد في المركز</a>@endif
+        <br><a href="{{ route('home') }}">العودة للصفحة الرئيسية</a></p>
+@endsection
+@section('aside')
+    @include('partials.honor-board')
 @endsection

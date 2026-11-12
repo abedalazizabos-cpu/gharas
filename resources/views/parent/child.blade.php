@@ -7,6 +7,7 @@
     @endif
     <a href="{{ route('parent.children.courses', $student) }}" class="btn btn-outline-primary"><i class="bi bi-journal-bookmark"></i> الدورات والواجبات</a>
     @if (auth()->user()->hasPermission('parent.weeks'))<a href="{{ route('parent.children.weeks', $student) }}" class="btn btn-primary"><i class="bi bi-calendar-week"></i> السجلات الأسبوعية والسابقة</a>@endif
+    @include('shared._monthly-reports')
     <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> طباعة</button>
 </x-page-header>
 

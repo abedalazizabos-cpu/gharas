@@ -5,6 +5,16 @@
     <div class="fw-bold d-none d-md-block text-truncate">@yield('title', 'لوحة التحكم')</div>
 
     <div class="ms-auto d-flex align-items-center gap-2">
+        <span class="topbar-date d-none d-md-inline small text-muted text-nowrap"><i class="bi bi-calendar3"></i> {{ \App\Models\Circle::DAYS[now()->dayOfWeek] }} {{ \App\Support\Hijri::both(now()) }}</span>
+        <div class="dropdown d-none" id="app-menu" data-vapid="{{ app(\App\Services\WebPushService::class)->publicKey() }}" data-subscribe="{{ route('push.subscribe') }}" data-unsubscribe="{{ route('push.unsubscribe') }}">
+            <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-label="تطبيق الجوال" title="تطبيق الجوال والإشعارات">
+                <i class="bi bi-phone fs-5"></i><span id="app-dot" class="position-absolute top-0 start-0 translate-middle p-1 bg-warning rounded-circle d-none"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+                <li><a href="#" class="dropdown-item d-none" id="app-install"><i class="bi bi-download ms-2"></i>تثبيت الموقع كتطبيق على الجوال</a></li>
+                <li><a href="#" class="dropdown-item d-none" id="app-push"><i class="bi bi-bell ms-2"></i><span>تفعيل الإشعارات على هذا الجهاز</span></a></li>
+            </ul>
+        </div>
         <div class="dropdown">
             <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-label="الإشعارات">
                 <i class="bi bi-bell fs-5"></i>

@@ -2,13 +2,13 @@
 
 namespace App\Support;
 
-use App\Models\AssessmentCriterion;
+use App\Models\Announcement;
 use App\Models\AttendanceRecord;
 use App\Models\AuditLog;
-use App\Models\Announcement;
 use App\Models\Circle;
 use App\Models\MemorizationRecord;
 use App\Models\Student;
+use App\Models\SunnahCourse;
 use App\Models\Surah;
 use App\Models\TeacherWarning;
 use App\Models\User;
@@ -52,6 +52,10 @@ class AuditPresenter
         'sunnah.attendance' => ['حضور دورة', 'primary'],
         'sunnah.homework' => ['تقييم واجب في دورة', 'success'],
         'sms.send' => ['إرسال رسائل SMS', 'info'],
+        'honor.replace' => ['تغيير طالب في لوحة الشرف', 'warning'],
+        'honor.rechoose' => ['إعادة اختيار لوحة الشرف', 'secondary'],
+        'registration.accept' => ['قبول طلب تسجيل', 'success'],
+        'registration.reject' => ['رفض طلب تسجيل', 'danger'],
         'dayoff.create' => ['يوم لم تنعقد فيه حلقة', 'info'],
         'dayoff.delete' => ['إلغاء يوم عدم انعقاد', 'warning'],
         'certificate.issue' => ['إصدار شهادات', 'success'],
@@ -84,7 +88,7 @@ class AuditPresenter
         'guardian' => 'أولياء الأمور (من صفحة الطالب)', 'circle' => 'الحلقات', 'teacher' => 'المحفظون',
         'memorization' => 'سجلات التسميع', 'attendance' => 'الحضور', 'assessment' => 'التقييمات',
         'criterion' => 'معايير التقييم', 'announcement' => 'الإعلانات', 'settings' => 'الإعدادات',
-        'system' => 'النظام', 'access' => 'الصلاحيات', 'trash' => 'سلة المحذوفات', 'sunnah' => 'قسم السنة', 'certificate' => 'الشهادات', 'dayoff' => 'أيام عدم انعقاد الحلقات', 'sms' => 'رسائل SMS',
+        'system' => 'النظام', 'access' => 'الصلاحيات', 'trash' => 'سلة المحذوفات', 'sunnah' => 'قسم السنة', 'certificate' => 'الشهادات', 'dayoff' => 'أيام عدم انعقاد الحلقات', 'sms' => 'رسائل SMS', 'honor' => 'لوحة الشرف', 'registration' => 'طلبات التسجيل',
     ];
 
     private const FIELDS = [
@@ -177,7 +181,7 @@ class AuditPresenter
 
         return match ($field) {
             'role' => User::ROLES[$value] ?? $value,
-            'status' => User::STATUSES[$value] ?? Student::STATUSES[$value] ?? Circle::STATUSES[$value] ?? \App\Models\SunnahCourse::STATUSES[$value] ?? $value,
+            'status' => User::STATUSES[$value] ?? Student::STATUSES[$value] ?? Circle::STATUSES[$value] ?? SunnahCourse::STATUSES[$value] ?? $value,
             'gender' => Student::GENDERS[$value] ?? $value,
             'type' => MemorizationRecord::TYPES[$value] ?? $value,
             'grade' => MemorizationRecord::GRADES[$value] ?? $value,
@@ -191,7 +195,7 @@ class AuditPresenter
             'circle_id' => Circle::withTrashed()->find($value)?->name ?? (string) $value,
             'student_id' => Student::withTrashed()->find($value)?->full_name ?? (string) $value,
             'teacher_id', 'parent_id' => User::withTrashed()->find($value)?->nameFor(auth()->user()) ?? (string) $value,
-            'category' => \App\Models\SunnahCourse::CATEGORIES[$value] ?? $value,
+            'category' => SunnahCourse::CATEGORIES[$value] ?? $value,
             'added', 'removed' => Student::withTrashed()->whereIn('id', (array) $value)->pluck('full_name')->join('، ') ?: '—',
             'starts_on', 'ends_on' => self::date($value, 'Y/m/d'),
             'attached', 'detached' => ($action === 'parent.children'

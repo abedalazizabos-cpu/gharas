@@ -7,6 +7,7 @@ use App\Http\Requests\SettingsRequest;
 use App\Models\Setting;
 use App\Services\AuditLogger;
 use App\Services\BackupService;
+use App\Services\WeeklyArchiveService;
 
 class SettingController extends Controller
 {
@@ -21,7 +22,7 @@ class SettingController extends Controller
     {
         $data = $request->validated();
         $data['allow_capacity_override'] = $request->boolean('allow_capacity_override') ? '1' : '0';
-        foreach (['reminders_enabled', 'logo_background', 'logo_on_pdf', 'logo_favicon', 'reminders_on_login'] as $flag) {
+        foreach (['reminders_enabled', 'logo_background', 'logo_on_pdf', 'logo_favicon', 'reminders_on_login', 'hijri_dates', 'honor_on_login', 'registration_open', 'monthly_reports'] as $flag) {
             $data[$flag] = $request->boolean($flag) ? '1' : '0';
         }
         $data['reminders_days'] = collect($data['reminders_days'])->map(fn ($d) => (int) $d)->unique()->sort()->implode(',');
@@ -46,7 +47,7 @@ class SettingController extends Controller
         // Saved weekly files carry the logo and the center name: remove them so each one is rebuilt
         // with the new ones on its next download. Certificates and reports are always built fresh.
         if (array_intersect(array_keys($new), ['center_logo', 'center_name', 'logo_on_pdf'])) {
-            app(\App\Services\WeeklyArchiveService::class)->forgetFiles();
+            app(WeeklyArchiveService::class)->forgetFiles();
         }
 
         return back()->with('success', 'تم حفظ الإعدادات بنجاح.');

@@ -33,6 +33,7 @@
         <td>@if (! empty($c['signer2_title']) || ! empty($c['signer2_name']))<div class="sign-title">{{ $c['signer2_title'] ?? '' }}</div><div>{{ $c['signer2_name'] ?? '' }}</div><div class="sign-line">..................................</div>@endif</td>
     </tr></table>
     @php($ltr = fn ($text) => preg_replace('/GH-\d{4}-\d+/', '<span dir="ltr">$0</span>', e($text)))
-    <div class="footer">{!! $ltr($c['footer'] ?? '') !!}@if (empty($c['footer']) && ! empty($c['number'])) رقم الشهادة <span dir="ltr">{{ $c['number'] }}</span> · {{ $c['date'] ?? '' }}@endif</div>
+    <div class="footer">{!! $ltr($c['footer'] ?? '') !!}@if (empty($c['footer']) && ! empty($c['number'])) رقم الشهادة <span dir="ltr">{{ $c['number'] }}</span> · {{ $c['date'] ?? '' }}@if (! empty($c['hijri'])) - {{ $c['hijri'] }}@endif @endif
+    @if (! empty($c['footer']) && ! empty($c['hijri']) && ! str_contains($c['footer'], 'هـ'))<div>{{ $c['hijri'] }}</div>@endif</div>
 </div></div>
 </body></html>

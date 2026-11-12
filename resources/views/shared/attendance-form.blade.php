@@ -22,7 +22,7 @@
     <input type="hidden" name="date" value="{{ $date }}">
     <div class="card mb-3">
         <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
-            <span>{{ \Illuminate\Support\Carbon::parse($date)->translatedFormat('l d F Y') }} · {{ $students->count() }} طالب</span>
+            <span>{{ \Illuminate\Support\Carbon::parse($date)->translatedFormat('l d F Y') }}@if (\App\Support\Hijri::enabled()) ({{ \App\Support\Hijri::format($date) }})@endif · {{ $students->count() }} طالب</span>
             <div class="d-flex flex-wrap gap-2 no-print">
                 <button type="button" class="btn btn-sm btn-outline-success" data-mark-all="present"><i class="bi bi-check2-all"></i> الكل حاضر</button>
                 <button type="button" class="btn btn-sm btn-outline-danger" data-mark-all="absent"><i class="bi bi-x-lg"></i> الكل غائب</button>

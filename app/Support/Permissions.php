@@ -15,7 +15,8 @@ class Permissions
     /** role => [permission => label] */
     public const BY_ROLE = [
         User::ROLE_ADMIN => [
-            'students.manage' => 'إدارة الطلاب (إضافة وتعديل ونقل وحذف)',
+            'students.manage' => 'إدارة الطلاب (إضافة وتعديل ونقل وحذف) وطلبات التسجيل الجديدة',
+            'honor.manage' => 'لوحة الشرف: تغيير الطالب المختار لكل حلقة',
             'circles.manage' => 'إدارة الحلقات ومواعيدها',
             'teachers.manage' => 'إدارة المشايخ وإنذاراتهم',
             'parents.manage' => 'إدارة أولياء الأمور',

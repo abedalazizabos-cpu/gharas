@@ -88,6 +88,20 @@
             <div class="col-12"><a href="{{ route('admin.criteria.index') }}"><i class="bi bi-sliders"></i> إدارة معايير التقييم</a></div>
         </div></div>
     </div>
+    <div class="card mb-3" id="honor">
+        <div class="card-header"><i class="bi bi-stars"></i> لوحة الشرف والتسجيل والتقارير الشهرية والتاريخ الهجري</div>
+        <div class="card-body"><div class="row g-3">
+            <div class="col-md-6"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="honor_on_login" value="1" id="hon-login" @checked(old('honor_on_login', $settings['honor_on_login']) == '1')><label class="form-check-label fw-semibold" for="hon-login">إظهار لوحة الشرف في شاشة تسجيل الدخول</label></div><div class="form-text">طالب واحد من كل حلقة يُختار أول كل شهر عن الشهر السابق. تغيير الطالب من صفحة «لوحة الشرف».</div></div>
+            <div class="col-md-6">
+                <label class="form-label" for="honor_names">طريقة عرض الأسماء في لوحة الشرف</label>
+                <select id="honor_names" name="honor_names" class="form-select">@foreach (\App\Models\Setting::HONOR_NAMES as $k => $v)<option value="{{ $k }}" @selected(old('honor_names', $settings['honor_names']) === $k)>{{ $v }}</option>@endforeach</select>
+                <div class="form-text">شاشة الدخول يراها أي زائر للموقع.</div>
+            </div>
+            <div class="col-md-6"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="registration_open" value="1" id="reg-open" @checked(old('registration_open', $settings['registration_open']) == '1')><label class="form-check-label fw-semibold" for="reg-open">استقبال طلبات تسجيل الطلاب الجدد من الموقع</label></div><div class="form-text">يملأ وليّ الأمر النموذج، وتصل الطلبات إلى «طلبات التسجيل» لتقبلها وتختار الحلقة.</div></div>
+            <div class="col-md-6"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="monthly_reports" value="1" id="mon-rep" @checked(old('monthly_reports', $settings['monthly_reports']) == '1')><label class="form-check-label fw-semibold" for="mon-rep">إرسال التقرير الشهري لأولياء الأمور أول كل شهر</label></div><div class="form-text">إشعار في حساب وليّ الأمر برابط تقرير ابنه PDF عن الشهر الماضي.</div></div>
+            <div class="col-md-6"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="hijri_dates" value="1" id="hijri" @checked(old('hijri_dates', $settings['hijri_dates']) == '1')><label class="form-check-label fw-semibold" for="hijri">إظهار التاريخ الهجري بجانب الميلادي</label></div><div class="form-text">في أعلى الصفحات وفي الشهادات والتقارير وملفات PDF.</div></div>
+        </div></div>
+    </div>
     <div class="card mb-3">
         <div class="card-header"><i class="bi bi-chat-quote"></i> رسائل التذكير (أدعية وآيات)</div>
         <div class="card-body"><div class="row g-3">

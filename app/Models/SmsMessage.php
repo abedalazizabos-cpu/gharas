@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SmsMessage extends Model
 {
-    public const PURPOSES = ['manual' => 'رسالة من الإدارة', 'absence' => 'تنبيه غياب', 'day_off' => 'لا تحفيظ اليوم', 'certificate' => 'شهادة جديدة', 'test' => 'رسالة تجربة'];
+    public const PURPOSES = ['manual' => 'رسالة من الإدارة', 'absence' => 'تنبيه غياب', 'day_off' => 'لا تحفيظ اليوم', 'certificate' => 'شهادة جديدة', 'monthly' => 'التقرير الشهري', 'registration' => 'قبول التسجيل', 'test' => 'رسالة تجربة'];
 
     protected $fillable = ['purpose', 'text', 'phones', 'phones_count', 'status', 'error', 'gateway_id', 'sent_by'];
 

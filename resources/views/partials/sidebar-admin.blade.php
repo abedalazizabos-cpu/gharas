@@ -1,9 +1,11 @@
 @php($u = auth()->user())
+@php($newRegistrations = $u->hasPermission('students.manage') ? \App\Models\RegistrationRequest::where('status', 'pending')->count() : 0)
 @php($newContacts = $u->hasPermission('contact.manage') ? \App\Models\ContactMessage::whereNull('read_at')->count() : 0)
 <nav class="nav flex-column py-2">
     @include('partials.nav-link', ['route' => 'admin.dashboard', 'icon' => 'speedometer2', 'label' => 'لوحة التحكم'])
     <div class="nav-section">إدارة المركز</div>
     @if ($u->hasPermission('students.manage'))@include('partials.nav-link', ['route' => 'admin.students.index', 'active' => 'admin.students.*', 'icon' => 'people', 'label' => 'الطلاب'])@endif
+    @if ($u->hasPermission('students.manage') && (\App\Models\Setting::get('registration_open', '1') === '1' || $newRegistrations))@include('partials.nav-link', ['route' => 'admin.registrations.index', 'icon' => 'person-plus', 'label' => 'طلبات التسجيل', 'badge' => $newRegistrations ?: null])@endif
     @if ($u->hasPermission('circles.manage'))@include('partials.nav-link', ['route' => 'admin.circles.index', 'active' => 'admin.circles.*', 'icon' => 'bullseye', 'label' => 'الحلقات'])@endif
     @if ($u->hasPermission('teachers.manage'))@include('partials.nav-link', ['route' => 'admin.teachers.index', 'active' => 'admin.teachers.*', 'icon' => 'person-badge', 'label' => 'المشايخ (المحفظون)'])@endif
     @if ($u->hasPermission('parents.manage'))@include('partials.nav-link', ['route' => 'admin.parents.index', 'active' => 'admin.parents.*', 'icon' => 'house-heart', 'label' => 'أولياء الأمور'])@endif
@@ -16,6 +18,7 @@
     @if ($u->hasPermission('quality.manage'))@include('partials.nav-link', ['route' => 'admin.quality.index', 'active' => 'admin.quality.*', 'icon' => 'patch-check', 'label' => 'لجنة الجودة والاختبارات'])@endif
     @if ($u->hasPermission('sunnah.manage'))@include('partials.nav-link', ['route' => 'admin.sunnah.index', 'active' => 'admin.sunnah.*', 'icon' => 'journal-bookmark', 'label' => 'قسم السنة والدورات'])@endif
     @if ($u->hasPermission('certificates.manage'))@include('partials.nav-link', ['route' => 'admin.certificates.index', 'active' => 'admin.certificates.*', 'icon' => 'award-fill', 'label' => 'الشهادات'])@endif
+    @if ($u->hasPermission('honor.manage'))@include('partials.nav-link', ['route' => 'admin.honor.index', 'active' => 'admin.honor.*', 'icon' => 'trophy', 'label' => 'لوحة الشرف'])@endif
     @if ($u->hasPermission('reports.view'))@include('partials.nav-link', ['route' => 'admin.reports.index', 'active' => 'admin.reports.*', 'icon' => 'bar-chart-line', 'label' => 'التقارير'])@endif
     <div class="nav-section">التواصل</div>
     @if ($u->hasPermission('sms.send') && ($u->isSuperAdmin() || app(\App\Services\SmsService::class)->configured()))@include('partials.nav-link', ['route' => 'admin.sms.index', 'active' => 'admin.sms.*', 'icon' => 'phone', 'label' => 'رسائل SMS للأهالي'])@endif

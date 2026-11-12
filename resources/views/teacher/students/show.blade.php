@@ -5,6 +5,7 @@
     @if (auth()->user()->hasPermission('teacher.students.edit'))<a href="{{ route('teacher.students.edit', $student) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> تعديل البيانات</a>@endif
     @if (auth()->user()->hasPermission('teacher.memorization'))<a href="{{ route('teacher.memorization.create', ['student' => $student->id]) }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> تسجيل تسميع</a>@endif
     @if (auth()->user()->hasPermission('teacher.assessments'))<a href="{{ route('teacher.assessments.create', ['student' => $student->id]) }}" class="btn btn-outline-primary"><i class="bi bi-award"></i> تقييم</a>@endif
+    @include('shared._monthly-reports')
     @foreach ($student->parents as $p)
         @if (auth()->user()->hasPermission('messages.send'))<a href="{{ route('messages.create', ['to' => $p->id, 'student' => $student->id]) }}" class="btn btn-outline-secondary"><i class="bi bi-chat-dots"></i> مراسلة {{ $p->name }}</a>@endif
     @endforeach

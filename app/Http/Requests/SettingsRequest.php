@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SettingsRequest extends FormRequest
 {
@@ -40,8 +43,8 @@ class SettingsRequest extends FormRequest
             'reminders_text' => ['nullable', 'string', 'max:10000'],
             'brand_title' => ['required', 'string', 'max:60'],
             'brand_subtitle' => ['nullable', 'string', 'max:80'],
-            'logo_size' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\Setting::LOGO_SIZES))],
-            'logo_shape' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Models\Setting::LOGO_SHAPES))],
+            'logo_size' => ['required', Rule::in(array_keys(Setting::LOGO_SIZES))],
+            'logo_shape' => ['required', Rule::in(array_keys(Setting::LOGO_SHAPES))],
             'logo_background' => ['nullable', 'boolean'],
             'logo_on_pdf' => ['nullable', 'boolean'],
             'logo_favicon' => ['nullable', 'boolean'],
@@ -52,10 +55,15 @@ class SettingsRequest extends FormRequest
             'reminders_days' => ['required', 'array', 'min:1'],
             'reminders_days.*' => ['integer', 'between:0,6'],
             'reminders_roles' => ['nullable', 'array'],
-            'reminders_roles.*' => [\Illuminate\Validation\Rule::in(array_keys(\App\Models\User::ROLES))],
+            'reminders_roles.*' => [Rule::in(array_keys(User::ROLES))],
             'reminders_order' => ['required', 'in:sequential,random'],
             'reminders_position' => ['required', 'in:bottom,top'],
             'reminders_on_login' => ['nullable', 'boolean'],
+            'hijri_dates' => ['nullable', 'boolean'],
+            'honor_on_login' => ['nullable', 'boolean'],
+            'honor_names' => ['required', Rule::in(array_keys(Setting::HONOR_NAMES))],
+            'registration_open' => ['nullable', 'boolean'],
+            'monthly_reports' => ['nullable', 'boolean'],
         ];
     }
 

@@ -28,6 +28,7 @@
         <p class="lead mx-auto mb-4" style="max-width:640px">{{ \App\Models\Setting::get('center_about') }}</p>
         <div class="d-flex flex-wrap justify-content-center gap-2">
             <a href="#programs" class="btn btn-gold btn-lg px-4">تعرّف على حلقاتنا</a>
+            @if (\App\Models\Setting::get('registration_open', '1') === '1')<a href="{{ route('registration.create') }}" class="btn btn-light btn-lg px-4"><i class="bi bi-person-plus ms-1"></i> سجّل ابنك في المركز</a>@endif
             <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg px-4">دخول أولياء الأمور والمحفظين</a>
         </div>
     </div>

@@ -28,7 +28,7 @@ class PdfExport
             'title' => $title,
             'subtitle' => $subtitle,
             'sections' => $sections,
-            'printedAt' => now()->format('Y/m/d H:i'),
+            'printedAt' => now()->format('Y/m/d H:i').(Hijri::enabled() ? ' - '.Hijri::format(now()) : ''),
         ])->render());
 
         return $mpdf->Output('', 'S');

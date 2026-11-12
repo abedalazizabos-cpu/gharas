@@ -28,6 +28,12 @@ class Setting extends Model
         'teacher_edit_days' => '7',
         'allow_capacity_override' => '1',
         'center_logo' => null,
+        // Center features (super admin)
+        'hijri_dates' => '1',
+        'honor_on_login' => '1',
+        'honor_names' => 'two',
+        'registration_open' => '1',
+        'monthly_reports' => '1',
         // Brand (super admin)
         'brand_title' => 'مركز غراس',
         'brand_subtitle' => 'لتحفيظ القرآن الكريم',
@@ -73,8 +79,13 @@ class Setting extends Model
     اللهم تقبّل شهداءنا، وأسكنهم الفردوس الأعلى، واجبر قلوب أهليهم | دعاء للشهداء
     TXT;
 
+    /** How student names appear on the public honor board. */
+    public const HONOR_NAMES = ['two' => 'الاسم الأول واسم الأب (يوسف أحمد)', 'full' => 'الاسم كاملاً', 'masked' => 'الاسم الأول وأول حرف من اسم الأب (يوسف أ.)'];
+
     public const LOGO_SIZES = ['small' => ['صغير', 34], 'medium' => ['متوسط', 42], 'large' => ['كبير', 56]];
+
     public const LOGO_SHAPES = ['rounded' => 'زوايا مستديرة', 'circle' => 'دائري', 'square' => 'مربع'];
+
     public const THEME_COLORS = ['#1b6b50' => 'أخضر غراس', '#0f5c7a' => 'أزرق', '#6b4a1b' => 'بني', '#5b3f8c' => 'بنفسجي', '#8a1c2b' => 'عنابي', '#2f3e46' => 'رمادي داكن'];
 
     /** Settings for the reminder toast in the browser, or null when this user should not see reminders. */
