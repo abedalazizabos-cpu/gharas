@@ -1,14 +1,19 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DashboardRedirectController;
+use App\Http\Controllers\Guardian;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MonthlyReportController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Guardian;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PwaController;
+use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\Teacher;
 use App\Http\Controllers\Visitor;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +21,10 @@ use Illuminate\Support\Facades\Route;
 // ---------------------------------------------------------------- Public
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/contact', [HomeController::class, 'contact'])->middleware('throttle:5,1')->name('contact.store');
+Route::get('/register', [RegistrationController::class, 'create'])->name('registration.create');
+Route::post('/register', [RegistrationController::class, 'store'])->middleware('throttle:5,10')->name('registration.store');
+Route::get('/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
+Route::get('/app-icon-{size}.png', [PwaController::class, 'icon'])->whereIn('size', ['192', '512'])->name('pwa.icon');
 
 // ---------------------------------------------------------------- Auth
 Route::middleware('guest')->group(function () {
@@ -35,11 +44,14 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
 
+    Route::post('/push/subscribe', [PwaController::class, 'subscribe'])->middleware('throttle:20,1')->name('push.subscribe');
+    Route::post('/push/unsubscribe', [PwaController::class, 'unsubscribe'])->name('push.unsubscribe');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
-    Route::get('/certificates/{certificate}/pdf', [\App\Http\Controllers\CertificateController::class, 'download'])->name('certificates.download');
+    Route::get('/students/{student}/monthly-report', [MonthlyReportController::class, 'download'])->name('monthly-reports.download');
+    Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'download'])->name('certificates.download');
 
     // Parent <-> teacher messaging
     Route::middleware(['role:teacher,parent', 'perm:messages.send'])->group(function () {
@@ -54,6 +66,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
         Route::middleware('perm:students.manage')->group(function () {
+            Route::get('registrations', [Admin\RegistrationController::class, 'index'])->name('registrations.index');
+            Route::post('registrations/{registration}/accept', [Admin\RegistrationController::class, 'accept'])->name('registrations.accept');
+            Route::post('registrations/{registration}/reject', [Admin\RegistrationController::class, 'reject'])->name('registrations.reject');
             Route::get('guardian-lookup', [Admin\StudentController::class, 'guardianLookup'])->name('students.guardian-lookup');
             Route::put('students/{student}/guardians/{parent}', [Admin\StudentController::class, 'updateGuardian'])->name('students.guardians.update');
             Route::resource('students', Admin\StudentController::class);
@@ -139,6 +154,14 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::delete('{course}/posts/{post}', [Admin\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
+        // لوحة الشرف: one student per circle each month, on the login screen.
+        Route::prefix('honor-board')->name('honor.')->middleware('perm:honor.manage')->group(function () {
+            Route::get('/', [Admin\HonorBoardController::class, 'index'])->name('index');
+            Route::post('/', [Admin\HonorBoardController::class, 'store'])->name('store');
+            Route::post('rechoose', [Admin\HonorBoardController::class, 'rechoose'])->name('rechoose');
+            Route::post('{entry}', [Admin\HonorBoardController::class, 'replace'])->name('replace');
+        });
+
         // SMS to parents from the center's phone.
         Route::middleware('perm:sms.send')->group(function () {
             Route::get('sms', [Admin\SmsController::class, 'index'])->name('sms.index');
@@ -183,9 +206,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         });
 
         Route::middleware('perm:archive.view')->group(function () {
-            Route::get('weeks', [\App\Http\Controllers\ArchiveController::class, 'week'])->name('weeks.show');
-            Route::get('archive', [\App\Http\Controllers\ArchiveController::class, 'index'])->name('archive.index');
-            Route::get('archive/{archive}/download', [\App\Http\Controllers\ArchiveController::class, 'download'])->name('archive.download');
+            Route::get('weeks', [ArchiveController::class, 'week'])->name('weeks.show');
+            Route::get('archive', [ArchiveController::class, 'index'])->name('archive.index');
+            Route::get('archive/{archive}/download', [ArchiveController::class, 'download'])->name('archive.download');
         });
 
         Route::get('audit-logs', [Admin\AuditLogController::class, 'index'])->name('audit.index')->middleware('perm:audit.view');
@@ -218,9 +241,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ------------------------------------------------------------ Teacher
     Route::prefix('teacher')->name('teacher.')->middleware('role:teacher')->group(function () {
         Route::middleware('perm:teacher.archive')->group(function () {
-            Route::get('weeks', [\App\Http\Controllers\ArchiveController::class, 'week'])->name('weeks.show');
-            Route::get('archive', [\App\Http\Controllers\ArchiveController::class, 'index'])->name('archive.index');
-            Route::get('archive/{archive}/download', [\App\Http\Controllers\ArchiveController::class, 'download'])->name('archive.download');
+            Route::get('weeks', [ArchiveController::class, 'week'])->name('weeks.show');
+            Route::get('archive', [ArchiveController::class, 'index'])->name('archive.index');
+            Route::get('archive/{archive}/download', [ArchiveController::class, 'download'])->name('archive.download');
         });
         Route::post('warnings/{warning}/acknowledge', [Teacher\WarningController::class, 'acknowledge'])->name('warnings.acknowledge');
         Route::get('/', [Teacher\DashboardController::class, 'index'])->name('dashboard');
@@ -276,7 +299,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::delete('{course}/posts/{post}', [Teacher\SunnahCourseController::class, 'destroyPost'])->name('posts.destroy');
         });
 
-        Route::get('certificates', [\App\Http\Controllers\CertificateController::class, 'teacher'])->name('certificates.index');
+        Route::get('certificates', [CertificateController::class, 'teacher'])->name('certificates.index');
         Route::post('circles/{circle}/day-off', [Teacher\DayOffController::class, 'store'])->name('day-offs.store');
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');
     });
@@ -291,9 +314,9 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('sunnah', [Visitor\SunnahController::class, 'index'])->name('sunnah.index');
         });
         Route::middleware('perm:visitor.archive')->group(function () {
-            Route::get('weeks', [\App\Http\Controllers\ArchiveController::class, 'week'])->name('weeks.show');
-            Route::get('archive', [\App\Http\Controllers\ArchiveController::class, 'index'])->name('archive.index');
-            Route::get('archive/{archive}/download', [\App\Http\Controllers\ArchiveController::class, 'download'])->name('archive.download')->middleware('perm:visitor.download');
+            Route::get('weeks', [ArchiveController::class, 'week'])->name('weeks.show');
+            Route::get('archive', [ArchiveController::class, 'index'])->name('archive.index');
+            Route::get('archive/{archive}/download', [ArchiveController::class, 'download'])->name('archive.download')->middleware('perm:visitor.download');
         });
     });
 

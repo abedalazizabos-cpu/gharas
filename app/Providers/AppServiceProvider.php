@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\WebPushService;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
@@ -14,7 +15,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One queue of phone notifications per request, sent after the response.
+        $this->app->singleton(WebPushService::class);
     }
 
     /**

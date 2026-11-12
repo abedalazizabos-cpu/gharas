@@ -1,7 +1,16 @@
 <?php
 
+use App\Models\QualityTest;
+use App\Models\SunnahCourse;
 use App\Models\User;
 use App\Services\BackupService;
+use App\Services\HonorBoardService;
+use App\Services\MonthlyReportService;
+use App\Services\RecordingGapService;
+use App\Services\WeeklyArchiveService;
+use Database\Seeders\CertificateDemoSeeder;
+use Database\Seeders\QualityDemoSeeder;
+use Database\Seeders\SunnahDemoSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
@@ -44,15 +53,15 @@ Artisan::command('gharas:demo-quality {--fresh : حذف بيانات الجود�
 
         return 1;
     }
-    if (\App\Models\QualityTest::withTrashed()->exists()) {
+    if (QualityTest::withTrashed()->exists()) {
         if (! $this->option('fresh')) {
             $this->warn('توجد اختبارات جودة مسجلة. لإعادة بناء بيانات التجربة شغّل الأمر مع --fresh (يحذف كل اختبارات الجودة الحالية).');
 
             return 1;
         }
-        \Database\Seeders\QualityDemoSeeder::clear();
+        QualityDemoSeeder::clear();
     }
-    $this->call('db:seed', ['--class' => \Database\Seeders\QualityDemoSeeder::class, '--force' => true]);
+    $this->call('db:seed', ['--class' => QualityDemoSeeder::class, '--force' => true]);
     $this->info('تمت إضافة بيانات تجريبية للجنة الجودة: مشايخ اللجنة teacher2 وteacher6 وteacher11 وteacher17، وولي الأمر 0550000001 يرى اختبارات ابنيه.');
 })->purpose('إضافة بيانات تجريبية للجنة الجودة والاختبارات');
 
@@ -63,16 +72,16 @@ Artisan::command('gharas:demo-sunnah {--fresh : حذف كل دورات قسم ا
 
         return 1;
     }
-    if (\App\Models\SunnahCourse::withTrashed()->exists()) {
+    if (SunnahCourse::withTrashed()->exists()) {
         if (! $this->option('fresh')) {
             $this->warn('توجد دورات في قسم السنة. لإعادة بناء بيانات التجربة شغّل الأمر مع --fresh (يحذف كل الدورات الحالية ونتائجها).');
 
             return 1;
         }
-        \Database\Seeders\SunnahDemoSeeder::clear();
+        SunnahDemoSeeder::clear();
     }
-    $this->call('db:seed', ['--class' => \Database\Seeders\SunnahDemoSeeder::class, '--force' => true]);
-    $this->call('db:seed', ['--class' => \Database\Seeders\CertificateDemoSeeder::class, '--force' => true]);
+    $this->call('db:seed', ['--class' => SunnahDemoSeeder::class, '--force' => true]);
+    $this->call('db:seed', ['--class' => CertificateDemoSeeder::class, '--force' => true]);
     $this->info('تمت إضافة 18 دورة تجريبية لقسم السنة مع الحضور والواجبات وتقييمها، وشهادات تجريبية للناجحين (وبقي بعضها ليصدره المدير من صفحة الشهادات). ولي الأمر 0550000001 يرى دورات ابنيه وشهاداتهما.');
 })->purpose('إضافة بيانات تجريبية لقسم السنة والدورات');
 
@@ -80,7 +89,7 @@ Artisan::command('gharas:backup', function (BackupService $backup) {
     $this->info('تم إنشاء النسخة الاحتياطية: '.$backup->create());
 })->purpose('إنشاء نسخة احتياطية من قاعدة البيانات في storage/app/backups');
 
-Artisan::command('gharas:archive-weeks', function (\App\Services\WeeklyArchiveService $weeks) {
+Artisan::command('gharas:archive-weeks', function (WeeklyArchiveService $weeks) {
     $this->info('تم حفظ ملفات '.$weeks->archiveMissing().' أسبوع/حلقة في storage/app/private/archives');
 })->purpose('حفظ ملف لكل حلقة عن كل أسبوع منتهٍ (من السبت إلى الخميس)');
 
@@ -89,15 +98,27 @@ Schedule::command('gharas:archive-weeks')->weeklyOn(5, '00:30');
 
 // Sunnah courses start and finish by their dates (the course pages also do this when opened).
 Artisan::command('gharas:sunnah-status', function () {
-    $this->info('تم تحديث حالة '.\App\Models\SunnahCourse::syncStatuses().' دورة حسب تواريخها.');
+    $this->info('تم تحديث حالة '.SunnahCourse::syncStatuses().' دورة حسب تواريخها.');
 })->purpose('تحديث حالة دورات قسم السنة حسب تاريخ البداية والنهاية');
 Schedule::command('gharas:sunnah-status')->dailyAt('00:15');
 
 // Each morning: teachers who did not record yesterday's attendance or recitation are alerted, and the admins get a summary.
-Artisan::command('gharas:recording-alerts', function (\App\Services\RecordingGapService $gaps) {
+Artisan::command('gharas:recording-alerts', function (RecordingGapService $gaps) {
     $this->info('أيام غير مسجلة أمس: '.$gaps->notifyYesterday());
 })->purpose('تنبيه المحفظين الذين لم يسجلوا حضور أو تسميع يوم أمس، وإشعار الإدارة');
 Schedule::command('gharas:recording-alerts')->dailyAt('07:00');
+
+// لوحة الشرف: on the 1st, one student of each circle is chosen for last month (the login screen also does it on first view).
+Artisan::command('gharas:honor-board', function (HonorBoardService $honor) {
+    $this->info('طلاب لوحة الشرف المختارون: '.$honor->ensure(HonorBoardService::currentMonth()));
+})->purpose('اختيار طالب من كل حلقة للوحة الشرف عن الشهر الماضي');
+Schedule::command('gharas:honor-board')->monthlyOn(1, '00:45');
+
+// On the 1st: parents are told that last month's report of each child is ready (PDF).
+Artisan::command('gharas:monthly-reports', function (MonthlyReportService $reports) {
+    $this->info('إشعارات التقرير الشهري المرسلة: '.$reports->notifyParents());
+})->purpose('إشعار أولياء الأمور بتقرير أبنائهم الشهري');
+Schedule::command('gharas:monthly-reports')->monthlyOn(1, '08:00');
 
 // Daily backup when the Laravel scheduler is running (php artisan schedule:work / cron).
 Schedule::command('gharas:backup')->dailyAt('02:00');

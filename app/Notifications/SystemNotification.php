@@ -2,12 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\WebPushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
 /**
- * In-site notification stored in the database. Adding 'mail' (or an SMS
- * channel) to via() is enough to deliver the same event externally later.
+ * In-site notification stored in the database, and sent to the user's phones too when they turned
+ * on notifications (the site installed as an app).
  */
 class SystemNotification extends Notification
 {
@@ -22,7 +23,7 @@ class SystemNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', WebPushChannel::class];
     }
 
     public function toArray(object $notifiable): array

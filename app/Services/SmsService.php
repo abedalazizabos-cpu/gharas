@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Setting;
 use App\Models\SmsMessage;
+use App\Models\Student;
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +23,7 @@ class SmsService
     private const CHUNK = 50;
 
     /** Automatic messages the super admin can switch on or off. */
-    public const AUTO = ['absence' => 'عند تسجيل غياب الطالب', 'day_off' => 'عندما يعلن المحفظ «لا تحفيظ اليوم»', 'certificate' => 'عند صدور شهادة للطالب'];
+    public const AUTO = ['absence' => 'عند تسجيل غياب الطالب', 'day_off' => 'عندما يعلن المحفظ «لا تحفيظ اليوم»', 'certificate' => 'عند صدور شهادة للطالب', 'monthly' => 'رابط التقرير الشهري للطالب (أول كل شهر)', 'registration' => 'عند قبول طلب تسجيل طالب جديد (مع بيانات الدخول)'];
 
     /** Set after the gateway could not be reached, so one request does not wait on it again and again. */
     private static bool $unreachable = false;
@@ -87,26 +87,28 @@ class SmsService
             $gatewayId = null;
             if (self::$unreachable) {
                 $error = 'تعذّر الاتصال ببوابة الرسائل.';
-            } else try {
-                $response = Http::withBasicAuth((string) Setting::get('sms_username'), $this->password())
-                    ->acceptJson()->connectTimeout(5)->timeout(15)
-                    ->post(Setting::get('sms_url') ?: self::DEFAULT_URL, [
-                        'textMessage' => ['text' => $text],
-                        'phoneNumbers' => $chunk->values()->all(),
-                    ]);
-                if ($response->successful()) {
-                    $gatewayId = $response->json('id');
-                } else {
-                    $error = match ($response->status()) {
-                        401, 403 => 'اسم المستخدم أو كلمة المرور في إعدادات الرسائل غير صحيحة.',
-                        503 => 'الجوال لم يستلم الرسائل بعد (تأكد أنه مشغّل ومتصل بالإنترنت).',
-                        default => 'رفض البوابة: '.$response->status().' '.mb_substr((string) ($response->json('message') ?? $response->body()), 0, 120),
-                    };
+            } else {
+                try {
+                    $response = Http::withBasicAuth((string) Setting::get('sms_username'), $this->password())
+                        ->acceptJson()->connectTimeout(5)->timeout(15)
+                        ->post(Setting::get('sms_url') ?: self::DEFAULT_URL, [
+                            'textMessage' => ['text' => $text],
+                            'phoneNumbers' => $chunk->values()->all(),
+                        ]);
+                    if ($response->successful()) {
+                        $gatewayId = $response->json('id');
+                    } else {
+                        $error = match ($response->status()) {
+                            401, 403 => 'اسم المستخدم أو كلمة المرور في إعدادات الرسائل غير صحيحة.',
+                            503 => 'الجوال لم يستلم الرسائل بعد (تأكد أنه مشغّل ومتصل بالإنترنت).',
+                            default => 'رفض البوابة: '.$response->status().' '.mb_substr((string) ($response->json('message') ?? $response->body()), 0, 120),
+                        };
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('SMS gateway error: '.$e->getMessage());
+                    $error = 'تعذّر الاتصال ببوابة الرسائل.';
+                    self::$unreachable = true;
                 }
-            } catch (\Throwable $e) {
-                Log::warning('SMS gateway error: '.$e->getMessage());
-                $error = 'تعذّر الاتصال ببوابة الرسائل.';
-                self::$unreachable = true;
             }
 
             SmsMessage::create([
@@ -121,7 +123,7 @@ class SmsService
     }
 
     /** Automatic message to a student's parents, if that kind is switched on. */
-    public function toParents(\App\Models\Student $student, string $text, string $purpose): void
+    public function toParents(Student $student, string $text, string $purpose): void
     {
         if ($this->autoEnabled($purpose)) {
             $this->send($student->parents->pluck('phone'), $text, $purpose);

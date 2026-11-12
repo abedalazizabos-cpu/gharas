@@ -3,17 +3,24 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\HonorBoardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
-    public function show()
+    public function show(HonorBoardService $honor)
     {
-        return view('auth.login');
+        $show = Setting::get('honor_on_login', '1') === '1';
+
+        return view('auth.login', [
+            'honor' => $show ? $honor->current() : collect(),
+            'honorMonth' => HonorBoardService::currentMonth(),
+        ]);
     }
 
     public function login(Request $request)

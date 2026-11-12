@@ -4,14 +4,21 @@ namespace App\Services;
 
 use App\Models\Announcement;
 use App\Models\Assessment;
+use App\Models\Certificate;
 use App\Models\Circle;
 use App\Models\CircleSession;
+use App\Models\HonorEntry;
 use App\Models\MemorizationRecord;
+use App\Models\PushSubscription;
+use App\Models\RegistrationRequest;
+use App\Models\Setting;
 use App\Models\Student;
+use App\Models\SunnahCourse;
 use App\Models\User;
 use App\Models\WeeklyArchive;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,7 +33,7 @@ class DataRemoval
 {
     /** Soft-deletable tables in the order a purge must run (children before parents). */
     private const MODELS = [
-        MemorizationRecord::class, Assessment::class, CircleSession::class, \App\Models\SunnahCourse::class,
+        MemorizationRecord::class, Assessment::class, CircleSession::class, SunnahCourse::class,
         Student::class, Circle::class, Announcement::class, User::class,
     ];
 
@@ -86,14 +93,19 @@ class DataRemoval
 
         return DB::transaction(function () use ($stamp) {
             Circle::query()->get()->each(fn (Circle $c) => $this->removeCircle($c, Carbon::parse($stamp)));
-            foreach ([MemorizationRecord::class, Assessment::class, CircleSession::class, \App\Models\SunnahCourse::class, Student::class, Announcement::class] as $model) {
+            foreach ([MemorizationRecord::class, Assessment::class, CircleSession::class, SunnahCourse::class, Student::class, Announcement::class] as $model) {
                 $model::query()->update(['deleted_at' => $stamp]);
             }
             User::where('role', '!=', User::ROLE_SUPERADMIN)->update(['deleted_at' => $stamp]);
             // Trial certificates go for good, so the real ones start again from number 0001.
-            \App\Models\Certificate::query()->delete();
-            \App\Models\Setting::where('key', 'like', 'certificate_last_%')->delete();
-            \Illuminate\Support\Facades\Cache::forget('settings.all');
+            Certificate::query()->delete();
+            Setting::where('key', 'like', 'certificate_last_%')->delete();
+            // The honor board, website registration requests and phone subscriptions of the trial go too.
+            HonorEntry::query()->delete();
+            Setting::where('key', 'like', 'honor_chosen_%')->delete();
+            RegistrationRequest::query()->delete();
+            PushSubscription::whereIn('user_id', User::onlyTrashed()->where('deleted_at', $stamp)->select('id'))->delete();
+            Cache::forget('settings.all');
 
             return [
                 'circles' => Circle::onlyTrashed()->where('deleted_at', $stamp)->count(),

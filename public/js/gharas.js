@@ -202,4 +202,99 @@
             if (Date.now() - last >= every) { write(KEY, Date.now()); show(); }
         }, 5000);
     })();
+
+    // ---------------------------------------------------------------- The site as a phone app
+    var deferredInstall = null;
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if ('serviceWorker' in navigator && window.isSecureContext) {
+        window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').then(refreshAppMenu).catch(function () {}); });
+    }
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredInstall = e; refreshAppMenu(); });
+    window.addEventListener('appinstalled', function () { deferredInstall = null; refreshAppMenu(); });
+
+    function urlBase64ToUint8Array(base64) {
+        var padding = '='.repeat((4 - base64.length % 4) % 4);
+        var raw = atob((base64 + padding).replace(/-/g, '+').replace(/_/g, '/'));
+        var out = new Uint8Array(raw.length);
+        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+    }
+    function post(url, body) {
+        return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }, body: JSON.stringify(body) });
+    }
+    function pushSupported() {
+        var menu = document.getElementById('app-menu');
+        return menu && menu.dataset.vapid && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext;
+    }
+    function currentSubscription() {
+        if (!pushSupported()) return Promise.resolve(null);
+        return navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); });
+    }
+
+    function refreshAppMenu() {
+        var menu = document.getElementById('app-menu');
+        if (!menu) return;
+        var install = document.getElementById('app-install');
+        var push = document.getElementById('app-push');
+        var showInstall = !isStandalone && (deferredInstall || isIos);
+        install.classList.toggle('d-none', !showInstall);
+        currentSubscription().then(function (sub) {
+            var canPush = pushSupported() && (!isIos || isStandalone);
+            push.classList.toggle('d-none', !canPush && !isIos);
+            push.dataset.on = sub ? '1' : '';
+            push.querySelector('span').textContent = sub ? 'إيقاف الإشعارات على هذا الجهاز' : 'تفعيل الإشعارات على هذا الجهاز';
+            menu.classList.toggle('d-none', install.classList.contains('d-none') && push.classList.contains('d-none'));
+            var dot = document.getElementById('app-dot');
+            if (dot) dot.classList.toggle('d-none', !!sub);
+        }).catch(function () {});
+    }
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('#app-install')) {
+            e.preventDefault();
+            if (deferredInstall) {
+                deferredInstall.prompt();
+                deferredInstall.userChoice.finally(function () { deferredInstall = null; refreshAppMenu(); });
+            } else {
+                Swal.fire({ title: 'تثبيت الموقع على الآيفون', icon: 'info', confirmButtonText: 'تم', confirmButtonColor: '#1b6b50',
+                    html: '<div style="text-align:right;line-height:2">1. افتح الموقع من متصفح <b>Safari</b>.<br>2. اضغط زر المشاركة <b>⬆︎</b> أسفل الشاشة.<br>3. اختر <b>«إضافة إلى الشاشة الرئيسية»</b> ثم «إضافة».<br>4. افتح التطبيق من أيقونته، ثم فعّل الإشعارات من هذه القائمة.</div>' });
+            }
+        }
+        var pushBtn = e.target.closest('#app-push');
+        if (pushBtn) {
+            e.preventDefault();
+            if (isIos && !isStandalone) {
+                Swal.fire({ icon: 'info', title: 'ثبّت التطبيق أولاً', text: 'على الآيفون تصل الإشعارات بعد إضافة الموقع إلى الشاشة الرئيسية وفتحه من أيقونته (iOS 16.4 أو أحدث).', confirmButtonText: 'حسناً', confirmButtonColor: '#1b6b50' });
+                return;
+            }
+            var menu = document.getElementById('app-menu');
+            if (pushBtn.dataset.on) {
+                currentSubscription().then(function (sub) {
+                    if (!sub) return;
+                    return post(menu.dataset.unsubscribe, { endpoint: sub.endpoint }).then(function () { return sub.unsubscribe(); });
+                }).then(refreshAppMenu);
+                return;
+            }
+            Notification.requestPermission().then(function (perm) {
+                if (perm !== 'granted') {
+                    Swal.fire({ icon: 'warning', title: 'الإشعارات غير مسموحة', text: 'اسمح للموقع بالإشعارات من إعدادات المتصفح ثم أعد المحاولة.', confirmButtonText: 'حسناً', confirmButtonColor: '#1b6b50' });
+                    return;
+                }
+                return navigator.serviceWorker.ready.then(function (reg) {
+                    return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(menu.dataset.vapid) });
+                }).then(function (sub) {
+                    return post(menu.dataset.subscribe, sub.toJSON());
+                }).then(function () {
+                    Swal.fire({ icon: 'success', title: 'تم تفعيل الإشعارات', text: 'ستصلك إشعارات المركز على هذا الجهاز.', timer: 2500, showConfirmButton: false });
+                    refreshAppMenu();
+                });
+            }).catch(function () {
+                Swal.fire({ icon: 'error', title: 'تعذّر التفعيل', text: 'جرّب مرة أخرى، أو من متصفح آخر.', confirmButtonText: 'حسناً', confirmButtonColor: '#1b6b50' });
+            });
+        }
+    });
+    document.addEventListener('DOMContentLoaded', refreshAppMenu);
 })();

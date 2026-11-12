@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Setting;
 use App\Models\User;
 use Tests\TestCase;
 
@@ -54,10 +55,16 @@ class AuthenticationTest extends TestCase
         }
     }
 
-    public function test_there_is_no_public_registration(): void
+    public function test_there_is_no_public_account_registration(): void
     {
+        // The website's registration form only sends a request to the admin; it never creates an account.
+        $users = User::count();
+        $this->post('/register', ['name' => 'x', 'email' => 'x@x.com', 'password' => 'password123'])->assertSessionHasErrors('student_name');
+        $this->assertSame($users, User::count());
+        $this->assertGuest();
+
+        Setting::put('registration_open', '0');
         $this->get('/register')->assertNotFound();
-        $this->post('/register', ['name' => 'x', 'email' => 'x@x.com', 'password' => 'password123'])->assertNotFound();
     }
 
     public function test_password_reset_link_can_be_requested(): void

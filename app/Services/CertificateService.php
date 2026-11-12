@@ -7,10 +7,14 @@ use App\Models\CertificateTemplate;
 use App\Models\QualityTest;
 use App\Models\Setting;
 use App\Models\Student;
+use App\Models\SunnahCourse;
 use App\Models\SunnahEnrollment;
 use App\Models\User;
 use App\Notifications\SystemNotification;
+use App\Support\Hijri;
+use App\Support\Juz;
 use App\Support\PdfExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -94,6 +98,7 @@ class CertificateService
                     'content' => $template->render($values) + [
                         'student' => $source->student->full_name, 'subject' => $subject, 'center' => $values['{المركز}'],
                         'number' => $number, 'date' => $values['{التاريخ}'],
+                        'hijri' => Hijri::enabled() ? $values['{التاريخ_الهجري}'] : null,
                     ],
                 ]));
             }
@@ -128,6 +133,7 @@ class CertificateService
             '{المركز}' => Setting::get('center_name', 'مركز غراس لتحفيظ القرآن الكريم'),
             '{الحلقة}' => $student->circle?->name ?? '',
             '{التاريخ}' => str_replace('-', '/', $issuedOn),
+            '{التاريخ_الهجري}' => Hijri::format($issuedOn),
             '{رقم_الشهادة}' => $number,
             '{الدورة}' => '', '{الشيخ}' => '', '{الجزء}' => '', '{الأجزاء}' => '', '{المختبر}' => '',
         ];
@@ -139,8 +145,8 @@ class CertificateService
             $values['{النسبة}'] = (string) $source->percentLabel();
             $subject = 'دورة «'.$source->course->title.'»';
         } else {
-            $values['{الجزء}'] = $source->isIndividual() ? \App\Support\Juz::label((int) $source->juz) : '';
-            $values['{الأجزاء}'] = $source->isIndividual() ? '' : \App\Support\Juz::rangeLabel($source->from_juz, $source->to_juz);
+            $values['{الجزء}'] = $source->isIndividual() ? Juz::label((int) $source->juz) : '';
+            $values['{الأجزاء}'] = $source->isIndividual() ? '' : Juz::rangeLabel($source->from_juz, $source->to_juz);
             $values['{المختبر}'] = $source->examiner ? $source->examiner->name : '';
             $values['{التقدير}'] = (string) $source->gradeLabel();
             $values['{النسبة}'] = $source->percentage !== null ? rtrim(rtrim(number_format($source->percentage, 2), '0'), '.').'%' : '';
@@ -156,9 +162,9 @@ class CertificateService
         return [
             '{الطالب}' => 'عبدالله محمد أحمد', '{اللقب}' => 'الطالب', '{له}' => 'له', '{ه}' => 'ه', '{ت}' => '',
             '{المركز}' => Setting::get('center_name', 'مركز غراس لتحفيظ القرآن الكريم'), '{الحلقة}' => 'حلقة أبي بكر الصديق',
-            '{التقدير}' => 'ممتاز', '{النسبة}' => '95%', '{التاريخ}' => now()->format('Y/m/d'), '{رقم_الشهادة}' => 'GH-'.now()->year.'-0000',
-            '{الدورة}' => 'آداب حملة القرآن', '{الشيخ}' => 'الشيخ أحمد علي', '{الجزء}' => \App\Support\Juz::label(30),
-            '{الأجزاء}' => \App\Support\Juz::rangeLabel(30, 28), '{المختبر}' => 'الشيخ خالد سعيد',
+            '{التقدير}' => 'ممتاز', '{النسبة}' => '95%', '{التاريخ}' => now()->format('Y/m/d'), '{التاريخ_الهجري}' => Hijri::format(now()), '{رقم_الشهادة}' => 'GH-'.now()->year.'-0000',
+            '{الدورة}' => 'آداب حملة القرآن', '{الشيخ}' => 'الشيخ أحمد علي', '{الجزء}' => Juz::label(30),
+            '{الأجزاء}' => Juz::rangeLabel(30, 28), '{المختبر}' => 'الشيخ خالد سعيد',
         ];
     }
 
@@ -173,6 +179,7 @@ class CertificateService
 
         return PdfExport::certificate($template->render($values) + [
             'student' => $values['{الطالب}'], 'center' => $values['{المركز}'], 'number' => $values['{رقم_الشهادة}'], 'date' => $values['{التاريخ}'], 'preview' => true,
+            'hijri' => Hijri::enabled() ? $values['{التاريخ_الهجري}'] : null,
         ]);
     }
 
@@ -195,11 +202,11 @@ class CertificateService
     }
 
     /** Certificates of the teacher's circle students and of the students in the courses he gives. */
-    public function forTeacher(User $teacher): \Illuminate\Database\Eloquent\Builder
+    public function forTeacher(User $teacher): Builder
     {
         return Certificate::query()->where(function ($q) use ($teacher) {
             $q->whereIn('student_id', $teacher->teacherStudents()->select('id'))
-                ->orWhereIn('sunnah_enrollment_id', SunnahEnrollment::whereIn('sunnah_course_id', \App\Models\SunnahCourse::where('teacher_id', $teacher->id)->select('id'))->select('id'));
+                ->orWhereIn('sunnah_enrollment_id', SunnahEnrollment::whereIn('sunnah_course_id', SunnahCourse::where('teacher_id', $teacher->id)->select('id'))->select('id'));
         });
     }
 
