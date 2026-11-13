@@ -18,6 +18,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         \App\Models\Setting::flushCache();
+        \App\Services\SmsService::resetState();
         $this->seed([SurahSeeder::class, SettingSeeder::class]);
     }
 
