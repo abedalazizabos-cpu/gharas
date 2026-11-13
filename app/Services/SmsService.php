@@ -26,11 +26,48 @@ class SmsService
     public const AUTO = ['absence' => 'عند تسجيل غياب الطالب', 'day_off' => 'عندما يعلن المحفظ «لا تحفيظ اليوم»', 'certificate' => 'عند صدور شهادة للطالب', 'monthly' => 'رابط التقرير الشهري للطالب (أول كل شهر)', 'registration' => 'عند قبول طلب تسجيل طالب جديد (مع بيانات الدخول)'];
 
     /** Set after the gateway could not be reached, so one request does not wait on it again and again. */
-    private static bool $unreachable = false;
+    private static array $unreachable = [];
+
+    /** Forgets that a way of sending was unreachable (new request, or between tests). */
+    public static function resetState(): void
+    {
+        self::$unreachable = [];
+    }
+
+    /** Ways of sending: the center's own phone, or a paid SMS provider (messages show the center's name). */
+    public const CHANNELS = ['phone' => 'جوال المركز', 'provider' => 'مزوّد الرسائل'];
+
+    /** Number formats providers ask for. */
+    public const NUMBER_FORMATS = ['intl' => '970599123456 (رمز الدولة بلا +)', 'plus' => '+970599123456', 'local' => '0599123456 (محلي)'];
+
+    public function phoneConfigured(): bool
+    {
+        return Setting::get('sms_enabled') === '1' && Setting::get('sms_username') && Setting::get('sms_password');
+    }
+
+    public function providerConfigured(): bool
+    {
+        return Setting::get('sms_provider_enabled') === '1' && filled(Setting::get('sms_provider_url'));
+    }
+
+    /** @return array<string, string> the ways that are set up and switched on */
+    public function channels(): array
+    {
+        return array_filter(self::CHANNELS, fn ($k) => $k === 'phone' ? $this->phoneConfigured() : $this->providerConfigured(), ARRAY_FILTER_USE_KEY);
+    }
 
     public function configured(): bool
     {
-        return Setting::get('sms_enabled') === '1' && Setting::get('sms_username') && Setting::get('sms_password');
+        return $this->channels() !== [];
+    }
+
+    /** The way used when none is chosen (automatic messages): the super admin's choice, if it is set up. */
+    public function defaultChannel(): ?string
+    {
+        $channels = $this->channels();
+        $chosen = Setting::get('sms_default_channel');
+
+        return isset($channels[$chosen]) ? $chosen : (array_key_first($channels) ?: null);
     }
 
     public function autoEnabled(string $purpose): bool
@@ -71,11 +108,12 @@ class SmsService
      * @param  iterable<string|null>  $phones
      * @return array{sent: int, failed: int, error: ?string}
      */
-    public function send(iterable $phones, string $text, string $purpose = 'manual', ?User $by = null): array
+    public function send(iterable $phones, string $text, string $purpose = 'manual', ?User $by = null, ?string $channel = null): array
     {
         $numbers = collect($phones)->map(fn ($p) => $this->normalize($p))->filter()->unique()->values();
         $result = ['sent' => 0, 'failed' => 0, 'error' => null];
-        if ($numbers->isEmpty() || ! $this->configured()) {
+        $channel = $channel && isset($this->channels()[$channel]) ? $channel : $this->defaultChannel();
+        if ($numbers->isEmpty() || ! $channel) {
             $result['error'] = $numbers->isEmpty() ? 'لا توجد أرقام صالحة.' : 'إرسال الرسائل غير مفعّل في الإعدادات.';
 
             return $result;
@@ -83,36 +121,13 @@ class SmsService
         $text = $this->withSignature($text);
 
         foreach ($numbers->chunk(self::CHUNK) as $chunk) {
-            $error = null;
-            $gatewayId = null;
-            if (self::$unreachable) {
-                $error = 'تعذّر الاتصال ببوابة الرسائل.';
-            } else {
-                try {
-                    $response = Http::withBasicAuth((string) Setting::get('sms_username'), $this->password())
-                        ->acceptJson()->connectTimeout(5)->timeout(15)
-                        ->post(Setting::get('sms_url') ?: self::DEFAULT_URL, [
-                            'textMessage' => ['text' => $text],
-                            'phoneNumbers' => $chunk->values()->all(),
-                        ]);
-                    if ($response->successful()) {
-                        $gatewayId = $response->json('id');
-                    } else {
-                        $error = match ($response->status()) {
-                            401, 403 => 'اسم المستخدم أو كلمة المرور في إعدادات الرسائل غير صحيحة.',
-                            503 => 'الجوال لم يستلم الرسائل بعد (تأكد أنه مشغّل ومتصل بالإنترنت).',
-                            default => 'رفض البوابة: '.$response->status().' '.mb_substr((string) ($response->json('message') ?? $response->body()), 0, 120),
-                        };
-                    }
-                } catch (\Throwable $e) {
-                    Log::warning('SMS gateway error: '.$e->getMessage());
-                    $error = 'تعذّر الاتصال ببوابة الرسائل.';
-                    self::$unreachable = true;
-                }
-            }
+            $chunk = $chunk->values();
+            [$error, $gatewayId] = self::$unreachable[$channel] ?? false
+                ? ['تعذّر الاتصال ب'.($channel === 'phone' ? 'بوابة الرسائل.' : 'مزوّد الرسائل.'), null]
+                : ($channel === 'phone' ? $this->viaPhone($chunk->all(), $text) : $this->viaProvider($chunk->all(), $text));
 
             SmsMessage::create([
-                'purpose' => $purpose, 'text' => $text, 'phones' => $chunk->values()->all(), 'phones_count' => $chunk->count(),
+                'purpose' => $purpose, 'channel' => $channel, 'text' => $text, 'phones' => $chunk->all(), 'phones_count' => $chunk->count(),
                 'status' => $error ? 'failed' : 'sent', 'error' => $error, 'gateway_id' => $gatewayId, 'sent_by' => $by?->id,
             ]);
             $error ? $result['failed'] += $chunk->count() : $result['sent'] += $chunk->count();
@@ -120,6 +135,107 @@ class SmsService
         }
 
         return $result;
+    }
+
+    /** The center's Android phone (SMS Gateway app): one request for many numbers. @return array{0: ?string, 1: ?string} error, id */
+    private function viaPhone(array $numbers, string $text): array
+    {
+        try {
+            $response = Http::withBasicAuth((string) Setting::get('sms_username'), $this->password())
+                ->acceptJson()->connectTimeout(5)->timeout(15)
+                ->post(Setting::get('sms_url') ?: self::DEFAULT_URL, ['textMessage' => ['text' => $text], 'phoneNumbers' => $numbers]);
+            if ($response->successful()) {
+                return [null, $response->json('id')];
+            }
+
+            return [match ($response->status()) {
+                401, 403 => 'اسم المستخدم أو كلمة المرور في إعدادات الرسائل غير صحيحة.',
+                503 => 'الجوال لم يستلم الرسائل بعد (تأكد أنه مشغّل ومتصل بالإنترنت).',
+                default => 'رفض البوابة: '.$response->status().' '.mb_substr((string) ($response->json('message') ?? $response->body()), 0, 120),
+            }, null];
+        } catch (\Throwable $e) {
+            Log::warning('SMS gateway error: '.$e->getMessage());
+            self::$unreachable['phone'] = true;
+
+            return ['تعذّر الاتصال ببوابة الرسائل.', null];
+        }
+    }
+
+    /**
+     * A paid SMS provider through its HTTP link (most local providers work this way): the parameter
+     * names, the sender name, the key and the number format come from the settings.
+     *
+     * @return array{0: ?string, 1: ?string} error, provider reply
+     */
+    private function viaProvider(array $numbers, string $text): array
+    {
+        $format = Setting::get('sms_provider_number_format') ?: 'intl';
+        $numbers = array_map(fn ($n) => match ($format) {
+            'plus' => $n,
+            'local' => '0'.substr($n, strlen(ltrim(Setting::get('sms_country_code') ?: '+970', '+')) + 1),
+            default => ltrim($n, '+'),
+        }, $numbers);
+        $groups = Setting::get('sms_provider_bulk') === '1' ? [implode(',', $numbers)] : $numbers;
+        $base = $this->providerExtraParams();
+        foreach (['sms_provider_sender_param' => 'sms_provider_sender', 'sms_provider_key_param' => null] as $nameKey => $valueKey) {
+            $name = trim((string) Setting::get($nameKey));
+            $value = $valueKey ? Setting::get($valueKey) : $this->providerKey();
+            if ($name !== '' && filled($value)) {
+                $base[$name] = $value;
+            }
+        }
+        $toParam = Setting::get('sms_provider_to_param') ?: 'to';
+        $textParam = Setting::get('sms_provider_text_param') ?: 'message';
+        $expect = trim((string) Setting::get('sms_provider_success'));
+        $replies = [];
+
+        foreach ($groups as $to) {
+            $params = $base + [$toParam => $to, $textParam => $text];
+            try {
+                $http = Http::connectTimeout(5)->timeout(20);
+                $response = Setting::get('sms_provider_method') === 'GET'
+                    ? $http->get(Setting::get('sms_provider_url'), $params)
+                    : $http->asForm()->post(Setting::get('sms_provider_url'), $params);
+                $body = mb_substr(trim((string) $response->body()), 0, 120);
+                if (! $response->successful() || ($expect !== '' && ! str_contains((string) $response->body(), $expect))) {
+                    return ['رفض مزوّد الرسائل: '.$response->status().' '.$body, null];
+                }
+                $replies[] = $body;
+            } catch (\Throwable $e) {
+                Log::warning('SMS provider error: '.$e->getMessage());
+                self::$unreachable['provider'] = true;
+
+                return ['تعذّر الاتصال بمزوّد الرسائل.', null];
+            }
+        }
+
+        return [null, mb_substr(implode(' | ', $replies), 0, 190) ?: null];
+    }
+
+    /** Fixed parameters some providers need (one "name=value" per line). */
+    private function providerExtraParams(): array
+    {
+        $params = [];
+        foreach (preg_split('/\R/', (string) Setting::get('sms_provider_extra')) as $line) {
+            if (str_contains($line, '=')) {
+                [$k, $v] = array_map('trim', explode('=', $line, 2));
+                if ($k !== '') {
+                    $params[$k] = $v;
+                }
+            }
+        }
+
+        return $params;
+    }
+
+    public function providerKey(): string
+    {
+        $stored = (string) Setting::get('sms_provider_key');
+        try {
+            return $stored === '' ? '' : Crypt::decryptString($stored);
+        } catch (\Throwable) {
+            return '';
+        }
     }
 
     /** Automatic message to a student's parents, if that kind is switched on. */

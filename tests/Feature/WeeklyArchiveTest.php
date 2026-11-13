@@ -16,6 +16,8 @@ class WeeklyArchiveTest extends TestCase
     private function setUpWeeks(): array
     {
         Storage::fake('local');
+        // Pin to a Monday: on Fridays the Saturday-Thursday week has already ended.
+        \Illuminate\Support\Carbon::setTestNow(\Illuminate\Support\Carbon::parse('2026-11-09 10:00'));
         $teacher = $this->teacher();
         $circle = $this->circleFor($teacher);
         $student = $this->studentIn($circle, ['full_name' => 'يوسف الأرشيف']);

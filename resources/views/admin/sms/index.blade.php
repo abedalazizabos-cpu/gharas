@@ -12,7 +12,7 @@
 
 <div class="row g-3">
     <div class="col-lg-5">
-        <form method="POST" action="{{ route('admin.sms.send') }}" class="card" data-confirm="ستُرسل الرسالة من جوال المركز إلى أولياء الأمور المختارين، وتُحسب من رصيد الشريحة." data-confirm-title="إرسال الرسالة" data-confirm-button="نعم، أرسل">
+        <form method="POST" action="{{ route('admin.sms.send') }}" class="card" data-confirm="ستُرسل الرسالة إلى أولياء الأمور المختارين، وتُحسب من رصيد الشريحة أو مزوّد الرسائل." data-confirm-title="إرسال الرسالة" data-confirm-button="نعم، أرسل">
             @csrf
             <div class="card-header"><i class="bi bi-send"></i> رسالة جديدة</div>
             <div class="card-body">
@@ -30,6 +30,14 @@
                     <option value="">اختر الطالب…</option>
                     @foreach ($students as $st)<option value="{{ $st->id }}" @selected((string) old('student_id', request('student')) === (string) $st->id)>{{ $st->full_name }} · {{ $st->circle?->name }}</option>@endforeach
                 </select>
+                @if (count($channels) > 1)
+                    <label class="form-label mt-1">أرسل عبر</label>
+                    <div class="d-flex flex-wrap gap-3 mb-2">
+                        @foreach ($channels as $k => $v)
+                            <div class="form-check"><input class="form-check-input" type="radio" name="channel" value="{{ $k }}" id="ch-{{ $k }}" @checked(old('channel', $defaultChannel) === $k)><label class="form-check-label" for="ch-{{ $k }}"><i class="bi bi-{{ $k === 'phone' ? 'phone' : 'broadcast' }}"></i> {{ $v }}</label></div>
+                        @endforeach
+                    </div>
+                @endif
                 <label class="form-label mt-1">نص الرسالة</label>
                 <textarea name="text" rows="5" maxlength="600" class="form-control @error('text') is-invalid @enderror" id="sms-text" required>{{ old('text') }}</textarea>
                 @error('text')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -51,7 +59,7 @@
                             <td class="small">{{ $m->purposeLabel() }}</td>
                             <td class="small">{{ \Illuminate\Support\Str::limit($m->text, 90) }}</td>
                             <td>{{ $m->phones_count }}</td>
-                            <td>@if ($m->status === 'sent')<span class="badge text-bg-success">أُرسلت للجوال</span>@else<span class="badge text-bg-danger" title="{{ $m->error }}">لم تُرسل</span><div class="small text-danger">{{ $m->error }}</div>@endif</td>
+                            <td>@if ($m->status === 'sent')<span class="badge text-bg-success">{{ $m->channel === 'provider' ? 'أُرسلت عبر المزوّد' : 'أُرسلت للجوال' }}</span>@else<span class="badge text-bg-danger" title="{{ $m->error }}">لم تُرسل</span><div class="small text-danger">{{ $m->error }}</div>@endif</td>
                         </tr>
                     @empty
                         <tr><td colspan="5" class="text-muted small p-3">لم تُرسل رسائل بعد.</td></tr>
