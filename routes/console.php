@@ -93,32 +93,35 @@ Artisan::command('gharas:archive-weeks', function (WeeklyArchiveService $weeks) 
     $this->info('تم حفظ ملفات '.$weeks->archiveMissing().' أسبوع/حلقة في storage/app/private/archives');
 })->purpose('حفظ ملف لكل حلقة عن كل أسبوع منتهٍ (من السبت إلى الخميس)');
 
+// Scheduled tasks run in-process (Artisan::call), not as a separate `php artisan` process:
+// shared hosts such as Hostinger disable proc_open, which Schedule::command() needs.
+
 // Saves the week's files every Friday (the study week ends on Thursday); the archive page also catches up on its own.
-Schedule::command('gharas:archive-weeks')->weeklyOn(5, '00:30');
+Schedule::call(fn () => Artisan::call('gharas:archive-weeks'))->name('gharas:archive-weeks')->weeklyOn(5, '00:30');
 
 // Sunnah courses start and finish by their dates (the course pages also do this when opened).
 Artisan::command('gharas:sunnah-status', function () {
     $this->info('تم تحديث حالة '.SunnahCourse::syncStatuses().' دورة حسب تواريخها.');
 })->purpose('تحديث حالة دورات قسم السنة حسب تاريخ البداية والنهاية');
-Schedule::command('gharas:sunnah-status')->dailyAt('00:15');
+Schedule::call(fn () => Artisan::call('gharas:sunnah-status'))->name('gharas:sunnah-status')->dailyAt('00:15');
 
 // Each morning: teachers who did not record yesterday's attendance or recitation are alerted, and the admins get a summary.
 Artisan::command('gharas:recording-alerts', function (RecordingGapService $gaps) {
     $this->info('أيام غير مسجلة أمس: '.$gaps->notifyYesterday());
 })->purpose('تنبيه المحفظين الذين لم يسجلوا حضور أو تسميع يوم أمس، وإشعار الإدارة');
-Schedule::command('gharas:recording-alerts')->dailyAt('07:00');
+Schedule::call(fn () => Artisan::call('gharas:recording-alerts'))->name('gharas:recording-alerts')->dailyAt('07:00');
 
 // لوحة الشرف: on the 1st, one student of each circle is chosen for last month (the login screen also does it on first view).
 Artisan::command('gharas:honor-board', function (HonorBoardService $honor) {
     $this->info('طلاب لوحة الشرف المختارون: '.$honor->ensure(HonorBoardService::currentMonth()));
 })->purpose('اختيار طالب من كل حلقة للوحة الشرف عن الشهر الماضي');
-Schedule::command('gharas:honor-board')->monthlyOn(1, '00:45');
+Schedule::call(fn () => Artisan::call('gharas:honor-board'))->name('gharas:honor-board')->monthlyOn(1, '00:45');
 
 // On the 1st: parents are told that last month's report of each child is ready (PDF).
 Artisan::command('gharas:monthly-reports', function (MonthlyReportService $reports) {
     $this->info('إشعارات التقرير الشهري المرسلة: '.$reports->notifyParents());
 })->purpose('إشعار أولياء الأمور بتقرير أبنائهم الشهري');
-Schedule::command('gharas:monthly-reports')->monthlyOn(1, '08:00');
+Schedule::call(fn () => Artisan::call('gharas:monthly-reports'))->name('gharas:monthly-reports')->monthlyOn(1, '08:00');
 
 // Daily backup when the Laravel scheduler is running (php artisan schedule:work / cron).
-Schedule::command('gharas:backup')->dailyAt('02:00');
+Schedule::call(fn () => Artisan::call('gharas:backup'))->name('gharas:backup')->dailyAt('02:00');

@@ -14,17 +14,20 @@
 2. **اجعل مجلد الموقع يشير إلى `public`.** في لوحة الاستضافة اجعل جذر النطاق (Document Root) هو مجلد `public` داخل المشروع، فهذا الأكثر أماناً. إن لم تسمح الاستضافة بذلك وكان المشروع كاملاً داخل `public_html`، فملف `.htaccess` الموجود في جذر المشروع يحوّل الزيارات إلى `public` ويمنع الوصول إلى بقية الملفات.
 3. **ثبّت المكتبات بدون أدوات التطوير.** هذا يقلل الحجم ويسرّع التحميل:
    ```
-   composer install --no-dev --optimize-autoloader
+   composer install --no-dev --optimize-autoloader --no-scripts
+   php artisan package:discover
    ```
+   الخيار `--no-scripts` ضروري على الاستضافات التي تقفل الدالة `proc_open` (مثل Hostinger)، لأن Composer لا يستطيع فيها تشغيل أوامر artisan بنفسه.
 4. **أنشئ ملف الإعدادات:** انسخ `.env.production.example` باسم `.env`، وعدّل القيم المعلّمة بـ «غيّر» (الرابط وقاعدة البيانات والبريد). ثم نفّذ:
    ```
    php artisan key:generate
    ```
 5. **جهّز قاعدة البيانات والكاش:**
    ```
-   composer deploy
+   php artisan migrate --force
+   php artisan optimize
    ```
-   ينفّذ هذا الأمر `migrate` ثم `optimize`. لا تُنشأ البيانات التجريبية على الاستضافة.
+   (على الاستضافات التي تسمح بـ `proc_open` يكفي `composer deploy`.) لا تُنشأ البيانات التجريبية على الاستضافة.
 6. **أنشئ حساب المدير الأعلى الأول:**
    ```
    php artisan db:seed --force
@@ -36,14 +39,16 @@
    ```
    * * * * * cd /path/to/gharas && php artisan schedule:run >> /dev/null 2>&1
    ```
-   هذا يحفظ أرشيف الأسابيع كل أحد، وينشئ نسخة احتياطية يومية في `storage/app/backups`.
+   المهام الدورية تعمل داخل نفس العملية، فلا تحتاج `proc_open`. هذا يحفظ أرشيف الأسابيع كل جمعة، وينشئ نسخة احتياطية يومية في `storage/app/backups`.
 
 ## عند كل تحديث لاحق
 
 ```
 git pull
-composer install --no-dev --optimize-autoloader
-composer deploy
+composer install --no-dev --optimize-autoloader --no-scripts
+php artisan package:discover
+php artisan migrate --force
+php artisan optimize
 ```
 
 ## ما يحمي الموقع تلقائياً
