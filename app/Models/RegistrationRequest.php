@@ -6,7 +6,7 @@ use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** A parent's request, from the website, to enroll a child in the center. */
+/** A request to enroll a new student: from a parent on the website, or from a teacher for his own circle. */
 class RegistrationRequest extends Model
 {
     public const STATUSES = ['pending' => 'بانتظار الرد', 'accepted' => 'مقبول', 'rejected' => 'مرفوض'];
@@ -25,6 +25,21 @@ class RegistrationRequest extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class)->withTrashed();
+    }
+
+    public function circle(): BelongsTo
+    {
+        return $this->belongsTo(Circle::class)->withTrashed();
+    }
+
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requested_by')->withTrashed();
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 
     public function handler(): BelongsTo

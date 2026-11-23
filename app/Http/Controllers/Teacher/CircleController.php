@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TeacherCircleRequest;
-use App\Services\AuditLogger;
 use App\Models\Circle;
+use App\Models\RegistrationRequest;
+use App\Services\AuditLogger;
 use App\Services\ReportService;
 use Illuminate\Http\Request;
 
@@ -21,9 +22,14 @@ class CircleController extends Controller
     public function show(Circle $circle)
     {
         $this->authorize('view', $circle);
+        $canRequest = $circle->teacher_id === auth()->id() && auth()->user()->hasPermission('teacher.students.request');
 
         return view('teacher.circles.show', [
             'circle' => $circle,
+            'canRequest' => $canRequest,
+            // The teacher's requests for this circle: all waiting ones, plus those answered in the last 30 days.
+            'requests' => $canRequest ? RegistrationRequest::where('circle_id', $circle->id)->where('requested_by', auth()->id())
+                ->where(fn ($q) => $q->where('status', 'pending')->orWhere('handled_at', '>=', now()->subDays(30)))->latest()->get() : collect(),
             'students' => $circle->students()->active()->with('parents')->orderBy('full_name')->get(),
             'sessions' => $circle->sessions()->withCount([
                 'attendance as present_count' => fn ($q) => $q->whereIn('status', ['present', 'late']),

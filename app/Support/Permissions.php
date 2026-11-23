@@ -43,6 +43,7 @@ class Permissions
             'teacher.quality' => 'رصد اختبارات لجنة الجودة (لمن اختاره المدير في اللجنة)',
             'teacher.sunnah' => 'دورات قسم السنة التي يعطيها ورصد درجاتها',
             'teacher.students.edit' => 'تعديل بيانات الطلاب وأولياء الأمور',
+            'teacher.students.request' => 'طلب إضافة طالب جديد إلى حلقته (يضيفه المدير بعد الموافقة)',
             'teacher.guardian.password' => 'تغيير كلمة سر ولي الأمر',
             'teacher.circle.edit' => 'تعديل اسم الحلقة وموعدها',
             'teacher.archive' => 'السجل الأسبوعي والأرشيف',

@@ -255,6 +255,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('circles/{circle}/edit', [Teacher\CircleController::class, 'edit'])->name('circles.edit')->middleware('perm:teacher.circle.edit');
         Route::put('circles/{circle}', [Teacher\CircleController::class, 'update'])->name('circles.update')->middleware('perm:teacher.circle.edit');
         Route::get('circles/{circle}/report', [Teacher\CircleController::class, 'report'])->name('circles.report');
+        Route::middleware('perm:teacher.students.request')->group(function () {
+            Route::get('circles/{circle}/student-requests/create', [Teacher\StudentRequestController::class, 'create'])->name('student-requests.create');
+            Route::post('circles/{circle}/student-requests', [Teacher\StudentRequestController::class, 'store'])->name('student-requests.store');
+            Route::delete('student-requests/{registration}', [Teacher\StudentRequestController::class, 'destroy'])->name('student-requests.destroy');
+        });
 
         Route::middleware('perm:teacher.attendance')->group(function () {
             Route::get('circles/{circle}/attendance', [Teacher\AttendanceController::class, 'create'])->name('attendance.create');

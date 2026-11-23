@@ -5,7 +5,7 @@
     <a href="{{ route('registration.create') }}" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-box-arrow-up-left"></i> نموذج التسجيل في الموقع</a>
 </x-page-header>
 
-<div class="alert alert-light border small"><i class="bi bi-info-circle text-success"></i> يملأ وليّ الأمر نموذج التسجيل في الموقع، فيصل الطلب هنا. عند القبول يُضاف الطالب إلى الحلقة التي تختارها، ويُربط بحساب وليّ الأمر إن كان رقمه مسجلاً (مع إخوته)، أو يُنشأ له حساب جديد بكلمة مرور مؤقتة تظهر لك لتسلّمها له@if (app(\App\Services\SmsService::class)->autoEnabled('registration'))، وتصله رسالة SMS بالقبول وبيانات الدخول@endif.</div>
+<div class="alert alert-light border small"><i class="bi bi-info-circle text-success"></i> يملأ وليّ الأمر نموذج التسجيل في الموقع، أو يطلب المحفظ إضافة طالب إلى حلقته، فيصل الطلب هنا. عند القبول يُضاف الطالب إلى الحلقة التي تختارها، ويُربط بحساب وليّ الأمر إن كان رقمه مسجلاً (مع إخوته)، أو يُنشأ له حساب جديد بكلمة مرور مؤقتة تظهر لك لتسلّمها له@if (app(\App\Services\SmsService::class)->autoEnabled('registration'))، وتصله رسالة SMS بالقبول وبيانات الدخول@endif.</div>
 
 <ul class="nav nav-pills mb-3 gap-1">
     @foreach (\App\Models\RegistrationRequest::STATUSES as $k => $v)
@@ -22,6 +22,7 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-lg-5 small">
+                    @if ($r->requested_by)<div class="mb-2"><span class="badge text-bg-info"><i class="bi bi-person-badge"></i> طلب من المحفظ {{ $r->requester?->name }}</span>@if ($r->circle) <span class="text-muted">لحلقة «{{ $r->circle->name }}»</span>@endif</div>@endif
                     <div><i class="bi bi-house-heart text-muted"></i> {{ \App\Models\RegistrationRequest::RELATIONSHIPS[$r->relationship] ?? '' }}: <strong>{{ $r->guardian_name }}</strong> · <a href="tel:{{ $r->guardian_phone }}" dir="ltr">{{ $r->guardian_phone }}</a></div>
                     @if (isset($parents[$r->guardian_phone]))<div class="text-success mt-1"><i class="bi bi-link-45deg"></i> الرقم مسجل لوليّ الأمر {{ $parents[$r->guardian_phone] }}، فيُضاف الطالب مع إخوته في حسابه.</div>@endif
                     @if ($r->birth_date)<div class="mt-1 text-muted">تاريخ الميلاد {{ $r->birth_date->format('Y/m/d') }}</div>@endif
@@ -35,7 +36,7 @@
                                 <label class="form-label small">الحلقة</label>
                                 <select name="circle_id" class="form-select form-select-sm">
                                     <option value="">بدون حلقة الآن</option>
-                                    @foreach ($circles as $c)<option value="{{ $c->id }}">{{ $c->name }} · {{ $c->teacher?->name ?? 'بلا محفظ' }} ({{ $c->students_count }}/{{ $c->capacity }})</option>@endforeach
+                                    @foreach ($circles as $c)<option value="{{ $c->id }}" @selected($r->circle_id === $c->id)>{{ $c->name }} · {{ $c->teacher?->name ?? 'بلا محفظ' }} ({{ $c->students_count }}/{{ $c->capacity }})</option>@endforeach
                                 </select>
                                 @if (\App\Models\Setting::get('allow_capacity_override') === '1')<div class="form-check small mt-1"><input class="form-check-input" type="checkbox" name="override_capacity" value="1" id="ov-{{ $r->id }}"><label class="form-check-label" for="ov-{{ $r->id }}">تجاوز سعة الحلقة</label></div>@endif
                             </div>
