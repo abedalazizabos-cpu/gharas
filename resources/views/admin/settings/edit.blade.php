@@ -1,7 +1,8 @@
 @extends('layouts.app')
-@section('title', 'الإعدادات')
+@php($full = auth()->user()->isSuperAdmin())
+@section('title', $full ? 'الإعدادات' : 'إعدادات المركز')
 @section('content')
-<x-page-header title="إعدادات النظام" :crumbs="['الإعدادات']" />
+<x-page-header :title="$full ? 'إعدادات النظام' : 'إعدادات المركز'" :crumbs="[$full ? 'الإعدادات' : 'إعدادات المركز']" />
 <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" novalidate>
     @csrf @method('PUT')
     <div class="card mb-3">
@@ -72,11 +73,12 @@
     <div class="card mb-3">
         <div class="card-header">بيانات التواصل</div>
         <div class="card-body"><div class="row g-3">
-            <x-field name="contact_phone" label="الهاتف" :value="$settings['contact_phone']" col="col-md-4" dir="ltr" help="رقم يظهر للزوار. لإرسال SMS للأهالي من رقم المركز اربط جوال المركز من «رسائل SMS للأهالي ← إعدادات الربط»." />
+            <x-field name="contact_phone" label="الهاتف" :value="$settings['contact_phone']" col="col-md-4" dir="ltr" help="رقم يظهر للزوار.{{ $full ? ' لإرسال SMS للأهالي من رقم المركز اربط جوال المركز من «رسائل SMS للأهالي ← إعدادات الربط».' : '' }}" />
             <x-field name="contact_email" label="البريد الإلكتروني" type="email" :value="$settings['contact_email']" col="col-md-4" dir="ltr" />
             <x-field name="contact_address" label="العنوان" :value="$settings['contact_address']" col="col-md-4" />
         </div></div>
     </div>
+    @if ($full)
     <div class="card mb-3">
         <div class="card-header">إعدادات الحلقات والتقييم</div>
         <div class="card-body"><div class="row g-3">
@@ -88,6 +90,7 @@
             <div class="col-12"><a href="{{ route('admin.criteria.index') }}"><i class="bi bi-sliders"></i> إدارة معايير التقييم</a></div>
         </div></div>
     </div>
+    @endif
     <div class="card mb-3" id="honor">
         <div class="card-header"><i class="bi bi-stars"></i> لوحة الشرف والتسجيل والتقارير الشهرية والتاريخ الهجري</div>
         <div class="card-body"><div class="row g-3">
@@ -102,6 +105,7 @@
             <div class="col-md-6"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="hijri_dates" value="1" id="hijri" @checked(old('hijri_dates', $settings['hijri_dates']) == '1')><label class="form-check-label fw-semibold" for="hijri">إظهار التاريخ الهجري بجانب الميلادي</label></div><div class="form-text">في أعلى الصفحات وفي الشهادات والتقارير وملفات PDF.</div></div>
         </div></div>
     </div>
+    @if ($full)
     <div class="card mb-3">
         <div class="card-header"><i class="bi bi-chat-quote"></i> رسائل التذكير (أدعية وآيات)</div>
         <div class="card-body"><div class="row g-3">
@@ -147,8 +151,10 @@
                 help="مثال: اللهم ارحم شهداءنا | دعاء للشهداء. إذا أفرغت الحقل تعود القائمة الافتراضية." />
         </div></div>
     </div>
+    @endif
     <div class="d-flex justify-content-end mb-4"><button class="btn btn-primary px-4"><i class="bi bi-save ms-1"></i> حفظ الإعدادات</button></div>
 </form>
+@if ($full)
 <div class="card">
     <div class="card-header">النسخ الاحتياطي</div>
     <div class="card-body">
@@ -156,6 +162,7 @@
         <a href="{{ route('admin.settings.backup') }}" class="btn btn-outline-primary"><i class="bi bi-download"></i> تنزيل نسخة احتياطية الآن</a>
     </div>
 </div>
+@endif
 @push('scripts')
 <script>
 (function () {

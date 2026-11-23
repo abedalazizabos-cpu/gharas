@@ -198,10 +198,13 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         Route::resource('announcements', Admin\AnnouncementController::class)->except('show')->middleware('perm:announcements.manage');
 
-        // Settings and backups belong to the super admin only.
-        Route::middleware('role:superadmin')->group(function () {
+        // Center settings (name, logo, contact, honor board...) are open to admins with the permission;
+        // the remaining settings in the same form and backups stay with the super admin.
+        Route::middleware('perm:settings.center')->group(function () {
             Route::get('settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+        });
+        Route::middleware('role:superadmin')->group(function () {
             Route::get('backup', [Admin\SettingController::class, 'backup'])->name('settings.backup');
         });
 

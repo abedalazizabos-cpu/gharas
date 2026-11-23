@@ -34,6 +34,7 @@ class Permissions
             'admins.manage' => 'حسابات المديرين',
             'visitors.manage' => 'حسابات الزوار والداعمين',
             'audit.view' => 'سجل العمليات',
+            'settings.center' => 'إعدادات المركز: البيانات والشعار والهوية والتواصل ولوحة الشرف والتسجيل والتقارير الشهرية والتاريخ الهجري',
         ],
         User::ROLE_TEACHER => [
             'teacher.attendance' => 'تسجيل الحضور',

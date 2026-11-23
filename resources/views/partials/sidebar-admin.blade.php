@@ -28,6 +28,7 @@
     @if ($u->hasPermission('admins.manage'))@include('partials.nav-link', ['route' => 'admin.admins.index', 'active' => 'admin.admins.*', 'icon' => 'shield-lock', 'label' => 'حسابات المديرين'])@endif
     @if ($u->hasPermission('visitors.manage'))@include('partials.nav-link', ['route' => 'admin.visitors.index', 'active' => 'admin.visitors.*', 'icon' => 'eye', 'label' => 'الزوار والداعمون'])@endif
     @if ($u->hasPermission('assessments.manage'))@include('partials.nav-link', ['route' => 'admin.criteria.index', 'icon' => 'sliders', 'label' => 'معايير التقييم'])@endif
+    @if (! $u->isSuperAdmin() && $u->hasPermission('settings.center'))@include('partials.nav-link', ['route' => 'admin.settings.edit', 'icon' => 'gear', 'label' => 'إعدادات المركز'])@endif
     @if ($u->hasPermission('audit.view'))@include('partials.nav-link', ['route' => 'admin.audit.index', 'icon' => 'journal-text', 'label' => 'سجل العمليات'])@endif
     @if ($u->isSuperAdmin())
         <div class="nav-section">المدير الأعلى</div>

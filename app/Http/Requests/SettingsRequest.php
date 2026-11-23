@@ -11,8 +11,16 @@ class SettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->isSuperAdmin();
+        return $this->user()->hasPermission('settings.center');
     }
+
+    /** Fields an admin (not the super admin) may change: the center's data, brand, contact and public-facing options. */
+    public const CENTER_FIELDS = [
+        'center_name', 'center_about', 'center_mission', 'center_goals',
+        'logo', 'remove_logo', 'brand_title', 'brand_subtitle', 'logo_size', 'logo_shape', 'logo_background', 'logo_on_pdf', 'logo_favicon', 'theme_color',
+        'contact_phone', 'contact_email', 'contact_address',
+        'honor_on_login', 'honor_names', 'registration_open', 'monthly_reports', 'hijri_dates',
+    ];
 
     protected function prepareForValidation(): void
     {
@@ -24,6 +32,13 @@ class SettingsRequest extends FormRequest
     }
 
     public function rules(): array
+    {
+        $rules = $this->allRules();
+
+        return $this->user()->isSuperAdmin() ? $rules : array_intersect_key($rules, array_flip(self::CENTER_FIELDS));
+    }
+
+    private function allRules(): array
     {
         return [
             'center_name' => ['required', 'string', 'max:150'],
