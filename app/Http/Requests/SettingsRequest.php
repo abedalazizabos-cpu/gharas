@@ -14,12 +14,13 @@ class SettingsRequest extends FormRequest
         return $this->user()->hasPermission('settings.center');
     }
 
-    /** Fields an admin (not the super admin) may change: the center's data, brand, contact and public-facing options. */
+    /** Fields an admin (not the super admin) may change: center data, brand, contact, honor board and the like, circles and evaluation. */
     public const CENTER_FIELDS = [
         'center_name', 'center_about', 'center_mission', 'center_goals',
         'logo', 'remove_logo', 'brand_title', 'brand_subtitle', 'logo_size', 'logo_shape', 'logo_background', 'logo_on_pdf', 'logo_favicon', 'theme_color',
         'contact_phone', 'contact_email', 'contact_address',
         'honor_on_login', 'honor_names', 'registration_open', 'monthly_reports', 'hijri_dates',
+        'pass_score', 'teacher_edit_days', 'allow_capacity_override',
     ];
 
     protected function prepareForValidation(): void

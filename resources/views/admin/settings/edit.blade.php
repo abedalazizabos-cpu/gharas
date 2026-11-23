@@ -78,7 +78,6 @@
             <x-field name="contact_address" label="العنوان" :value="$settings['contact_address']" col="col-md-4" />
         </div></div>
     </div>
-    @if ($full)
     <div class="card mb-3">
         <div class="card-header">إعدادات الحلقات والتقييم</div>
         <div class="card-body"><div class="row g-3">
@@ -90,7 +89,6 @@
             <div class="col-12"><a href="{{ route('admin.criteria.index') }}"><i class="bi bi-sliders"></i> إدارة معايير التقييم</a></div>
         </div></div>
     </div>
-    @endif
     <div class="card mb-3" id="honor">
         <div class="card-header"><i class="bi bi-stars"></i> لوحة الشرف والتسجيل والتقارير الشهرية والتاريخ الهجري</div>
         <div class="card-body"><div class="row g-3">

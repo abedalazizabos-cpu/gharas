@@ -32,18 +32,19 @@ class RolesAndPermissionsTest extends TestCase
         Setting::put('reminders_interval', '15');
         $this->actingAs($admin)->get(route('admin.settings.edit'))->assertOk()
             ->assertSee('بيانات المركز')->assertSee('الشعار والهوية')->assertSee('بيانات التواصل')->assertSee('لوحة الشرف والتسجيل والتقارير الشهرية والتاريخ الهجري')
-            ->assertDontSee('إعدادات الحلقات والتقييم')->assertDontSee('رسائل التذكير')->assertDontSee('النسخ الاحتياطي')->assertDontSee('المدير الأعلى');
+            ->assertSee('إعدادات الحلقات والتقييم')->assertDontSee('رسائل التذكير')->assertDontSee('النسخ الاحتياطي')->assertDontSee('المدير الأعلى');
 
         // Only the center fields are saved; anything else sent along is ignored.
         $this->actingAs($admin)->put(route('admin.settings.update'), [
             'center_name' => 'مركز غراس الجديد', 'brand_title' => 'غراس', 'logo_size' => 'medium', 'logo_shape' => 'rounded', 'theme_color' => array_key_first(Setting::THEME_COLORS),
             'contact_phone' => '0599000000', 'honor_names' => array_key_first(Setting::HONOR_NAMES), 'hijri_dates' => '1', 'registration_open' => '1',
-            'pass_score' => '10', 'reminders_interval' => '99',
+            'pass_score' => '60', 'teacher_edit_days' => '5', 'allow_capacity_override' => '1', 'reminders_interval' => '99',
         ])->assertSessionHasNoErrors();
         $this->assertSame('مركز غراس الجديد', Setting::get('center_name'));
         $this->assertSame('0599000000', Setting::get('contact_phone'));
         $this->assertSame('1', Setting::get('hijri_dates'));
-        $this->assertSame('70', Setting::get('pass_score'));
+        $this->assertSame('60', Setting::get('pass_score'));
+        $this->assertSame('1', Setting::get('allow_capacity_override'));
         $this->assertSame('15', Setting::get('reminders_interval'));
 
         // The super admin can take the page away from admins.
