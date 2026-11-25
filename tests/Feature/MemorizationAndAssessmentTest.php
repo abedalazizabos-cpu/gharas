@@ -6,6 +6,8 @@ use App\Models\Assessment;
 use App\Models\AssessmentCriterion;
 use App\Models\MemorizationRecord;
 use App\Services\ProgressService;
+use App\Services\ReportService;
+use App\Support\Mushaf;
 use Tests\TestCase;
 
 class MemorizationAndAssessmentTest extends TestCase
@@ -44,18 +46,24 @@ class MemorizationAndAssessmentTest extends TestCase
         $this->assertDatabaseHas('memorization_records', ['type' => 'revision', 'grade' => 'good']);
     }
 
-    public function test_amount_is_required_in_quarter_pages(): void
+    public function test_amount_is_worked_out_from_the_ayat_on_the_604_page_mushaf(): void
     {
         $teacher = $this->teacher();
         $student = $this->studentIn($this->circleFor($teacher));
-        $base = ['student_id' => $student->id, 'recorded_on' => now()->toDateString(), 'type' => 'new',
-            'surah_id' => 2, 'from_ayah' => 1, 'to_ayah' => 5, 'score' => 90];
+        $base = ['student_id' => $student->id, 'recorded_on' => now()->toDateString(), 'type' => 'new', 'score' => 90];
 
-        $this->actingAs($teacher)->post(route('teacher.memorization.store'), $base)->assertSessionHasErrors('pages');
-        $this->actingAs($teacher)->post(route('teacher.memorization.store'), $base + ['pages' => 0.3])->assertSessionHasErrors('pages');
-        $this->actingAs($teacher)->post(route('teacher.memorization.store'), $base + ['pages' => 0.5])->assertSessionHasNoErrors();
+        // Al-Baqarah 1-5 is exactly page 2; whatever amount is sent is ignored.
+        $this->actingAs($teacher)->post(route('teacher.memorization.store'), $base + ['surah_id' => 2, 'from_ayah' => 1, 'to_ayah' => 5, 'pages' => 7])->assertSessionHasNoErrors();
+        $this->assertSame('صفحة', MemorizationRecord::latest('id')->firstOrFail()->pagesLabel());
+        // All of Al-Baqarah: pages 2 to 49.
+        $this->actingAs($teacher)->post(route('teacher.memorization.store'), $base + ['surah_id' => 2, 'from_ayah' => 1, 'to_ayah' => 286])->assertSessionHasNoErrors();
+        $this->assertSame('48.00', MemorizationRecord::latest('id')->firstOrFail()->pages);
+        // Half of page 42 (Ayat al-Kursi and the two after it) rounds to quarters.
+        $this->assertSame(42, Mushaf::pageOf(2, 255));
+        $this->assertSame(0.75, Mushaf::pages(2, 255, 257));
+        $this->assertSame(604, Mushaf::pageOf(114, 6));
+        $this->assertSame(582, Mushaf::pageOf(78, 1));
 
-        $this->assertSame('نصف صفحة', MemorizationRecord::firstOrFail()->pagesLabel());
         $this->assertSame('ربع صفحة', MemorizationRecord::formatPages(0.25));
         $this->assertSame('صفحتان', MemorizationRecord::formatPages(2));
         $this->assertSame('3 صفحات', MemorizationRecord::formatPages(3));
@@ -96,7 +104,7 @@ class MemorizationAndAssessmentTest extends TestCase
 
         // Amounts are measured in pages: passing new memorization only.
         $this->assertSame(0.75, app(ProgressService::class)->memorizedPages($student));
-        $rows = app(\App\Services\ReportService::class)->studentRows(collect([$student]), now()->subDay(), now());
+        $rows = app(ReportService::class)->studentRows(collect([$student]), now()->subDay(), now());
         $this->assertSame(0.75, $rows->first()['new_pages']);
         $this->assertSame(1.0, $rows->first()['revision_pages']);
     }

@@ -9,6 +9,7 @@ use App\Models\RegistrationRequest;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\User;
+use App\Notifications\SystemNotification;
 use App\Services\AuditLogger;
 use App\Services\EnrollmentService;
 use App\Services\SmsService;
@@ -29,7 +30,7 @@ class RegistrationController extends Controller
         return view('admin.registrations.index', [
             'status' => $status,
             'counts' => RegistrationRequest::selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status'),
-            'requests' => RegistrationRequest::where('status', $status)->with(['student.circle', 'handler'])
+            'requests' => RegistrationRequest::where('status', $status)->with(['student.circle', 'handler', 'circle', 'requester'])
                 ->orderBy($status === 'pending' ? 'created_at' : 'handled_at', $status === 'pending' ? 'asc' : 'desc')->paginate(20)->withQueryString(),
             'circles' => Circle::active()->with('teacher')->withCount(['students' => fn ($q) => $q->active()])->orderBy('name')->get(),
             'parents' => User::where('role', User::ROLE_PARENT)->pluck('name', 'phone'),
@@ -54,14 +55,14 @@ class RegistrationController extends Controller
             $student = new Student([
                 'full_name' => $registration->student_name, 'gender' => $registration->gender, 'birth_date' => $registration->birth_date?->toDateString(),
                 'enrollment_date' => now()->toDateString(), 'memorized_juz_at_join' => $registration->memorized_juz,
-                'internal_notes' => $registration->notes ? 'ملاحظة وليّ الأمر عند التسجيل: '.$registration->notes : null,
+                'internal_notes' => $registration->notes ? ($registration->requested_by ? 'ملاحظة المحفظ عند الطلب: ' : 'ملاحظة وليّ الأمر عند التسجيل: ').$registration->notes : null,
             ]);
             $student->student_number = Student::generateNumber();
             $student->status = 'active';
             $student->save();
             $guardian = $this->attachGuardian($student, ['guardian_phone' => $registration->guardian_phone, 'guardian_name' => $registration->guardian_name, 'guardian_relationship' => $registration->relationship]);
             if (! empty($data['circle_id'])) {
-                $enrollment->assign($student, Circle::findOrFail($data['circle_id']), 'تسجيل جديد من الموقع', $override);
+                $enrollment->assign($student, Circle::findOrFail($data['circle_id']), $registration->requested_by ? 'طلب إضافة من المحفظ' : 'تسجيل جديد من الموقع', $override);
             }
             $registration->forceFill(['status' => 'accepted', 'student_id' => $student->id, 'handled_by' => $request->user()->id, 'handled_at' => now()])->save();
             AuditLogger::log('registration.accept', "قبول طلب تسجيل {$student->full_name}", $student, [], $student->only(['student_number', 'full_name']));
@@ -69,9 +70,11 @@ class RegistrationController extends Controller
             return $student;
         });
 
+        $circle = $student->fresh('circle')->circle;
+        $registration->requester?->notify(new SystemNotification('قُبل طلب إضافة طالب', "أُضيف {$student->full_name} ".($circle ? "إلى «{$circle->name}»." : 'إلى المركز دون حلقة بعد.'), $circle ? route('teacher.circles.show', $circle) : route('teacher.dashboard'), 'person-check'));
+
         $sms = app(SmsService::class);
         if ($sms->autoEnabled('registration')) {
-            $circle = $student->fresh('circle')->circle;
             $login = 'للدخول ومتابعة ابنكم: '.route('login').' برقم جوالكم'.($guardian['password'] ? ' وكلمة المرور '.$guardian['password'] : '');
             $sms->send([$registration->guardian_phone], 'تم قبول تسجيل '.$student->full_name.' في '.Setting::get('center_name').($circle ? ' في «'.$circle->name.'»' : '').'. '.$login, 'registration', $request->user());
         }
@@ -85,6 +88,7 @@ class RegistrationController extends Controller
         $data = $request->validate(['reject_reason' => ['nullable', 'string', 'max:255']]);
         $registration->forceFill(['status' => 'rejected', 'reject_reason' => $data['reject_reason'] ?? null, 'handled_by' => $request->user()->id, 'handled_at' => now()])->save();
         AuditLogger::log('registration.reject', "رفض طلب تسجيل {$registration->student_name}".(! empty($data['reject_reason']) ? ': '.$data['reject_reason'] : ''));
+        $registration->requester?->notify(new SystemNotification('رُفض طلب إضافة طالب', "طلب إضافة {$registration->student_name}".(! empty($data['reject_reason']) ? ': '.$data['reject_reason'] : '.'), $registration->circle ? route('teacher.circles.show', $registration->circle) : route('teacher.dashboard'), 'person-x'));
 
         return back()->with('success', 'تم رفض الطلب.');
     }

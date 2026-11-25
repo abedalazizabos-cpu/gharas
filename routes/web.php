@@ -198,10 +198,13 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         Route::resource('announcements', Admin\AnnouncementController::class)->except('show')->middleware('perm:announcements.manage');
 
-        // Settings and backups belong to the super admin only.
-        Route::middleware('role:superadmin')->group(function () {
+        // Center settings (name, logo, contact, honor board...) are open to admins with the permission;
+        // the remaining settings in the same form and backups stay with the super admin.
+        Route::middleware('perm:settings.center')->group(function () {
             Route::get('settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+        });
+        Route::middleware('role:superadmin')->group(function () {
             Route::get('backup', [Admin\SettingController::class, 'backup'])->name('settings.backup');
         });
 
@@ -252,6 +255,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('circles/{circle}/edit', [Teacher\CircleController::class, 'edit'])->name('circles.edit')->middleware('perm:teacher.circle.edit');
         Route::put('circles/{circle}', [Teacher\CircleController::class, 'update'])->name('circles.update')->middleware('perm:teacher.circle.edit');
         Route::get('circles/{circle}/report', [Teacher\CircleController::class, 'report'])->name('circles.report');
+        Route::middleware('perm:teacher.students.request')->group(function () {
+            Route::get('circles/{circle}/student-requests/create', [Teacher\StudentRequestController::class, 'create'])->name('student-requests.create');
+            Route::post('circles/{circle}/student-requests', [Teacher\StudentRequestController::class, 'store'])->name('student-requests.store');
+            Route::delete('student-requests/{registration}', [Teacher\StudentRequestController::class, 'destroy'])->name('student-requests.destroy');
+        });
 
         Route::middleware('perm:teacher.attendance')->group(function () {
             Route::get('circles/{circle}/attendance', [Teacher\AttendanceController::class, 'create'])->name('attendance.create');

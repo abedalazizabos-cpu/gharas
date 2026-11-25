@@ -96,14 +96,32 @@
             surah.addEventListener('change', sync);
             sync();
         }
-        // نموذج التسميع: اختيار سريع للمقدار بالصفحات
-        document.querySelectorAll('[data-pages]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var pages = document.getElementById('pages');
-                pages.value = btn.dataset.pages;
-                pages.dispatchEvent(new Event('input'));
-            });
-        });
+        // نموذج التسميع: حساب المقدار بالصفحات تلقائياً من الآيات (مصحف المدينة 604 صفحات)
+        var pagesBox = document.getElementById('pages');
+        if (pagesBox && pagesBox.dataset.pageStarts && surah) {
+            var starts = JSON.parse(pagesBox.dataset.pageStarts), before = [0];
+            Array.prototype.forEach.call(surah.options, function (o) { if (o.value) before[parseInt(o.value, 10)] = parseInt(o.dataset.ayahs || '0', 10); });
+            for (var i = 1; i < before.length; i++) before[i] = (before[i - 1] || 0) + (before[i] || 0);
+            var pageOf = function (id) { var lo = 0, hi = starts.length - 1; while (lo < hi) { var mid = (lo + hi + 1) >> 1; if (starts[mid] <= id) lo = mid; else hi = mid - 1; } return lo + 1; };
+            var pagesText = function (p) {
+                var named = { 0.25: 'ربع صفحة', 0.5: 'نصف صفحة', 0.75: 'ثلاثة أرباع صفحة', 1: 'صفحة', 2: 'صفحتان' };
+                if (named[p]) return named[p];
+                return (p >= 3 && p <= 10 && Math.floor(p) === p) ? p + ' صفحات' : p + ' صفحة';
+            };
+            var calc = function () {
+                var s = parseInt(surah.value, 10), a = parseInt(document.getElementById('from_ayah').value, 10), b = parseInt(document.getElementById('to_ayah').value, 10);
+                var max = s ? (before[s] - before[s - 1]) : 0;
+                if (!s || !a || !b || a < 1 || b < a || b > max) { pagesBox.value = ''; return; }
+                var first = before[s - 1] + a, last = before[s - 1] + b, total = 0;
+                for (var p = pageOf(first); p <= pageOf(last); p++) {
+                    var st = starts[p - 1], en = (p < starts.length ? starts[p] : 6237) - 1;
+                    total += (Math.min(en, last) - Math.max(st, first) + 1) / (en - st + 1);
+                }
+                pagesBox.value = pagesText(Math.max(0.25, Math.round(total * 4) / 4));
+            };
+            ['surah_id', 'from_ayah', 'to_ayah'].forEach(function (id) { var el = document.getElementById(id); el.addEventListener('input', calc); el.addEventListener('change', calc); });
+            if (!pagesBox.value) calc();
+        }
         var score = document.getElementById('score');
         if (score) {
             var label = document.getElementById('grade-preview');

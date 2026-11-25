@@ -2,7 +2,7 @@
 @section('title', 'قسم السنة')
 @section('content')
 <x-page-header title="قسم السنة والدورات" :crumbs="['قسم السنة']">
-    @if (auth()->user()->hasPermission('visitor.download'))<a href="{{ route('visitor.sunnah.index', ['export' => 'pdf']) }}" class="btn btn-outline-primary" data-no-loading><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a>@endif
+    @if (auth()->user()->hasPermission('visitor.download'))<a href="{{ route('visitor.sunnah.index', ['export' => 'pdf']) }}" class="btn btn-outline-primary" data-no-loading><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a><a href="{{ route('visitor.sunnah.index', ['export' => 'xlsx']) }}" class="btn btn-outline-success" data-no-loading><i class="bi bi-file-earmark-excel"></i> تنزيل Excel</a>@endif
 </x-page-header>
 <p class="small text-muted">دورات المركز في آداب القرآن والإعجاز القرآني والأحاديث النبوية والصلاة والطهارة والسيرة النبوية وسير الصحابة.</p>
 <div class="card"><div class="table-responsive">

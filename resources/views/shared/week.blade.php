@@ -3,7 +3,7 @@
 @section('content')
 <x-page-header title="السجل الأسبوعي" :crumbs="['السجل الأسبوعي']">
     <a href="{{ route($prefix.'.archive.index') }}" class="btn btn-outline-primary"><i class="bi bi-archive"></i> أرشيف الأسابيع السابقة</a>
-    @if ($archive) @if ($prefix !== 'visitor' || auth()->user()->hasPermission('visitor.download'))<a href="{{ route($prefix.'.archive.download', $archive) }}" class="btn btn-outline-secondary"><i class="bi bi-download"></i> تنزيل ملف الأسبوع</a>@endif @endif
+    @if ($archive) @if ($prefix !== 'visitor' || auth()->user()->hasPermission('visitor.download'))<a href="{{ route($prefix.'.archive.download', $archive) }}" class="btn btn-outline-secondary" data-no-loading><i class="bi bi-filetype-pdf"></i> تنزيل ملف الأسبوع PDF</a> <a href="{{ route($prefix.'.archive.download', [$archive, 'export' => 'xlsx']) }}" class="btn btn-outline-success" data-no-loading><i class="bi bi-file-earmark-excel"></i> تنزيل Excel</a>@endif @endif
     <button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> طباعة</button>
 </x-page-header>
 @if (! $circle)

@@ -3,7 +3,7 @@
 @section('content')
 @php($area = auth()->user()->isVisitor() ? 'visitor' : 'admin')
 <x-page-header title="التقرير الإجمالي للمركز" :crumbs="$area === 'admin' ? ['التقارير' => route('admin.reports.index'), 'تقرير المركز'] : ['الرئيسية' => route('visitor.dashboard'), 'تقرير المركز']">
-    @if (! auth()->user()->isVisitor() || auth()->user()->hasPermission('visitor.download'))<a href="{{ request()->fullUrlWithQuery(['export' => 'pdf']) }}" class="btn btn-outline-primary"><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a>@endif
+    @if (! auth()->user()->isVisitor() || auth()->user()->hasPermission('visitor.download'))<a href="{{ request()->fullUrlWithQuery(['export' => 'pdf']) }}" class="btn btn-outline-primary" data-no-loading><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a><a href="{{ request()->fullUrlWithQuery(['export' => 'xlsx']) }}" class="btn btn-outline-success" data-no-loading><i class="bi bi-file-earmark-excel"></i> تنزيل Excel</a>@endif
     <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> طباعة</button>
 </x-page-header>
 @include('shared._period-filter')

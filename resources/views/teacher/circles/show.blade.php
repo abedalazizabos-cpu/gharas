@@ -5,6 +5,7 @@
     @if (auth()->user()->hasPermission('teacher.attendance'))<a href="{{ route('teacher.attendance.create', $circle) }}" class="btn btn-success"><i class="bi bi-calendar-check"></i> تسجيل الحضور</a>@endif
     <a href="{{ route('teacher.circles.report', $circle) }}" class="btn btn-outline-primary"><i class="bi bi-bar-chart"></i> تقرير الحلقة</a>
     @if (auth()->user()->hasPermission('teacher.circle.edit'))<a href="{{ route('teacher.circles.edit', $circle) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil-square"></i> الاسم والموعد</a>@endif
+    @if ($canRequest)<a href="{{ route('teacher.student-requests.create', $circle) }}" class="btn btn-outline-success"><i class="bi bi-person-plus"></i> طلب إضافة طالب</a>@endif
 </x-page-header>
 <p class="text-muted small mb-3"><i class="bi bi-clock ms-1"></i> {{ $circle->daysLabel() }} · {{ $circle->timeLabel() }}</p>
 <div class="row g-3">
@@ -38,6 +39,27 @@
         </div>
     </div>
     <div class="col-lg-4">
+        @if ($canRequest)
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between"><span><i class="bi bi-person-plus"></i> طلبات إضافة طلاب</span><small class="text-muted">المقاعد المتاحة {{ $circle->freeSeats() }} من {{ $circle->capacity }}</small></div>
+            <ul class="list-group list-group-flush small">
+                @forelse ($requests as $r)
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <span class="fw-semibold">{{ $r->student_name }}</span>
+                            <span class="badge text-bg-{{ \App\Models\RegistrationRequest::STATUS_COLORS[$r->status] }}">{{ $r->statusLabel() }}</span>
+                        </div>
+                        <div class="text-muted">{{ $r->created_at->format('Y/m/d') }}@if ($r->reject_reason) · السبب: {{ $r->reject_reason }}@endif</div>
+                        @if ($r->status === 'pending')
+                            <form method="POST" action="{{ route('teacher.student-requests.destroy', $r) }}" class="mt-1">@csrf @method('DELETE')<button class="btn btn-link btn-sm text-danger p-0">سحب الطلب</button></form>
+                        @endif
+                    </li>
+                @empty
+                    <li class="list-group-item text-muted">لم ترسل طلبات بعد. لإضافة طالب جديد اضغط «طلب إضافة طالب».</li>
+                @endforelse
+            </ul>
+        </div>
+        @endif
         <div class="card">
             <div class="card-header">آخر الجلسات</div>
             <ul class="list-group list-group-flush small">

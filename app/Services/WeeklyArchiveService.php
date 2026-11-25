@@ -6,7 +6,6 @@ use App\Models\AttendanceRecord;
 use App\Models\Circle;
 use App\Models\CircleSession;
 use App\Models\MemorizationRecord;
-use App\Models\Setting;
 use App\Models\Student;
 use App\Models\WeeklyArchive;
 use App\Support\PdfExport;
@@ -81,6 +80,12 @@ class WeeklyArchiveService
     public function maskedPdf(Circle $circle, Carbon $start): string
     {
         return $this->pdf($circle, $this->mask($this->week($start, $circle)), false);
+    }
+
+    /** The week built on the fly with notes (used for the Excel copy; the saved file stays PDF). */
+    public function freshPdf(Circle $circle, Carbon $start): string
+    {
+        return $this->pdf($circle, $this->week($start, $circle), true);
     }
 
     /** Deletes the saved week files (the rows stay); each is rebuilt on its next download. */

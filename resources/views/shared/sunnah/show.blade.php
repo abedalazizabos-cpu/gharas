@@ -5,7 +5,8 @@
 <x-page-header :title="$course->title" :crumbs="[($isAdmin ? 'قسم السنة' : 'دوراتي في قسم السنة') => route($area.'.sunnah.index'), $course->title]">
     <a href="{{ route($area.'.sunnah.attendance', $course) }}" class="btn btn-primary"><i class="bi bi-calendar-check"></i> الحضور والغياب</a>
     <a href="{{ route($area.'.sunnah.grade', $course) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> رصد الدرجات</a>
-    <a href="{{ route($area.'.sunnah.show', [$course, 'export' => 'pdf']) }}" class="btn btn-outline-primary"><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a>
+    <a href="{{ route($area.'.sunnah.show', [$course, 'export' => 'pdf']) }}" class="btn btn-outline-primary" data-no-loading><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a>
+    <a href="{{ route($area.'.sunnah.show', [$course, 'export' => 'xlsx']) }}" class="btn btn-outline-success" data-no-loading><i class="bi bi-file-earmark-excel"></i> تنزيل Excel</a>
     @if ($isAdmin)
         <a href="{{ route('admin.sunnah.edit', $course) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i> تعديل الدورة والطلاب</a>
         <x-delete-form :action="route('admin.sunnah.destroy', $course)" label="حذف" class="btn btn-outline-danger" message="ستُحذف الدورة ونتائجها من القوائم." />

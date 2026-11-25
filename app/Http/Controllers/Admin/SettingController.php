@@ -21,17 +21,21 @@ class SettingController extends Controller
     public function update(SettingsRequest $request)
     {
         $data = $request->validated();
-        $data['allow_capacity_override'] = $request->boolean('allow_capacity_override') ? '1' : '0';
-        foreach (['reminders_enabled', 'logo_background', 'logo_on_pdf', 'logo_favicon', 'reminders_on_login', 'hijri_dates', 'honor_on_login', 'registration_open', 'monthly_reports'] as $flag) {
+        $full = $request->user()->isSuperAdmin();
+        foreach (['allow_capacity_override', 'reminders_enabled', 'logo_background', 'logo_on_pdf', 'logo_favicon', 'reminders_on_login', 'hijri_dates', 'honor_on_login', 'registration_open', 'monthly_reports'] as $flag) {
             $data[$flag] = $request->boolean($flag) ? '1' : '0';
         }
-        $data['reminders_days'] = collect($data['reminders_days'])->map(fn ($d) => (int) $d)->unique()->sort()->implode(',');
-        $data['reminders_roles'] = collect($data['reminders_roles'] ?? [])->implode(',');
+        if ($full) {
+            $data['reminders_days'] = collect($data['reminders_days'])->map(fn ($d) => (int) $d)->unique()->sort()->implode(',');
+            $data['reminders_roles'] = collect($data['reminders_roles'] ?? [])->implode(',');
+        }
         $data['center_logo'] = $this->storeLogo($request);
         $old = [];
         $new = [];
+        // An admin's form only holds the center sections; every other setting keeps its value.
+        $keys = $full ? array_keys(Setting::DEFAULTS) : array_merge(SettingsRequest::CENTER_FIELDS, ['center_logo']);
 
-        foreach (array_keys(Setting::DEFAULTS) as $key) {
+        foreach (array_intersect(array_keys(Setting::DEFAULTS), $keys) as $key) {
             $value = isset($data[$key]) ? (string) $data[$key] : null;
             if (Setting::get($key) !== $value) {
                 $old[$key] = Setting::get($key);
@@ -41,7 +45,7 @@ class SettingController extends Controller
         }
 
         if ($new) {
-            AuditLogger::log('settings.update', 'تعديل إعدادات النظام', null, $old, $new);
+            AuditLogger::log('settings.update', $full ? 'تعديل إعدادات النظام' : 'تعديل إعدادات المركز', null, $old, $new);
         }
 
         // Saved weekly files carry the logo and the center name: remove them so each one is rebuilt

@@ -18,6 +18,10 @@ class PdfExport
     public static function render(string $title, ?string $subtitle, array $sections, bool $landscape = true): string
     {
         self::$last = ['title' => $title, 'subtitle' => $subtitle, 'sections' => collect($sections)->map(fn ($s) => ['rows' => collect($s['rows'])->map(fn ($r) => array_values((array) $r))->all()] + $s)->all()];
+        // The same report as an Excel file when the download asked for it (?export=xlsx).
+        if (self::wantsExcel()) {
+            return ExcelExport::render($title, $subtitle, self::$last['sections']);
+        }
         $mpdf = self::mpdf($landscape ? 'A4-L' : 'A4');
         $mpdf->SetTitle($title);
         $mpdf->SetFooter('{PAGENO} / {nbpg}');
@@ -82,8 +86,24 @@ class PdfExport
             ->prepend(self::$last['subtitle'] ?? '')->prepend(self::$last['title'] ?? '')->implode(' | ');
     }
 
+    /** The download link asked for Excel instead of PDF. */
+    public static function wantsExcel(): bool
+    {
+        return app()->bound('request') && request()->query('export') === 'xlsx';
+    }
+
     public static function response(string $pdf, string $filename): Response
     {
+        // An Excel copy (an xlsx file is a zip, so it starts with "PK"; a PDF starts with "%PDF").
+        if (str_starts_with($pdf, 'PK')) {
+            $filename = preg_replace('/\.pdf$/i', '', $filename).'.xlsx';
+            $ascii = 'gharas-'.ltrim(preg_replace('/[^A-Za-z0-9._-]+/', '-', $filename), '-');
+
+            return response($pdf, 200, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => "attachment; filename=\"{$ascii}\"; filename*=UTF-8''".rawurlencode($filename),
+            ]);
+        }
         $ascii = 'gharas-'.ltrim(preg_replace('/[^A-Za-z0-9._-]+/', '-', $filename), '-');
 
         return response($pdf, 200, [

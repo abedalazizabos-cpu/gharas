@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Circle;
 use App\Models\Student;
 use App\Models\SunnahCourse;
+use App\Models\SunnahPost;
 use App\Models\SunnahScore;
 use App\Models\User;
+use App\Notifications\SystemNotification;
 use App\Services\AuditLogger;
 use App\Services\SunnahService;
 use Illuminate\Http\Request;
@@ -73,7 +75,7 @@ class SunnahCourseController extends Controller
 
     public function show(Request $request, SunnahCourse $course)
     {
-        if ($request->query('export') === 'pdf') {
+        if (in_array($request->query('export'), ['pdf', 'xlsx'], true)) {
             return $this->coursePdf($course);
         }
 
@@ -143,12 +145,12 @@ class SunnahCourseController extends Controller
         return redirect()->route('admin.sunnah.attendance', [$course, 'date' => $date])->with('success', 'تم حفظ حضور اللقاء.');
     }
 
-    public function homework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    public function homework(Request $request, SunnahCourse $course, SunnahPost $post)
     {
         return $this->homeworkView($course, $post, 'admin');
     }
 
-    public function storeHomework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    public function storeHomework(Request $request, SunnahCourse $course, SunnahPost $post)
     {
         $n = $this->saveHomework($request, $course, $post);
 
@@ -162,7 +164,7 @@ class SunnahCourseController extends Controller
         return redirect()->to(route('admin.sunnah.show', $course).'#posts')->with('success', 'تم النشر، ووصل إشعار لأولياء أمور الطلاب.');
     }
 
-    public function destroyPost(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    public function destroyPost(Request $request, SunnahCourse $course, SunnahPost $post)
     {
         $this->removePost($course, $post);
 
@@ -243,6 +245,6 @@ class SunnahCourseController extends Controller
 
     private function notifyTeacher(SunnahCourse $course): void
     {
-        $course->teacher?->notify(new \App\Notifications\SystemNotification('دورة جديدة في قسم السنة', "كُلّفت بإعطاء دورة «{$course->title}» ({$course->categoryLabel()}).", route('teacher.sunnah.show', $course), 'journal-bookmark'));
+        $course->teacher?->notify(new SystemNotification('دورة جديدة في قسم السنة', "كُلّفت بإعطاء دورة «{$course->title}» ({$course->categoryLabel()}).", route('teacher.sunnah.show', $course), 'journal-bookmark'));
     }
 }

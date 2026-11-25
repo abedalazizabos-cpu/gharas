@@ -25,7 +25,7 @@
                             <td class="text-nowrap text-muted">{{ $a->records_count }} تسميع · {{ $a->attendance_count }} حضور</td>
                             <td class="text-nowrap text-end">
                                 <a href="{{ route($prefix.'.weeks.show', ['circle' => $a->circle_id, 'week' => $week]) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> عرض</a>
-                                @if ($prefix !== 'visitor' || auth()->user()->hasPermission('visitor.download'))<a href="{{ route($prefix.'.archive.download', $a) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download"></i> الملف</a>@endif
+                                @if ($prefix !== 'visitor' || auth()->user()->hasPermission('visitor.download'))<a href="{{ route($prefix.'.archive.download', $a) }}" class="btn btn-sm btn-outline-primary" data-no-loading><i class="bi bi-filetype-pdf"></i> PDF</a> <a href="{{ route($prefix.'.archive.download', [$a, 'export' => 'xlsx']) }}" class="btn btn-sm btn-outline-success" data-no-loading><i class="bi bi-file-earmark-excel"></i> Excel</a>@endif
                             </td>
                         </tr>
                     @endforeach

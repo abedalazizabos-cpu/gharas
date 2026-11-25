@@ -3,11 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
+use App\Models\CertificateTemplate;
 use App\Models\Circle;
 use App\Models\Student;
+use App\Models\SunnahAttendance;
+use App\Models\SunnahCourse;
 use App\Models\User;
 use App\Services\ProgressService;
 use App\Services\ReportService;
+use App\Services\StatsService;
+use App\Services\SunnahService;
 use App\Support\Pages;
 use App\Support\PdfExport;
 use Illuminate\Http\Request;
@@ -33,9 +39,9 @@ class ReportController extends Controller
         $circles = Circle::with(['teacher', 'students' => fn ($q) => $q->active()])->orderBy('name')->get();
         $rows = $this->reports->circleRows($circles, $from, $to);
         $courses = $this->courseRows($from, $to);
-        $certificates = \App\Models\Certificate::whereBetween('issued_on', [$from->toDateString(), $to->toDateString()])->selectRaw('kind, count(*) as n')->groupBy('kind')->pluck('n', 'kind');
+        $certificates = Certificate::whereBetween('issued_on', [$from->toDateString(), $to->toDateString()])->selectRaw('kind, count(*) as n')->groupBy('kind')->pluck('n', 'kind');
 
-        if ($request->query('export') === 'pdf') {
+        if (in_array($request->query('export'), ['pdf', 'xlsx'], true)) {
             return PdfExport::download('تقرير-المركز.pdf', 'التقرير الإجمالي للمركز', $this->periodLabel($from, $to), [[
                 'title' => '', 'headers' => ['الحلقة', 'المحفظ', 'عدد الطلاب', 'نسبة الحضور %', 'صفحات حفظ جديد', 'صفحات مراجعة', 'جلسات التسميع', 'متوسط الدرجة'],
                 'rows' => $rows->map(fn ($r) => [$r['circle']->name, $r['circle']->teacher?->name ?? '—', $r['students'], $r['attendance_rate'] ?? '—', Pages::num($r['new_pages']), Pages::num($r['revision_pages']), $r['sessions'], $r['avg_score'] ? round($r['avg_score'], 1) : '—']),
@@ -47,14 +53,14 @@ class ReportController extends Controller
                 'text_cols' => [0, 1, 2],
             ], [
                 'title' => 'الشهادات الصادرة في الفترة', 'headers' => ['نوع الشهادة', 'العدد'],
-                'rows' => collect(\App\Models\CertificateTemplate::KINDS)->map(fn ($label, $k) => [$label, $certificates[$k] ?? 0])->values(),
+                'rows' => collect(CertificateTemplate::KINDS)->map(fn ($label, $k) => [$label, $certificates[$k] ?? 0])->values(),
                 'text_cols' => [0],
             ]]);
         }
 
         $all = $rows->pipe(fn ($c) => [
             'students' => $c->sum('students'), 'new_pages' => $c->sum('new_pages'), 'revision_pages' => $c->sum('revision_pages'), 'sessions' => $c->sum('sessions'),
-            'attendance_rate' => app(\App\Services\StatsService::class)->rate([
+            'attendance_rate' => app(StatsService::class)->rate([
                 'present' => $c->sum('attendance.present'), 'late' => $c->sum('attendance.late'),
                 'absent' => $c->sum('attendance.absent'), 'excused' => $c->sum('attendance.excused'),
             ]),
@@ -66,17 +72,17 @@ class ReportController extends Controller
     /** Sunnah courses that ran during the period, with numbers only (no student names, also safe for visitors). */
     protected function courseRows($from, $to)
     {
-        \App\Models\SunnahCourse::syncStatuses();
-        $courses = \App\Models\SunnahCourse::with(['teacher', 'enrollments'])->withCount('enrollments')
+        SunnahCourse::syncStatuses();
+        $courses = SunnahCourse::with(['teacher', 'enrollments'])->withCount('enrollments')
             ->where(fn ($q) => $q->whereNull('starts_on')->orWhere('starts_on', '<=', $to->toDateString()))
             ->where(fn ($q) => $q->whereNull('ends_on')->orWhere('ends_on', '>=', $from->toDateString()))
             ->orderByRaw("CASE status WHEN 'running' THEN 0 WHEN 'planned' THEN 1 ELSE 2 END")->latest('starts_on')->get();
-        $sunnah = app(\App\Services\SunnahService::class);
-        $attendance = \App\Models\SunnahAttendance::join('sunnah_sessions', 'sunnah_sessions.id', '=', 'sunnah_attendance.sunnah_session_id')
+        $sunnah = app(SunnahService::class);
+        $attendance = SunnahAttendance::join('sunnah_sessions', 'sunnah_sessions.id', '=', 'sunnah_attendance.sunnah_session_id')
             ->whereIn('sunnah_sessions.sunnah_course_id', $courses->pluck('id'))
             ->selectRaw("sunnah_sessions.sunnah_course_id as course_id, count(*) as total, sum(case when sunnah_attendance.status in ('present', 'late') then 1 else 0 end) as came")
             ->groupBy('sunnah_sessions.sunnah_course_id')->get()->keyBy('course_id');
-        $certificates = \App\Models\Certificate::join('sunnah_enrollments', 'sunnah_enrollments.id', '=', 'certificates.sunnah_enrollment_id')
+        $certificates = Certificate::join('sunnah_enrollments', 'sunnah_enrollments.id', '=', 'certificates.sunnah_enrollment_id')
             ->whereIn('sunnah_enrollments.sunnah_course_id', $courses->pluck('id'))
             ->selectRaw('sunnah_enrollments.sunnah_course_id as course_id, count(*) as n')->groupBy('sunnah_enrollments.sunnah_course_id')->pluck('n', 'course_id');
 
@@ -125,7 +131,7 @@ class ReportController extends Controller
         [$from, $to] = $this->period($request);
         $rows = $this->presentRows($this->reports->studentRows($students, $from, $to, $circleIds));
 
-        if ($request->query('export') === 'pdf') {
+        if (in_array($request->query('export'), ['pdf', 'xlsx'], true)) {
             $masked = $rows->first() && $rows->first()['student']->student_number === null;
             $headers = ['الاسم', 'حاضر', 'متأخر', 'غائب', 'بعذر', 'نسبة الحضور %', 'صفحات حفظ جديد', 'صفحات مراجعة', 'متوسط الدرجة', 'متوسط التقييم %'];
 

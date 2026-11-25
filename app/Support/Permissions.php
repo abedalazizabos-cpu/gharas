@@ -34,6 +34,7 @@ class Permissions
             'admins.manage' => 'حسابات المديرين',
             'visitors.manage' => 'حسابات الزوار والداعمين',
             'audit.view' => 'سجل العمليات',
+            'settings.center' => 'إعدادات المركز: البيانات والشعار والهوية والتواصل والحلقات والتقييم ولوحة الشرف والتسجيل والتقارير الشهرية والتاريخ الهجري',
         ],
         User::ROLE_TEACHER => [
             'teacher.attendance' => 'تسجيل الحضور',
@@ -42,6 +43,7 @@ class Permissions
             'teacher.quality' => 'رصد اختبارات لجنة الجودة (لمن اختاره المدير في اللجنة)',
             'teacher.sunnah' => 'دورات قسم السنة التي يعطيها ورصد درجاتها',
             'teacher.students.edit' => 'تعديل بيانات الطلاب وأولياء الأمور',
+            'teacher.students.request' => 'طلب إضافة طالب جديد إلى حلقته (يضيفه المدير بعد الموافقة)',
             'teacher.guardian.password' => 'تغيير كلمة سر ولي الأمر',
             'teacher.circle.edit' => 'تعديل اسم الحلقة وموعدها',
             'teacher.archive' => 'السجل الأسبوعي والأرشيف',

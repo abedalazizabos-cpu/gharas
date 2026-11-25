@@ -96,6 +96,12 @@ class Circle extends Model
         return $this->students()->where('status', 'active')->count();
     }
 
+    /** Places left once the active students and the teacher's pending requests for this circle are counted. */
+    public function freeSeats(): int
+    {
+        return max(0, $this->capacity - $this->activeStudentsCount() - RegistrationRequest::pending()->where('circle_id', $this->id)->count());
+    }
+
     public function isFull(): bool
     {
         return $this->activeStudentsCount() >= $this->capacity;
