@@ -3,7 +3,7 @@
 @section('content')
 @php($viewer = auth()->user())
 <x-page-header :title="$title" :crumbs="['التقارير' => $viewer->isAdmin() ? route('admin.reports.index') : ($viewer->isVisitor() ? route('visitor.reports.center') : route('teacher.circles.index')), $title]">
-    @if (! auth()->user()->isVisitor() || auth()->user()->hasPermission('visitor.download'))<a href="{{ request()->fullUrlWithQuery(['export' => 'pdf']) }}" class="btn btn-outline-primary {{ $viewer->isAdmin() || $viewer->isVisitor() ? '' : 'd-none' }}"><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a>@endif
+    @if (! auth()->user()->isVisitor() || auth()->user()->hasPermission('visitor.download'))<a href="{{ request()->fullUrlWithQuery(['export' => 'pdf']) }}" class="btn btn-outline-primary" data-no-loading><i class="bi bi-filetype-pdf"></i> تنزيل PDF</a><a href="{{ request()->fullUrlWithQuery(['export' => 'xlsx']) }}" class="btn btn-outline-success" data-no-loading><i class="bi bi-file-earmark-excel"></i> تنزيل Excel</a>@endif
     <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> طباعة</button>
 </x-page-header>
 @include('shared._period-filter')

@@ -57,6 +57,9 @@ class ArchiveController extends Controller
 
             return PdfExport::response($this->weeks->maskedPdf($circle, Carbon::parse($archive->week_start)), $archive->downloadName());
         }
+        if (PdfExport::wantsExcel()) {
+            return PdfExport::response($this->weeks->freshPdf($archive->circle()->withTrashed()->first(), Carbon::parse($archive->week_start)), $archive->downloadName());
+        }
         // Rebuild the file if it was removed from disk or was saved in the older CSV format.
         if (! str_ends_with($archive->path, '.pdf') || ! Storage::disk('local')->exists($archive->path)) {
             $archive = $this->weeks->archive($archive->circle, Carbon::parse($archive->week_start));

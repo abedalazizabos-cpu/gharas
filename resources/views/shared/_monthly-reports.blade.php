@@ -5,6 +5,7 @@
     <ul class="dropdown-menu dropdown-menu-end shadow">
         @foreach ($reportMonths as $m)
             <li><a class="dropdown-item" href="{{ route('monthly-reports.download', [$student, 'month' => $m]) }}" data-no-loading><i class="bi bi-download ms-1"></i> {{ \App\Models\HonorEntry::monthLabel($m) }}@if ($m === now()->format('Y-m')) <small class="text-muted">(حتى اليوم)</small>@endif</a></li>
+            @unless (auth()->user()->isParent())<li><a class="dropdown-item small text-success pe-4" href="{{ route('monthly-reports.download', [$student, 'month' => $m, 'export' => 'xlsx']) }}" data-no-loading><i class="bi bi-file-earmark-excel ms-1"></i> نسخة Excel</a></li>@endunless
         @endforeach
     </ul>
 </div>

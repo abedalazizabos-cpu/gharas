@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Concerns\ShowsSunnahCourses;
 use App\Http\Controllers\Controller;
 use App\Models\SunnahCourse;
+use App\Models\SunnahPost;
 use Illuminate\Http\Request;
 
 /** The sheikh's side of قسم السنة: the courses the admin gave him, and their results. */
@@ -15,6 +16,7 @@ class SunnahCourseController extends Controller
     public function index(Request $request)
     {
         SunnahCourse::syncStatuses();
+
         return view('teacher.sunnah.index', [
             'courses' => SunnahCourse::for($request->user())->withCount(['enrollments', 'enrollments as graded_count' => fn ($q) => $q->graded()])
                 ->orderByRaw("CASE status WHEN 'running' THEN 0 WHEN 'planned' THEN 1 ELSE 2 END")->latest('starts_on')->get(),
@@ -24,7 +26,7 @@ class SunnahCourseController extends Controller
     public function show(Request $request, SunnahCourse $course)
     {
         $this->authorizeTeacher($request, $course);
-        if ($request->query('export') === 'pdf') {
+        if (in_array($request->query('export'), ['pdf', 'xlsx'], true)) {
             return $this->coursePdf($course);
         }
 
@@ -49,6 +51,7 @@ class SunnahCourseController extends Controller
     public function attendance(Request $request, SunnahCourse $course)
     {
         $this->authorizeTeacher($request, $course);
+
         return $this->attendanceView($request, $course, 'teacher');
     }
 
@@ -60,13 +63,14 @@ class SunnahCourseController extends Controller
         return redirect()->route('teacher.sunnah.attendance', [$course, 'date' => $date])->with('success', 'تم حفظ حضور اللقاء.');
     }
 
-    public function homework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    public function homework(Request $request, SunnahCourse $course, SunnahPost $post)
     {
         $this->authorizeTeacher($request, $course);
+
         return $this->homeworkView($course, $post, 'teacher');
     }
 
-    public function storeHomework(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    public function storeHomework(Request $request, SunnahCourse $course, SunnahPost $post)
     {
         $this->authorizeTeacher($request, $course);
         $n = $this->saveHomework($request, $course, $post);
@@ -82,7 +86,7 @@ class SunnahCourseController extends Controller
         return redirect()->to(route('teacher.sunnah.show', $course).'#posts')->with('success', 'تم النشر، ووصل إشعار لأولياء أمور الطلاب.');
     }
 
-    public function destroyPost(Request $request, SunnahCourse $course, \App\Models\SunnahPost $post)
+    public function destroyPost(Request $request, SunnahCourse $course, SunnahPost $post)
     {
         $this->authorizeTeacher($request, $course);
         $this->removePost($course, $post);

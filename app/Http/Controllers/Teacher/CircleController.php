@@ -8,6 +8,8 @@ use App\Models\Circle;
 use App\Models\RegistrationRequest;
 use App\Services\AuditLogger;
 use App\Services\ReportService;
+use App\Support\Pages;
+use App\Support\PdfExport;
 use Illuminate\Http\Request;
 
 class CircleController extends Controller
@@ -60,6 +62,14 @@ class CircleController extends Controller
         $from = ($request->date('from') ?? now()->startOfMonth())->startOfDay();
         $to = ($request->date('to') ?? now())->endOfDay();
         $rows = $reports->studentRows($circle->students()->active()->orderBy('full_name')->get(), $from, $to, [$circle->id]);
+
+        if (in_array($request->query('export'), ['pdf', 'xlsx'], true)) {
+            return PdfExport::download('تقرير-'.$circle->name.'.pdf', "تقرير حلقة {$circle->name}", 'الفترة من '.$from->format('Y/m/d').' إلى '.$to->format('Y/m/d'), [[
+                'title' => '', 'headers' => ['رقم الطالب', 'الاسم', 'حاضر', 'متأخر', 'غائب', 'بعذر', 'نسبة الحضور %', 'صفحات حفظ جديد', 'صفحات مراجعة', 'متوسط الدرجة', 'متوسط التقييم %'],
+                'rows' => $rows->map(fn ($r) => [$r['student']->student_number, $r['student']->full_name, $r['attendance']['present'], $r['attendance']['late'], $r['attendance']['absent'], $r['attendance']['excused'], $r['attendance_rate'] ?? '—', Pages::num($r['new_pages']), Pages::num($r['revision_pages']), $r['avg_score'] ?? '—', $r['avg_assessment'] ? round($r['avg_assessment'], 1) : '—']),
+                'text_cols' => [1],
+            ]]);
+        }
 
         return view('shared.students-report', [
             'title' => "تقرير حلقة {$circle->name}",
