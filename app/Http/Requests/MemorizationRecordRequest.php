@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\MemorizationRecord;
 use App\Models\Student;
 use App\Models\Surah;
+use App\Support\Mushaf;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -22,6 +23,17 @@ class MemorizationRecordRequest extends FormRequest
         return $student !== null && $this->user()->can('record', $student);
     }
 
+    /** The amount is never typed: it is worked out from the ayah range on the 604-page mushaf. */
+    protected function prepareForValidation(): void
+    {
+        $surah = Surah::find((int) $this->input('surah_id'));
+        $from = (int) $this->input('from_ayah');
+        $to = (int) $this->input('to_ayah');
+        if ($surah && $from >= 1 && $to >= $from && $to <= $surah->ayah_count) {
+            $this->merge(['pages' => Mushaf::pages($surah->id, $from, $to)]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -31,7 +43,7 @@ class MemorizationRecordRequest extends FormRequest
             'surah_id' => ['required', 'integer', 'exists:surahs,id'],
             'from_ayah' => ['required', 'integer', 'min:1'],
             'to_ayah' => ['required', 'integer', 'gte:from_ayah'],
-            'pages' => ['required', 'numeric', 'min:0.25', 'max:604', 'multiple_of:0.25'],
+            'pages' => ['nullable', 'numeric', 'min:0.25', 'max:604', 'multiple_of:0.25'],
             'score' => ['required', 'integer', 'between:0,100'],
             'mistakes_count' => ['nullable', 'integer', 'min:0', 'max:500'],
             'notes' => ['nullable', 'string', 'max:2000'],
