@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Middleware\EnsureAccountActive;
+use App\Http\Middleware\EnsurePermission;
+use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\OfflineSync;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,11 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureRole::class,
-            'active' => \App\Http\Middleware\EnsureAccountActive::class,
-            'perm' => \App\Http\Middleware\EnsurePermission::class,
+            'role' => EnsureRole::class,
+            'active' => EnsureAccountActive::class,
+            'perm' => EnsurePermission::class,
         ]);
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(SecurityHeaders::class);
+        // Forms a teacher filled in without internet, sent later from the phone (see public/js/offline.js).
+        $middleware->web(append: [OfflineSync::class]);
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('dashboard'));
     })

@@ -8,6 +8,9 @@
     @endif
 @endauth
 <script src="{{ asset('js/gharas.js') }}?v={{ filemtime(public_path('js/gharas.js')) }}"></script>
+@auth
+    <script src="{{ asset('js/offline.js') }}?v={{ filemtime(public_path('js/offline.js')) }}"></script>
+@endauth
 @if (session('success') || session('error'))
     <div id="flash-data" data-type="{{ session('error') ? 'error' : 'success' }}" data-message="{{ session('error') ?? session('success') }}" hidden></div>
 @endif

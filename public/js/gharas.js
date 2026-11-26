@@ -38,6 +38,7 @@
         var btn = form.querySelector('button:not([type=button]):not([data-no-loading]), input[type=submit]');
         if (btn && !form.hasAttribute('data-no-loading') && form.method.toLowerCase() !== 'get') {
             setTimeout(function () {
+                if (e.defaultPrevented) return; // kept on the phone (offline.js), the page stays as it is
                 btn.disabled = true;
                 btn.dataset.original = btn.innerHTML;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm ms-1"></span> جارٍ الحفظ...';

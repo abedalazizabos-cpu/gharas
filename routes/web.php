@@ -24,6 +24,9 @@ Route::post('/contact', [HomeController::class, 'contact'])->middleware('throttl
 Route::get('/register', [RegistrationController::class, 'create'])->name('registration.create');
 Route::post('/register', [RegistrationController::class, 'store'])->middleware('throttle:5,10')->name('registration.store');
 Route::get('/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
+// Fresh security token and the signed-in user, read by the phone before it sends forms kept offline.
+Route::get('/offline/token', fn () => response()->json(['token' => csrf_token(), 'user' => auth()->id()])
+    ->header('Cache-Control', 'no-store'))->name('offline.token');
 Route::get('/app-icon-{size}.png', [PwaController::class, 'icon'])->whereIn('size', ['192', '512'])->name('pwa.icon');
 
 // ---------------------------------------------------------------- Auth
