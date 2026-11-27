@@ -7,7 +7,7 @@
 const VERSION = 'v2';
 const STATIC = 'gharas-static-' + VERSION;   // CSS, JS, fonts, icons, logo
 const PAGES = 'gharas-pages-' + VERSION;     // teacher pages, for opening them without internet
-const OFFLINE = '/offline.html';
+const OFFLINE = '/offline.html'; // page revision 2: lists the kept teacher pages
 
 // Teacher forms that may be filled in without internet. Keep the same list in public/js/offline.js.
 const OFFLINE_FORMS = [
@@ -24,7 +24,7 @@ const OFFLINE_FORMS = [
 const ANY_QUERY = [/^\/teacher\/memorization\/create$/, /^\/teacher\/assessments\/create$/];
 
 self.addEventListener('install', (event) => {
-    event.waitUntil(caches.open(STATIC).then((c) => c.addAll([OFFLINE])).then(() => self.skipWaiting()));
+    event.waitUntil(caches.open(STATIC).then((c) => c.addAll([new Request(OFFLINE, { cache: 'reload' })])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {

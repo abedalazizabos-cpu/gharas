@@ -11,14 +11,53 @@
     p { opacity: .85; line-height: 1.8; }
     button { margin-top: 1rem; background: #c9a24a; color: #fff; border: 0; border-radius: 10px; padding: .7rem 1.6rem; font-size: 1rem; cursor: pointer; }
     .icon { font-size: 3rem; }
+    #kept { display: none; margin-top: 1.4rem; text-align: right; }
+    #kept h2 { font-size: 1rem; margin: 0 0 .6rem; text-align: center; }
+    #kept a { display: block; background: rgba(255,255,255,.12); color: #fff; text-decoration: none; border-radius: 10px; padding: .75rem 1rem; margin-bottom: .5rem; }
+    #kept a:active { background: rgba(255,255,255,.25); }
 </style>
 </head>
 <body>
 <div class="box">
     <div class="icon">📶</div>
     <h1>لا يوجد اتصال بالإنترنت</h1>
-    <p>تأكد من الاتصال ثم أعد المحاولة. صفحات المحفظ التي فتحتها من قبل (الحضور والتسميع والتقييم) تعمل دون إنترنت، وما تسجّله فيها يُرفع وحده عند عودة الاتصال.</p>
+    <p>تأكد من الاتصال ثم أعد المحاولة. تسجيل الدخول يحتاج إنترنت، أما صفحات المحفظ التي فتحتها من قبل (الحضور والتسميع والتقييم) تعمل دون إنترنت، وما تسجّله فيها يُرفع وحده عند عودة الاتصال.</p>
     <button onclick="location.reload()">إعادة المحاولة</button>
+    <div id="kept"><h2>صفحاتك المحفوظة على هذا الجهاز</h2><div id="kept-list"></div></div>
 </div>
+<script>
+// Teacher pages kept on this phone by sw.js (cache gharas-pages-*): offer them as buttons.
+(function () {
+    if (!window.caches) return;
+    var order = [/^\/teacher$/, /^\/teacher\/memorization\/create$/, /\/attendance$/, /^\/teacher\/assessments\/create$/];
+    function rank(path) { for (var i = 0; i < order.length; i++) if (order[i].test(path)) return i; return order.length; }
+    caches.keys().then(function (keys) {
+        var name = keys.filter(function (k) { return k.indexOf('gharas-pages') === 0; })[0];
+        return name ? caches.open(name) : null;
+    }).then(function (cache) {
+        if (!cache) return [];
+        return cache.keys().then(function (reqs) {
+            return Promise.all(reqs.map(function (r) {
+                return cache.match(r).then(function (res) { return res.text(); }).then(function (html) {
+                    var m = html.match(/<title>([^<|]*)/);
+                    return { url: r.url, path: new URL(r.url).pathname, title: (m ? m[1] : '').trim() || 'صفحة محفوظة' };
+                });
+            }));
+        });
+    }).then(function (pages) {
+        pages = pages.filter(function (p) { return p.path.indexOf('/teacher') === 0; })
+            .sort(function (a, b) { return rank(a.path) - rank(b.path); }).slice(0, 12);
+        if (!pages.length) return;
+        var list = document.getElementById('kept-list');
+        pages.forEach(function (p) {
+            var a = document.createElement('a');
+            a.href = p.url;
+            a.textContent = p.path === '/teacher' ? 'لوحة المحفظ' : p.title;
+            list.appendChild(a);
+        });
+        document.getElementById('kept').style.display = 'block';
+    }).catch(function () {});
+})();
+</script>
 </body>
 </html>
