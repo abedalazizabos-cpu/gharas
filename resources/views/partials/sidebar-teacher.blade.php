@@ -16,6 +16,7 @@
     @include('partials.nav-link', ['route' => 'teacher.certificates.index', 'icon' => 'award-fill', 'label' => 'شهادات طلابي'])
     <div class="nav-section">التواصل</div>
     @if ($authUser->hasPermission('messages.send'))@include('partials.nav-link', ['route' => 'messages.index', 'active' => 'messages.*', 'icon' => 'chat-dots', 'label' => 'الرسائل', 'badge' => $unreadMessages ?: null])@endif
+    @if ($authUser->hasPermission('teacher.sms') && app(\App\Services\SmsService::class)->configured())@include('partials.nav-link', ['route' => 'teacher.sms.index', 'icon' => 'phone', 'label' => 'رسائل SMS للأهالي'])@endif
     @include('partials.nav-link', ['route' => 'teacher.announcements', 'icon' => 'megaphone', 'label' => 'الإعلانات'])
     @include('partials.nav-link', ['route' => 'notifications.index', 'icon' => 'bell', 'label' => 'الإشعارات'])
 </nav>

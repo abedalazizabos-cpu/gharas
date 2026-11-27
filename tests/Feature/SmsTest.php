@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\AttendanceRecord;
 use App\Models\Setting;
 use App\Models\SmsMessage;
 use App\Services\AttendanceService;
 use App\Services\SmsService;
+use App\Support\Permissions;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -89,7 +91,7 @@ class SmsTest extends TestCase
         $other->parents()->attach($parent->id, ['relationship' => 'أم']);
         app(AttendanceService::class)->record($circle, now()->toDateString(), [$other->id => ['status' => 'absent']], $teacher);
         $this->assertSame('failed', SmsMessage::latest('id')->first()->status);
-        $this->assertSame(2, \App\Models\AttendanceRecord::where('status', 'absent')->count());
+        $this->assertSame(2, AttendanceRecord::where('status', 'absent')->count());
     }
 
     public function test_nothing_is_sent_while_sms_is_off(): void
@@ -113,12 +115,12 @@ class SmsTest extends TestCase
         $this->actingAs($admin)->post(route('admin.sms.send'), ['audience' => 'all', 'text' => 'x'])->assertNotFound();
 
         $super = $this->superAdmin();
-        $this->actingAs($super)->get(route('admin.dashboard'))->assertOk()->assertSee('رسائل SMS للأهالي');
+        $this->actingAs($super)->get(route('admin.dashboard'))->assertOk()->assertSee('رسائل SMS');
         $this->actingAs($super)->get(route('admin.sms.index'))->assertOk();
 
         Http::fake();
         $this->connect();
-        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('رسائل SMS للأهالي');
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->assertSee('رسائل SMS');
         $this->actingAs($admin)->get(route('admin.sms.index'))->assertOk();
     }
 
@@ -211,5 +213,58 @@ class SmsTest extends TestCase
         $this->assertSame('provider', SmsMessage::firstOrFail()->channel);
         // Admins can see the SMS page once any channel is connected.
         $this->actingAs($this->admin())->get(route('admin.sms.index'))->assertOk();
+    }
+
+    public function test_admin_messages_the_teachers(): void
+    {
+        Http::fake([SmsService::DEFAULT_URL => Http::response(['id' => 'abc'], 202)]);
+        $this->connect();
+        $a = $this->teacher();
+        $a->forceFill(['phone' => '0598000001'])->save();
+        $b = $this->teacher();
+        $b->forceFill(['phone' => '0598000002'])->save();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->get(route('admin.sms.index'))->assertOk()->assertSee('كل المحفظين')->assertSee($a->name);
+        $this->actingAs($admin)->post(route('admin.sms.send'), ['audience' => 'teachers', 'text' => 'اجتماع المحفظين بعد العصر'])->assertSessionHas('success');
+        Http::assertSent(fn ($r) => collect($r['phoneNumbers'])->sort()->values()->all() === ['+970598000001', '+970598000002']);
+        $this->assertSame('staff', SmsMessage::latest('id')->first()->purpose);
+
+        $this->actingAs($admin)->post(route('admin.sms.send'), ['audience' => 'teacher', 'teacher_id' => $b->id, 'text' => 'راجع الإدارة'])->assertSessionHas('success');
+        Http::assertSent(fn ($r) => $r['phoneNumbers'] === ['+970598000002']);
+    }
+
+    public function test_teacher_messages_only_the_parents_of_his_own_circles(): void
+    {
+        Http::fake([SmsService::DEFAULT_URL => Http::response(['id' => 'abc'], 202)]);
+        $teacher = $this->teacher();
+        $circle = $this->circleFor($teacher);
+        $mine = $this->studentIn($circle, ['status' => 'active']);
+        $other = $this->studentIn($this->circleFor($this->teacher()), ['status' => 'active']);
+        foreach ([[$mine, '0599000011'], [$other, '0599000012']] as [$s, $phone]) {
+            $p = $this->parentUser();
+            $p->forceFill(['phone' => $phone])->save();
+            $s->parents()->attach($p->id, ['relationship' => 'أب']);
+        }
+
+        // Hidden until the center connects SMS.
+        $this->actingAs($teacher)->get(route('teacher.sms.index'))->assertNotFound();
+        $this->connect();
+        $this->actingAs($teacher)->get(route('teacher.dashboard'))->assertSee(route('teacher.sms.index'));
+        $this->actingAs($teacher)->get(route('teacher.sms.index'))->assertOk()->assertSee($circle->name)->assertDontSee($other->full_name);
+
+        $this->actingAs($teacher)->post(route('teacher.sms.send'), ['audience' => 'circle', 'circle_id' => $circle->id, 'text' => 'لا تحفيظ غداً'])->assertSessionHas('success');
+        Http::assertSent(fn ($r) => $r['phoneNumbers'] === ['+970599000011'] && str_starts_with($r['textMessage']['text'], $teacher->name.': لا تحفيظ غداً'));
+        $this->assertSame('teacher', SmsMessage::latest('id')->first()->purpose);
+
+        // Another teacher's circle or student is refused.
+        $this->actingAs($teacher)->post(route('teacher.sms.send'), ['audience' => 'circle', 'circle_id' => $other->current_circle_id, 'text' => 'x'])->assertSessionHasErrors('circle_id');
+        $this->actingAs($teacher)->post(route('teacher.sms.send'), ['audience' => 'student', 'student_id' => $other->id, 'text' => 'x'])->assertSessionHasErrors('student_id');
+        Http::assertSentCount(1);
+
+        // The super admin can switch it off for teachers.
+        Permissions::saveRole('teacher', ['teacher.sms' => false]);
+        Permissions::flush();
+        $this->actingAs($teacher)->get(route('teacher.sms.index'))->assertForbidden();
     }
 }

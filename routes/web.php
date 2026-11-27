@@ -24,6 +24,9 @@ Route::post('/contact', [HomeController::class, 'contact'])->middleware('throttl
 Route::get('/register', [RegistrationController::class, 'create'])->name('registration.create');
 Route::post('/register', [RegistrationController::class, 'store'])->middleware('throttle:5,10')->name('registration.store');
 Route::get('/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
+// Fresh security token and the signed-in user, read by the phone before it sends forms kept offline.
+Route::get('/offline/token', fn () => response()->json(['token' => csrf_token(), 'user' => auth()->id()])
+    ->header('Cache-Control', 'no-store'))->name('offline.token');
 Route::get('/app-icon-{size}.png', [PwaController::class, 'icon'])->whereIn('size', ['192', '512'])->name('pwa.icon');
 
 // ---------------------------------------------------------------- Auth
@@ -310,6 +313,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('certificates', [CertificateController::class, 'teacher'])->name('certificates.index');
         Route::post('circles/{circle}/day-off', [Teacher\DayOffController::class, 'store'])->name('day-offs.store');
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');
+        Route::middleware('perm:teacher.sms')->group(function () {
+            Route::get('sms', [Teacher\SmsController::class, 'index'])->name('sms.index');
+            Route::post('sms', [Teacher\SmsController::class, 'send'])->name('sms.send')->middleware('throttle:10,1');
+        });
     });
 
     // ------------------------------------------------------------ Visitor (read-only: GET routes only)

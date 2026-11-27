@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\OfflineSubmission;
 use App\Models\QualityTest;
 use App\Models\SunnahCourse;
 use App\Models\User;
@@ -125,3 +126,6 @@ Schedule::call(fn () => Artisan::call('gharas:monthly-reports'))->name('gharas:m
 
 // Daily backup when the Laravel scheduler is running (php artisan schedule:work / cron).
 Schedule::call(fn () => Artisan::call('gharas:backup'))->name('gharas:backup')->dailyAt('02:00');
+
+// Receipts of forms sent later from teachers' phones (offline mode) are kept 90 days, then removed.
+Schedule::call(fn () => Artisan::call('model:prune', ['--model' => [OfflineSubmission::class]]))->name('gharas:prune-offline')->dailyAt('03:00');

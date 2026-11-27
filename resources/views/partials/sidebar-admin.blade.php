@@ -21,7 +21,7 @@
     @if ($u->hasPermission('honor.manage'))@include('partials.nav-link', ['route' => 'admin.honor.index', 'active' => 'admin.honor.*', 'icon' => 'trophy', 'label' => 'لوحة الشرف'])@endif
     @if ($u->hasPermission('reports.view'))@include('partials.nav-link', ['route' => 'admin.reports.index', 'active' => 'admin.reports.*', 'icon' => 'bar-chart-line', 'label' => 'التقارير'])@endif
     <div class="nav-section">التواصل</div>
-    @if ($u->hasPermission('sms.send') && ($u->isSuperAdmin() || app(\App\Services\SmsService::class)->configured()))@include('partials.nav-link', ['route' => 'admin.sms.index', 'active' => 'admin.sms.*', 'icon' => 'phone', 'label' => 'رسائل SMS للأهالي'])@endif
+    @if ($u->hasPermission('sms.send') && ($u->isSuperAdmin() || app(\App\Services\SmsService::class)->configured()))@include('partials.nav-link', ['route' => 'admin.sms.index', 'active' => 'admin.sms.*', 'icon' => 'phone', 'label' => 'رسائل SMS'])@endif
     @if ($u->hasPermission('announcements.manage'))@include('partials.nav-link', ['route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'megaphone', 'label' => 'الإعلانات'])@endif
     @if ($u->hasPermission('contact.manage'))@include('partials.nav-link', ['route' => 'admin.contact.index', 'icon' => 'envelope', 'label' => 'رسائل التواصل', 'badge' => $newContacts ?: null])@endif
     <div class="nav-section">النظام</div>

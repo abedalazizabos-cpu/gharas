@@ -12,11 +12,11 @@ class ScheduleTest extends TestCase
     {
         $events = collect(app(Schedule::class)->events());
 
-        $this->assertCount(6, $events);
+        $this->assertCount(7, $events);
         // Shared hosting (Hostinger) disables proc_open, so no task may start a separate process.
         $events->each(fn ($e) => $this->assertInstanceOf(CallbackEvent::class, $e, (string) $e->description));
         $this->assertEqualsCanonicalizing(
-            ['gharas:archive-weeks', 'gharas:sunnah-status', 'gharas:recording-alerts', 'gharas:honor-board', 'gharas:monthly-reports', 'gharas:backup'],
+            ['gharas:archive-weeks', 'gharas:sunnah-status', 'gharas:recording-alerts', 'gharas:honor-board', 'gharas:monthly-reports', 'gharas:backup', 'gharas:prune-offline'],
             $events->pluck('description')->all()
         );
     }
