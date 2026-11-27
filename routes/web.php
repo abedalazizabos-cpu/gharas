@@ -313,6 +313,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('certificates', [CertificateController::class, 'teacher'])->name('certificates.index');
         Route::post('circles/{circle}/day-off', [Teacher\DayOffController::class, 'store'])->name('day-offs.store');
         Route::get('announcements', [Teacher\DashboardController::class, 'announcements'])->name('announcements');
+        Route::middleware('perm:teacher.sms')->group(function () {
+            Route::get('sms', [Teacher\SmsController::class, 'index'])->name('sms.index');
+            Route::post('sms', [Teacher\SmsController::class, 'send'])->name('sms.send')->middleware('throttle:10,1');
+        });
     });
 
     // ------------------------------------------------------------ Visitor (read-only: GET routes only)

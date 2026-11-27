@@ -29,7 +29,7 @@ class Permissions
             'archive.view' => 'السجل الأسبوعي والأرشيف',
             'reports.view' => 'التقارير وتنزيلها PDF',
             'announcements.manage' => 'الإعلانات',
-            'sms.send' => 'إرسال رسائل SMS لأولياء الأمور',
+            'sms.send' => 'إرسال رسائل SMS لأولياء الأمور والمحفظين',
             'contact.manage' => 'رسائل التواصل',
             'admins.manage' => 'حسابات المديرين',
             'visitors.manage' => 'حسابات الزوار والداعمين',
@@ -48,6 +48,7 @@ class Permissions
             'teacher.circle.edit' => 'تعديل اسم الحلقة وموعدها',
             'teacher.archive' => 'السجل الأسبوعي والأرشيف',
             'messages.send' => 'مراسلة أولياء الأمور',
+            'teacher.sms' => 'إرسال رسائل SMS لأولياء أمور طلاب حلقته (عند تفعيل الرسائل)',
         ],
         User::ROLE_PARENT => [
             'parent.weeks' => 'السجلات الأسبوعية السابقة',

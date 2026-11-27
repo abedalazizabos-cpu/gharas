@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\Rule;
 
-/** SMS to parents from the center's phone: compose and history (admin), gateway settings (super admin). */
+/** SMS to parents and teachers: compose and history (admin), gateway settings (super admin). */
 class SmsController extends Controller
 {
     public function __construct(private SmsService $sms) {}
@@ -32,6 +32,7 @@ class SmsController extends Controller
             'defaultChannel' => $this->sms->defaultChannel(),
             'circles' => Circle::active()->with('teacher')->orderBy('name')->get(),
             'students' => Student::active()->whereHas('parents')->with('circle')->orderBy('full_name')->get(['id', 'full_name', 'current_circle_id']),
+            'teachers' => $this->teachers()->orderBy('name')->get(['id', 'name', 'phone']),
             'parentsCount' => $this->parents('all', null)->count(),
             'history' => SmsMessage::with('sender')->latest('id')->paginate(20),
         ]);
@@ -41,20 +42,26 @@ class SmsController extends Controller
     {
         $this->hiddenUntilConnected($request);
         $data = $request->validate([
-            'audience' => ['required', Rule::in(['all', 'circle', 'student'])],
+            'audience' => ['required', Rule::in(['all', 'circle', 'student', 'teachers', 'teacher'])],
             'circle_id' => ['required_if:audience,circle', 'nullable', 'integer', 'exists:circles,id'],
             'student_id' => ['required_if:audience,student', 'nullable', 'integer', 'exists:students,id'],
+            'teacher_id' => ['required_if:audience,teacher', 'nullable', 'integer', 'exists:users,id'],
             'text' => ['required', 'string', 'max:600'],
             'channel' => ['nullable', Rule::in(array_keys(SmsService::CHANNELS))],
-        ], [], ['text' => 'نص الرسالة', 'circle_id' => 'الحلقة', 'student_id' => 'الطالب']);
+        ], [], ['text' => 'نص الرسالة', 'circle_id' => 'الحلقة', 'student_id' => 'الطالب', 'teacher_id' => 'المحفظ']);
 
-        $target = $data['audience'] === 'circle' ? $data['circle_id'] : ($data['audience'] === 'student' ? $data['student_id'] : null);
-        $parents = $this->parents($data['audience'], $target);
-        if ($parents->isEmpty()) {
-            return back()->withInput()->with('error', 'لا يوجد أولياء أمور بأرقام جوال لهذا الاختيار.');
+        $toTeachers = in_array($data['audience'], ['teachers', 'teacher'], true);
+        if ($toTeachers) {
+            $people = $this->teachers()->when($data['audience'] === 'teacher', fn ($q) => $q->whereKey($data['teacher_id']))->get();
+        } else {
+            $target = $data['audience'] === 'circle' ? $data['circle_id'] : ($data['audience'] === 'student' ? $data['student_id'] : null);
+            $people = $this->parents($data['audience'], $target);
+        }
+        if ($people->isEmpty()) {
+            return back()->withInput()->with('error', $toTeachers ? 'لا يوجد محفظون بأرقام جوال لهذا الاختيار.' : 'لا يوجد أولياء أمور بأرقام جوال لهذا الاختيار.');
         }
         $channel = ($data['channel'] ?? null) ?: $this->sms->defaultChannel();
-        $result = $this->sms->send($parents->pluck('phone'), $data['text'], 'manual', $request->user(), $channel);
+        $result = $this->sms->send($people->pluck('phone'), $data['text'], $toTeachers ? 'staff' : 'manual', $request->user(), $channel);
         AuditLogger::log('sms.send', 'رسالة SMS إلى '.$result['sent'].' رقم: '.mb_substr($data['text'], 0, 80));
 
         return back()->with($result['failed'] ? 'error' : 'success', $result['failed']
@@ -142,6 +149,12 @@ class SmsController extends Controller
             'student' => $q->whereHas('children', fn ($c) => $c->whereKey($id))->get(),
             default => $q->whereHas('children', fn ($c) => $c->active())->get(),
         };
+    }
+
+    /** Active teachers with a mobile number. */
+    private function teachers()
+    {
+        return User::role(User::ROLE_TEACHER)->active()->whereNotNull('phone')->where('phone', '!=', '');
     }
 
     /** Until the super admin connects the center's phone, the SMS pages do not exist for anyone else. */

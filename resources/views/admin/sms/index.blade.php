@@ -1,7 +1,7 @@
 @extends('layouts.app')
-@section('title', 'رسائل SMS للأهالي')
+@section('title', 'رسائل SMS')
 @section('content')
-<x-page-header title="رسائل SMS لأولياء الأمور" :crumbs="['رسائل SMS']">
+<x-page-header title="رسائل SMS لأولياء الأمور والمحفظين" :crumbs="['رسائل SMS']">
     @if (auth()->user()->isSuperAdmin())<a href="{{ route('admin.sms.settings') }}" class="btn btn-outline-secondary"><i class="bi bi-gear"></i> إعدادات الربط</a>@endif
 </x-page-header>
 
@@ -12,15 +12,21 @@
 
 <div class="row g-3">
     <div class="col-lg-5">
-        <form method="POST" action="{{ route('admin.sms.send') }}" class="card" data-confirm="ستُرسل الرسالة إلى أولياء الأمور المختارين، وتُحسب من رصيد الشريحة أو مزوّد الرسائل." data-confirm-title="إرسال الرسالة" data-confirm-button="نعم، أرسل">
+        <form method="POST" action="{{ route('admin.sms.send') }}" class="card" data-confirm="ستُرسل الرسالة إلى من اخترتهم، وتُحسب من رصيد الشريحة أو مزوّد الرسائل." data-confirm-title="إرسال الرسالة" data-confirm-button="نعم، أرسل">
             @csrf
             <div class="card-header"><i class="bi bi-send"></i> رسالة جديدة</div>
             <div class="card-body">
                 <label class="form-label">إلى</label>
                 <select name="audience" class="form-select mb-2" id="sms-audience">
-                    <option value="all" @selected(old('audience') === 'all')>كل أولياء الأمور ({{ $parentsCount }})</option>
-                    <option value="circle" @selected(old('audience') === 'circle')>أولياء أمور حلقة</option>
-                    <option value="student" @selected(old('audience', request('student') ? 'student' : null) === 'student')>ولي أمر طالب واحد</option>
+                    <optgroup label="أولياء الأمور">
+                        <option value="all" @selected(old('audience') === 'all')>كل أولياء الأمور ({{ $parentsCount }})</option>
+                        <option value="circle" @selected(old('audience') === 'circle')>أولياء أمور حلقة</option>
+                        <option value="student" @selected(old('audience', request('student') ? 'student' : null) === 'student')>ولي أمر طالب واحد</option>
+                    </optgroup>
+                    <optgroup label="المحفظون">
+                        <option value="teachers" @selected(old('audience') === 'teachers')>كل المحفظين ({{ $teachers->count() }})</option>
+                        <option value="teacher" @selected(old('audience', request('teacher') ? 'teacher' : null) === 'teacher')>محفظ واحد</option>
+                    </optgroup>
                 </select>
                 <select name="circle_id" class="form-select mb-2 sms-for sms-for-circle">
                     <option value="">اختر الحلقة…</option>
@@ -29,6 +35,10 @@
                 <select name="student_id" class="form-select mb-2 sms-for sms-for-student">
                     <option value="">اختر الطالب…</option>
                     @foreach ($students as $st)<option value="{{ $st->id }}" @selected((string) old('student_id', request('student')) === (string) $st->id)>{{ $st->full_name }} · {{ $st->circle?->name }}</option>@endforeach
+                </select>
+                <select name="teacher_id" class="form-select mb-2 sms-for sms-for-teacher">
+                    <option value="">اختر المحفظ…</option>
+                    @foreach ($teachers as $t)<option value="{{ $t->id }}" @selected((string) old('teacher_id', request('teacher')) === (string) $t->id)>{{ $t->name }}</option>@endforeach
                 </select>
                 @if (count($channels) > 1)
                     <label class="form-label mt-1">أرسل عبر</label>
